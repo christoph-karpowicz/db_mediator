@@ -1,0 +1,20 @@
+{
+    "one-offs": [
+        {
+            "name": "filmz",
+            "databases": ["dvdrental", "SampleCollections"],
+            "tables": [
+                {
+                    "names": ["dvdrental.film", "SampleCollections.film"],
+                    "keys": ["dvdrental.film_id", "SampleCollections._id"],
+                    "synchronize": [
+                        "film.title => film.title"
+                    ]
+                }
+            ]
+        }
+    ],
+    "ongoing": [
+
+    ]
+}
