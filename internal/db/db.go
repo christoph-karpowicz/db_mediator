@@ -1,7 +1,7 @@
 package db
 
 type Databases struct {
-	Databases []Database `json:"databases"`
+	Databases map[string]Database `json:"databases"`
 }
 
 type Database struct {
