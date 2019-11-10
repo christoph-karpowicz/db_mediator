@@ -7,7 +7,7 @@
                 {
                     "names": ["dvdrental.film", "SampleCollections.film"],
                     "keys": ["dvdrental.film_id", "SampleCollections._id"],
-                    "synchronize": [
+                    "vectors": [
                         "film.title => film.title"
                     ]
                 }
