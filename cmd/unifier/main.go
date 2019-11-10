@@ -21,7 +21,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app.ImportDatabases()
+	app.Init()
 
 	fmt.Println(app.Lang)
 

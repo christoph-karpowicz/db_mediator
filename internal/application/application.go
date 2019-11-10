@@ -1,10 +1,7 @@
 package application
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	"github.com/christoph-karpowicz/unifier/internal/db"
 
@@ -14,7 +11,12 @@ import (
 type Application struct {
 	CLI  *cli.App
 	Lang string
-	dbs  db.Databases
+	dbs  *db.Databases
+}
+
+func (a *Application) Init() {
+	a.dbs = &db.Databases{DBMap: make(map[string]db.Database)}
+	a.dbs.ImportJSON()
 }
 
 func (a *Application) SetCLI() {
@@ -51,28 +53,4 @@ func (a *Application) SetCLI() {
 			Destination: &a.Lang,
 		},
 	}
-}
-
-func (a *Application) ImportDatabases() {
-	databasesConfigFile, err := os.Open("config/databases.json")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("Parsing databases.json...")
-	defer databasesConfigFile.Close()
-
-	// Read opened file as a byte array.
-	byteValue, _ := ioutil.ReadAll(databasesConfigFile)
-
-	json.Unmarshal(byteValue, &a.dbs)
-
-	fmt.Println("----------------")
-	fmt.Println("Databases:")
-	// for i := 0; i < len(a.dbs.Databases); i++ {
-	// 	fmt.Println("	- Name: " + a.dbs.Databases[i].Name + ", type: " + a.dbs.Databases[i].Type)
-	// }
-	fmt.Println(a.dbs.Databases)
-	fmt.Println(a.dbs.Databases["dvdrental"].Type)
-	fmt.Println("----------------")
 }

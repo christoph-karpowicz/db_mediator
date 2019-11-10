@@ -1,10 +1,6 @@
 package db
 
-type Databases struct {
-	Databases map[string]Database `json:"databases"`
-}
-
-type Database struct {
+type DatabaseData struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Host     string `json:"host"`
