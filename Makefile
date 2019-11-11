@@ -3,3 +3,6 @@ main:
 
 run:
 	go run cmd/unifier/main.go
+
+tests:
+	go test -v ./...

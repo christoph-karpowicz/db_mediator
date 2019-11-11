@@ -17,7 +17,7 @@ type Application struct {
 }
 
 func (a *Application) Init() {
-	a.dbs = &db.Databases{DBMap: make(map[string]db.Database)}
+	a.dbs = &db.Databases{DBMap: make(map[string]*db.Database)}
 	a.dbs.ImportJSON()
 	a.synchs = &synch.Synchs{SynchMap: make(map[string]*synch.Synch)}
 	a.synchs.ImportJSON()
@@ -36,9 +36,7 @@ func (a *Application) SetCLI() {
 			Aliases: []string{"oo"},
 			Usage:   "One off synchronization.",
 			Action: func(c *cli.Context) {
-				for _, arg := range c.Args() {
-					a.synchronize(arg)
-				}
+				a.synchronizeArray(c.Args())
 			},
 		},
 		{
@@ -67,5 +65,13 @@ func (a *Application) synchronize(synchKey string) {
 		panic("Synch '" + synchKey + "' not found.")
 	}
 
+	synch.SetDatabases(a.dbs.DBMap)
+
 	fmt.Println(*synch)
+}
+
+func (a *Application) synchronizeArray(synchKeys []string) {
+	for _, arg := range synchKeys {
+		a.synchronize(arg)
+	}
 }

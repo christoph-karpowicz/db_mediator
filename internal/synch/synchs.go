@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 type Synchs struct {
@@ -12,11 +13,13 @@ type Synchs struct {
 }
 
 func (s *Synchs) ImportJSON() {
-	synchFile, err := os.Open("config/synch.json")
+	synchFilePath, _ := filepath.Abs("./config/synch.json")
+
+	synchFile, err := os.Open(synchFilePath)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Parsing synch.json...")
+	fmt.Printf("Parsing %s...\n", synchFilePath)
 	defer synchFile.Close()
 
 	byteArray, err := ioutil.ReadAll(synchFile)

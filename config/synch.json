@@ -6,7 +6,7 @@
             "tables": [
                 {
                     "names": ["dvdrental.film", "SampleCollections.film"],
-                    "keys": ["dvdrental.film_id", "SampleCollections._id"],
+                    "keys": ["film_id", "_id"],
                     "vectors": [
                         "title => title"
                     ]
@@ -19,7 +19,7 @@
             "tables": [
                 {
                     "names": ["dvdrental.film", "SampleCollections.film"],
-                    "keys": ["dvdrental.film_id", "SampleCollections._id"],
+                    "keys": ["film_id", "_id"],
                     "vectors": [
                         "title => title", 
                         "year <=> year"

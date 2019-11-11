@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 type Databases struct {
-	DBMap map[string]Database
+	DBMap map[string]*Database
 }
 
 func (d *Databases) ImportJSON() {
-	databasesConfigFile, err := os.Open("config/databases.json")
+	databasesFilePath, _ := filepath.Abs("./config/databases.json")
+
+	databasesConfigFile, err := os.Open(databasesFilePath)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Parsing databases.json...")
+	fmt.Printf("Parsing %s...\n", databasesFilePath)
 	defer databasesConfigFile.Close()
 
 	byteArray, err := ioutil.ReadAll(databasesConfigFile)
@@ -48,7 +51,7 @@ func (d *Databases) ImportJSON() {
 			database = nil
 		}
 
-		d.DBMap[databasesArray[i].Name] = database
+		d.DBMap[databasesArray[i].Name] = &database
 
 		// fmt.Printf("key[%s] value[%s]\n", k, v)
 		fmt.Println(database)
