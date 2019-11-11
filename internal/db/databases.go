@@ -14,19 +14,20 @@ type Databases struct {
 func (d *Databases) ImportJSON() {
 	databasesConfigFile, err := os.Open("config/databases.json")
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 	fmt.Println("Parsing databases.json...")
 	defer databasesConfigFile.Close()
 
-	// Read opened file as a byte array.
-	byteValue, _ := ioutil.ReadAll(databasesConfigFile)
+	byteArray, err := ioutil.ReadAll(databasesConfigFile)
+	if err != nil {
+		panic(err)
+	}
 
 	var databases map[string]json.RawMessage
 	var databasesArray []DatabaseData
 
-	json.Unmarshal(byteValue, &databases)
+	json.Unmarshal(byteArray, &databases)
 	json.Unmarshal(databases["databases"], &databasesArray)
 
 	fmt.Println("----------------")

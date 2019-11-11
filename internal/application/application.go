@@ -4,19 +4,23 @@ import (
 	"fmt"
 
 	"github.com/christoph-karpowicz/unifier/internal/db"
+	"github.com/christoph-karpowicz/unifier/internal/synch"
 
 	"github.com/urfave/cli"
 )
 
 type Application struct {
-	CLI  *cli.App
-	Lang string
-	dbs  *db.Databases
+	CLI    *cli.App
+	Lang   string
+	dbs    *db.Databases
+	synchs *synch.Synchs
 }
 
 func (a *Application) Init() {
 	a.dbs = &db.Databases{DBMap: make(map[string]db.Database)}
 	a.dbs.ImportJSON()
+	a.synchs = &synch.Synchs{SynchMap: make(map[string]*synch.Synch)}
+	a.synchs.ImportJSON()
 }
 
 func (a *Application) SetCLI() {
@@ -32,7 +36,9 @@ func (a *Application) SetCLI() {
 			Aliases: []string{"oo"},
 			Usage:   "One off synchronization.",
 			Action: func(c *cli.Context) {
-				fmt.Println("one-off")
+				for _, arg := range c.Args() {
+					a.synchronize(arg)
+				}
 			},
 		},
 		{
@@ -53,4 +59,13 @@ func (a *Application) SetCLI() {
 			Destination: &a.Lang,
 		},
 	}
+}
+
+func (a *Application) synchronize(synchKey string) {
+	synch := a.synchs.SynchMap[synchKey]
+	if synch == nil {
+		panic("Synch '" + synchKey + "' not found.")
+	}
+
+	fmt.Println(*synch)
 }

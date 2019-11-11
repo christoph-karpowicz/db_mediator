@@ -1,5 +1,5 @@
 {
-    "one-offs": [
+    "synch": [
         {
             "name": "filmz",
             "databases": ["dvdrental", "SampleCollections"],
@@ -8,13 +8,24 @@
                     "names": ["dvdrental.film", "SampleCollections.film"],
                     "keys": ["dvdrental.film_id", "SampleCollections._id"],
                     "vectors": [
-                        "film.title => film.title"
+                        "title => title"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "test2",
+            "databases": ["dvdrental", "SampleCollections"],
+            "tables": [
+                {
+                    "names": ["dvdrental.film", "SampleCollections.film"],
+                    "keys": ["dvdrental.film_id", "SampleCollections._id"],
+                    "vectors": [
+                        "title => title", 
+                        "year <=> year"
                     ]
                 }
             ]
         }
-    ],
-    "ongoing": [
-
     ]
 }

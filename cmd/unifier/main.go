@@ -14,14 +14,14 @@ func main() {
 
 	var app application.Application = application.Application{}
 
+	app.Init()
+
 	app.SetCLI()
 
 	err := app.CLI.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	app.Init()
 
 	fmt.Println(app.Lang)
 
