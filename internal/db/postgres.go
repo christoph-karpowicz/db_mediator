@@ -1,7 +1,11 @@
 package db
 
 type PostgresDatabase struct {
-	db *DatabaseData
+	DB *DatabaseData
+}
+
+func (d *PostgresDatabase) GetData() *DatabaseData {
+	return d.DB
 }
 
 func (d *PostgresDatabase) Select() string {

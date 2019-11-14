@@ -1,8 +1,12 @@
 package db
 
 type MongoDatabase struct {
-	db  *DatabaseData
+	DB  *DatabaseData
 	Tst int
+}
+
+func (d *MongoDatabase) GetData() *DatabaseData {
+	return d.DB
 }
 
 func (d *MongoDatabase) Select() string {

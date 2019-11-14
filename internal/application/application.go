@@ -19,6 +19,7 @@ type Application struct {
 func (a *Application) Init() {
 	a.dbs = &db.Databases{DBMap: make(map[string]*db.Database)}
 	a.dbs.ImportJSON()
+	a.dbs.ValidateJSON()
 	a.synchs = &synch.Synchs{SynchMap: make(map[string]*synch.Synch)}
 	a.synchs.ImportJSON()
 }

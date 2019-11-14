@@ -7,6 +7,10 @@
                 {
                     "names": ["dvdrental.film", "SampleCollections.film"],
                     "keys": ["film_id", "_id"],
+                    "connection": {
+                        "type": "external_id_columns",
+                        "columns": ["extern_id", "ext_id"]
+                    },
                     "vectors": [
                         "title => title"
                     ]
@@ -20,6 +24,10 @@
                 {
                     "names": ["dvdrental.film", "SampleCollections.film"],
                     "keys": ["film_id", "_id"],
+                    "connection": {
+                        "type": "unifier_persistence",
+                        "initial_vector": "dvdrental <= SampleCollections"
+                    },
                     "vectors": [
                         "title => title", 
                         "year <=> year"
