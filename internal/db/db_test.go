@@ -7,6 +7,6 @@ import (
 
 func TestJSON(t *testing.T) {
 	os.Chdir("../..")
-	dbs := Databases{DBMap: make(map[string]Database)}
+	dbs := Databases{DBMap: make(map[string]*Database)}
 	dbs.ImportJSON()
 }

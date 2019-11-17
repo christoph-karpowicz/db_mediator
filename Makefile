@@ -1,8 +1,10 @@
 main:
-	go build -o app cmd/unifier/main.go
+	go build -o server cmd/server/main.go
+	go build -o client cmd/client/main.go
 
 run:
-	go run cmd/unifier/main.go
+	go run cmd/server/main.go
+	go run cmd/client/main.go
 
 tests:
 	go test -v ./...
