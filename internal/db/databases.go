@@ -54,15 +54,14 @@ func (d *Databases) ImportJSON() {
 		d.DBMap[databasesArray[i].Name] = &database
 
 		// fmt.Printf("key[%s] value[%s]\n", k, v)
-		// fmt.Println(database)
 	}
 	fmt.Println(d.DBMap)
 	fmt.Println("----------------")
 }
 
 func (d *Databases) ValidateJSON() {
+	fmt.Println("Database JSON file validation...")
 	for _, database := range d.DBMap {
-		fmt.Println((*database).GetData())
 		(*database).GetData().Validate()
 		// switch database.(type) {
 		// case *PostgresDatabase:
@@ -75,4 +74,5 @@ func (d *Databases) ValidateJSON() {
 
 		// }
 	}
+	fmt.Println("...passed.")
 }

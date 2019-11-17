@@ -10,6 +10,10 @@ type Synch struct {
 	database2 *db.Database
 }
 
+func (s *Synch) GetData() *SynchData {
+	return s.synch
+}
+
 func (s *Synch) SetDatabases(DBMap map[string]*db.Database) {
 	if len(s.synch.Databases) < 2 || DBMap[s.synch.Databases[0]] == nil || DBMap[s.synch.Databases[1]] == nil {
 		panic(s.synch.Name + " database config is invalid.")

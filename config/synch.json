@@ -25,7 +25,7 @@
                     "names": ["dvdrental.film", "SampleCollections.film"],
                     "keys": ["film_id", "_id"],
                     "connection": {
-                        "type": "unifier_persistence",
+                        "type": "persistence",
                         "initial_vector": "dvdrental <= SampleCollections"
                     },
                     "vectors": [

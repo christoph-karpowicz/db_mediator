@@ -64,3 +64,12 @@ func (s *Synchs) ImportJSON() {
 	}
 	fmt.Println("----------------")
 }
+
+func (s *Synchs) ValidateJSON() {
+	fmt.Println("Synch JSON file validation...")
+	for _, synch := range s.SynchMap {
+		fmt.Println((*synch).GetData())
+		(*synch).GetData().Validate()
+	}
+	fmt.Println("...passed.")
+}

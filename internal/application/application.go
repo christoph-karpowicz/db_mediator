@@ -22,6 +22,7 @@ func (a *Application) Init() {
 	a.dbs.ValidateJSON()
 	a.synchs = &synch.Synchs{SynchMap: make(map[string]*synch.Synch)}
 	a.synchs.ImportJSON()
+	a.synchs.ValidateJSON()
 }
 
 func (a *Application) SetCLI() {
