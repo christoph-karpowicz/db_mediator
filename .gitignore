@@ -1,5 +1,6 @@
 config/databases.json
 vendor/
 data/
-app
+server
+client
 docker-compose.yml
