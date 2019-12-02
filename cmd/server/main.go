@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/christoph-karpowicz/unifier/internal/application"
+	"github.com/christoph-karpowicz/unifier/internal/server/application"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
 
-	var app application.Application = application.Application{}
+	var App application.Application = application.Application{}
 
-	app.Init()
+	App.Init()
 
 	// fmt.Printf("%v\n\n", os.Args)
 
