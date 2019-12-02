@@ -1,6 +1,6 @@
-config/databases.json
-vendor/
-data/
-server
-client
-docker-compose.yml
+/config/databases.json
+/vendor/
+/data/
+/server
+/client
+/docker-compose.yml
