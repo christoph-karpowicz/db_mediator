@@ -24,23 +24,22 @@ type StartHandler struct {
 
 func (h *StartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	synchs, ok := r.URL.Query()["synch"]
+	synchType, ok := r.URL.Query()["type"]
+	if !ok || len(synchType[0]) < 1 {
+		log.Println("Url Param 'synchType' is missing")
+		return
+	}
 
-	if !ok || len(synchs[0]) < 1 {
+	synch, ok := r.URL.Query()["synch"]
+	if !ok || len(synch[0]) < 1 {
 		log.Println("Url Param 'synch' is missing")
 		return
 	}
 
-	// // synch := keys[0]
-	// log.Println(r.URL.Query())
-
-	// log.Println("Url Param 'synch' is: " + string(synch))
-
-	// fmt.Fprintf(w, "Welcome to my website!")
 	fmt.Println("h.app.Lang::::::")
 	fmt.Println(h.app.Lang)
 	h.app.Lang = "test222222"
 	count++
 	// go tst(count, &w)
-	go h.app.synchronizeArray(synchs)
+	go h.app.synchronize(synchType[0], synch[0])
 }

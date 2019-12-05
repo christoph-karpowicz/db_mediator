@@ -27,23 +27,25 @@ func (a *Application) Init() {
 }
 
 func (a *Application) listen() {
-	http.Handle("/start", &StartHandler{app: a})
+	http.Handle("/init", &StartHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 
-func (a *Application) synchronize(synchKey string) {
+func (a *Application) synchronize(synchType string, synchKey string) {
+	fmt.Printf("%s - %s\n", synchType, synchKey)
 	synch := a.synchs.SynchMap[synchKey]
 	if synch == nil {
 		panic("Synch '" + synchKey + "' not found.")
 	}
 
 	synch.SetDatabases(a.dbs.DBMap)
+	synch.SelectData()
 
 	fmt.Println(*synch)
 }
 
-func (a *Application) synchronizeArray(synchKeys []string) {
+func (a *Application) synchronizeArray(synchType string, synchKeys []string) {
 	for _, arg := range synchKeys {
-		a.synchronize(arg)
+		a.synchronize(synchType, arg)
 	}
 }
