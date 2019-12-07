@@ -14,5 +14,5 @@ type DatabaseData struct {
 }
 
 func (d *DatabaseData) Validate() {
-	validationUtil.JSONStruct(*d, "")
+	validationUtil.JSONStruct(*d)
 }

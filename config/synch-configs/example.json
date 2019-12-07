@@ -1,0 +1,47 @@
+{
+    "name": "example",
+    "databases": { 
+        "db1": {
+            "name": "dvdrental",
+            "type": "postgres"
+        }, 
+        "db2": {
+            "name": "SampleCollections",
+            "type": "mongodb"
+        }
+    },
+    "tables": [
+        {
+            "names": { "table1": "film", "table2": "Sakila_films" },
+            "primaryKeys": { "table1": "film_id", "table2": "_id" },
+            "settings": {
+                "synchType": {
+                    "matchBy": "external_id_columns",
+                    "columnNames": { "table1": "film_id", "table2": "ext_id" }
+                },
+                "createNewRows": {
+                    "table1": "never",
+                    "table2": "never"
+                },
+                "updateOldRows": {
+                    "table1": "always",
+                    "table2": "always"
+                }
+            },
+            "vectors": [
+                {
+                    "columnNames": {
+                        "table1": "title",
+                        "table2": "Title"
+                    },
+                    "dataFlow": "=>",
+                    "wheres": {
+                        "table1": "title ILIKE 'A%'",
+                        "table2": "-"
+                    }
+                }
+            ]
+        }
+    ],
+    "active": false
+}

@@ -19,11 +19,11 @@ func (s *Synch) GetData() *SynchData {
 }
 
 func (s *Synch) SetDatabases(DBMap map[string]*db.Database) {
-	if len(s.synch.Databases) < 2 || DBMap[s.synch.Databases[0]] == nil || DBMap[s.synch.Databases[1]] == nil {
+	if DBMap[s.synch.Databases.Db1.Name] == nil || DBMap[s.synch.Databases.Db2.Name] == nil {
 		panic(s.synch.Name + " database config is invalid.")
 	}
-	s.database1 = DBMap[s.synch.Databases[0]]
-	s.database2 = DBMap[s.synch.Databases[1]]
+	s.database1 = DBMap[s.synch.Databases.Db1.Name]
+	s.database2 = DBMap[s.synch.Databases.Db2.Name]
 }
 
 func (s *Synch) SelectData() {

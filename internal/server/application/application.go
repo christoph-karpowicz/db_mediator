@@ -19,7 +19,7 @@ func (a *Application) Init() {
 	a.dbs.ImportJSON()
 	a.dbs.ValidateJSON()
 	a.synchs = &synch.Synchs{SynchMap: make(map[string]*synch.Synch)}
-	a.synchs.ImportJSON()
+	a.synchs.ImportJSONDir()
 	a.synchs.ValidateJSON()
 
 	a.Lang = "sdsadsdsad"

@@ -1,22 +1,25 @@
 package synch
 
 import (
-	"os"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"testing"
 )
 
 func TestJSON(t *testing.T) {
-	os.Chdir("../..")
-	synchs := Synchs{SynchMap: make(map[string]*Synch)}
-	synchs.ImportJSON()
+	// os.Chdir("../../..")
+	// synchs := Synchs{SynchMap: make(map[string]*Synch)}
+	// synchs.ImportJSON()
 }
 
-func TestVectorParsing(t *testing.T) {
-	var vector *Vector = &Vector{}
-	example := "example1 <=> example2"
-	vector.Parse(&example)
-	parsedCorrectly := (vector.Column1 == "example1" && vector.Column2 == "example2" && vector.Dir == "<=>")
-	if !parsedCorrectly {
-		t.Error("Vector hasn't been parsed correctly.")
+func TestDir(t *testing.T) {
+	files, err := ioutil.ReadDir("../../../config/synch-configs")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		fmt.Println(f.Name())
 	}
 }

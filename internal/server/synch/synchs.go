@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -12,8 +13,32 @@ type Synchs struct {
 	SynchMap map[string]*Synch
 }
 
-func (s *Synchs) ImportJSON() {
-	synchFilePath, _ := filepath.Abs("./config/synch.json")
+func (s *Synchs) ImportJSONDir() {
+	configFiles, err := ioutil.ReadDir("./config/synch-configs")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("----------------")
+	fmt.Println("Synchs:")
+	for _, configFile := range configFiles {
+		synchData := s.ImportJSONFile(configFile.Name())
+
+		// Don't load inactive synchs.
+		if !synchData.Active {
+			continue
+		}
+
+		s.SynchMap[synchData.Name] = &Synch{synch: &synchData}
+		fmt.Println("Config file name: " + configFile.Name())
+		fmt.Println(synchData)
+	}
+	fmt.Println("----------------")
+
+}
+
+func (s *Synchs) ImportJSONFile(fileName string) SynchData {
+	synchFilePath, _ := filepath.Abs("./config/synch-configs/" + fileName)
 
 	synchFile, err := os.Open(synchFilePath)
 	if err != nil {
@@ -27,42 +52,11 @@ func (s *Synchs) ImportJSON() {
 		panic(err)
 	}
 
-	var synchs map[string]json.RawMessage
-	var synchsArray []SynchData
+	var synch SynchData
 
-	json.Unmarshal(byteArray, &synchs)
-	json.Unmarshal(synchs["synch"], &synchsArray)
+	json.Unmarshal(byteArray, &synch)
 
-	fmt.Println("----------------")
-	fmt.Println("Synchs:")
-	for i := 0; i < len(synchsArray); i++ {
-
-		// Convert string arrays of vestors into Vector arrays.
-		for j := 0; j < len(synchsArray[i].Tables); j++ {
-
-			for k := 0; k < len(synchsArray[i].Tables[j].Vectors); k++ {
-				pair := synchsArray[i].Tables[j].Vectors[k].(string)
-				synchsArray[i].Tables[j].Vectors[k] = Vector{}
-				v := synchsArray[i].Tables[j].Vectors[k].(Vector)
-				vPtr := &v
-				vPtr.Parse(&pair)
-			}
-
-			if synchsArray[i].Tables[j].Connection.InitialVector != nil {
-				pair := synchsArray[i].Tables[j].Connection.InitialVector.(string)
-				synchsArray[i].Tables[j].Connection.InitialVector = Vector{}
-				v := synchsArray[i].Tables[j].Connection.InitialVector.(Vector)
-				vPtr := &v
-				vPtr.Parse(&pair)
-			}
-
-		}
-
-		s.SynchMap[synchsArray[i].Name] = &Synch{synch: &synchsArray[i]}
-		fmt.Println(synchsArray[i])
-
-	}
-	fmt.Println("----------------")
+	return synch
 }
 
 func (s *Synchs) ValidateJSON() {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func JSONField(fieldValue interface{}, fieldName string, ignore string) string {
+func JSONField(fieldValue interface{}, fieldName string) string {
 	var invalid string
 	switch fieldValue.(type) {
 	case int:
@@ -17,11 +17,11 @@ func JSONField(fieldValue interface{}, fieldName string, ignore string) string {
 			invalid = fieldName
 		}
 	case []string:
-		if len(fieldValue.([]string)) < 2 && fieldName != ignore {
+		if len(fieldValue.([]string)) < 2 {
 			return fieldName
 		}
 		for i, val := range fieldValue.([]string) {
-			if JSONField(val, strconv.Itoa(i), "") != "" {
+			if JSONField(val, strconv.Itoa(i)) != "" {
 				return fieldName
 			}
 		}
@@ -29,13 +29,13 @@ func JSONField(fieldValue interface{}, fieldName string, ignore string) string {
 	return invalid
 }
 
-func JSONStruct(structure interface{}, ignore string) {
+func JSONStruct(structure interface{}) {
 	fieldValue := reflect.ValueOf(structure)
 	fieldType := fieldValue.Type()
 
 	for i := 0; i < fieldValue.NumField(); i++ {
 
-		if invalidField := JSONField(fieldValue.Field(i).Interface(), fieldType.Field(i).Name, ignore); invalidField != "" {
+		if invalidField := JSONField(fieldValue.Field(i).Interface(), fieldType.Field(i).Name); invalidField != "" {
 			panic(invalidField + " is invalid.")
 		}
 
