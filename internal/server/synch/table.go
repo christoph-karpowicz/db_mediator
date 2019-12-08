@@ -21,4 +21,6 @@ type Table struct {
 	Keys     TableSpecifics `json:"primaryKeys"`
 	Settings Settings       `json:"settings"`
 	Vectors  []Vector       `json:"vectors"`
+	Db1Data  []map[string]interface{}
+	Db2Data  []map[string]interface{}
 }

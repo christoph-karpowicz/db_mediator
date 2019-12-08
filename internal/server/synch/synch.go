@@ -1,10 +1,6 @@
 package synch
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 )
 
@@ -23,36 +19,17 @@ func (s *Synch) SetDatabases(DBMap map[string]*db.Database) {
 		panic(s.synch.Name + " database config is invalid.")
 	}
 	s.database1 = DBMap[s.synch.Databases.Db1.Name]
+	(*s.database1).Init()
 	s.database2 = DBMap[s.synch.Databases.Db2.Name]
+	(*s.database2).Init()
 }
 
 func (s *Synch) SelectData() {
-	var db1Data *db.DatabaseData = (*s.database1).GetData()
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		db1Data.Host, db1Data.Port, db1Data.User, db1Data.Password, db1Data.Name)
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		panic(err)
+	// Select all data from all tables.
+	for _, table := range s.synch.Tables {
+		table.Db1Data = (*s.database1).SelectAll(table.Names.Table1)
+		table.Db2Data = (*s.database2).SelectAll(table.Names.Table2)
 	}
 
-	fmt.Println("Successfully connected!")
-
-	rows, err := db.Query(`SELECT film_id, title FROM film WHERE title ILIKE 'Des%'`)
-	for rows.Next() {
-		var id string
-		var title string
-
-		if err := rows.Scan(&id, &title); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("id: %s, title: %s\n", id, title)
-	}
 }
