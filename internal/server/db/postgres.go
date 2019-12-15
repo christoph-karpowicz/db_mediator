@@ -20,7 +20,9 @@ func (d *PostgresDatabase) Init() {
 		d.DB.Host, d.DB.Port, d.DB.User, d.DB.Password, d.DB.Name)
 }
 
-func (d *PostgresDatabase) SelectAll(tableName string) []map[string]interface{} {
+func (d *PostgresDatabase) Select(tableName string, conditions string) []map[string]interface{} {
+	var allRecords []map[string]interface{}
+
 	d.TestConnection()
 
 	database, err := sql.Open("postgres", d.connectionString)
@@ -29,7 +31,13 @@ func (d *PostgresDatabase) SelectAll(tableName string) []map[string]interface{} 
 	}
 	defer database.Close()
 
-	rows, err := database.Query(fmt.Sprintf(`SELECT * FROM %s WHERE title ILIKE 'Des%%'`, tableName))
+	if conditions != "" {
+		conditions = fmt.Sprintf(` WHERE %s`, conditions)
+	}
+
+	query := fmt.Sprintf(`SELECT * FROM %s%s`, tableName, conditions)
+
+	rows, err := database.Query(query)
 	if err != nil {
 		panic(err)
 	}
@@ -52,16 +60,18 @@ func (d *PostgresDatabase) SelectAll(tableName string) []map[string]interface{} 
 
 		// Create our map, and retrieve the value for each column from the pointers slice,
 		// storing it in the map with the name of the column as the key.
-		m := make(map[string]interface{})
+		record := make(map[string]interface{})
 		for i, colName := range cols {
 			val := columnPointers[i].(*interface{})
-			m[colName] = *val
+			record[colName] = *val
 		}
 
 		// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
-		fmt.Println(m)
+		// fmt.Println(record)
+		allRecords = append(allRecords, record)
 	}
-	return nil
+
+	return allRecords
 }
 
 func (d *PostgresDatabase) TestConnection() {

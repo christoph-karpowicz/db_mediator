@@ -35,7 +35,7 @@ func (s *SynchData) Validate() {
 		for _, vector := range table.Vectors {
 			validationUtil.JSONStruct(vector)
 			validationUtil.JSONStruct(vector.ColumnNames)
-			validationUtil.JSONStruct(vector.Wheres)
+			validationUtil.JSONStruct(vector.Conditions)
 		}
 	}
 }

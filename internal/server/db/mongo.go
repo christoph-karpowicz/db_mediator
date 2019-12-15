@@ -54,36 +54,47 @@ func (d *MongoDatabase) Init() {
 	d.close = cancel
 }
 
-func (d *MongoDatabase) SelectAll(tableName string) []map[string]interface{} {
-	defer d.close()
+func (d *MongoDatabase) Select(tableName string, conditions string) []map[string]interface{} {
+	var allDocuments []map[string]interface{}
+
+	// defer d.close()
 
 	d.TestConnection()
 
 	client := d.GetClient()
 	collection := client.Database(d.DB.Name).Collection(tableName)
 
-	cur, err := collection.Find(d.ctx, bson.D{{}})
+	// conditions = "{\"ext_id\": 7, \"Title\": \"AFRICAN EGG\"}"
+	var bsonConditions interface{}
+	if conditions != "" {
+		err := bson.UnmarshalExtJSON([]byte(conditions), true, &bsonConditions)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		bsonConditions = bson.M{}
+	}
+
+	cur, err := collection.Find(d.ctx, bsonConditions)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var allDocuments []map[string]interface{}
-
 	for cur.Next(context.TODO()) {
-		var booksResultHolder map[string]interface{} = make(map[string]interface{})
-		err := cur.Decode(booksResultHolder)
+		var documentMap map[string]interface{} = make(map[string]interface{})
+		err := cur.Decode(documentMap)
 		if err != nil {
 			log.Fatal(err)
 		}
-		allDocuments = append(allDocuments, booksResultHolder)
+		allDocuments = append(allDocuments, documentMap)
 	}
 
 	defer cur.Close(context.TODO())
 
-	for _, element := range allDocuments {
-		book := element
-		fmt.Println(book)
-	}
+	// for _, element := range allDocuments {
+	// 	book := element
+	// 	fmt.Println(book)
+	// }
 
 	return allDocuments
 }

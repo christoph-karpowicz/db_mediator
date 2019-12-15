@@ -1,7 +1,10 @@
 package synch
 
 type Vector struct {
-	ColumnNames TableSpecifics
-	DataFlow    string
-	Wheres      TableSpecifics
+	ColumnNames      TableSpecifics `json:"columnNames"`
+	DataFlow         string         `json:"dataFlow"`
+	Conditions       TableSpecifics `json:"conditions"`
+	Db1ActiveRecords []*Record
+	Db2ActiveRecords []*Record
+	Pairs            []Pair
 }
