@@ -1,6 +1,7 @@
 package synch
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -26,30 +27,58 @@ func (s *Synch) SetDatabases(DBMap map[string]*db.Database) {
 	(*s.database2).Init()
 }
 
+func (s *Synch) PairData() {
+	for _, table := range s.synch.Tables {
+		for _, vector := range table.Vectors {
+			// For each active record in database1 find a corresponding acitve record in database2.
+			fmt.Println(table.Names.Table1)
+			fmt.Println(table.Names.Table2)
+			fmt.Println(table.Db1Records)
+			for _, DB1_record := range vector.Db1ActiveRecords {
+				for _, DB2_record := range vector.Db2ActiveRecords {
+
+					if table.Settings.SynchType.MatchBy == "external_id_columns" {
+						var DB1_externalIdColumnName string = table.Settings.SynchType.ColumnNames.Table1
+						var DB2_externalIdColumnName string = table.Settings.SynchType.ColumnNames.Table2
+						if DB1_record.Data[DB1_externalIdColumnName] == DB2_record.Data[DB2_externalIdColumnName] {
+							var newPair Pair = Pair{record1: DB1_record, record2: DB2_record}
+							vector.Pairs = append(vector.Pairs, newPair)
+						}
+					}
+
+				}
+			}
+			for _, pair := range vector.Pairs {
+				fmt.Printf("rec1: %s, rec2: %s\n", pair.record1.Data, pair.record2.Data)
+				fmt.Println("======")
+			}
+		}
+	}
+}
+
 func (s *Synch) SelectData() {
 
 	// Select all records from all tables.
 	for _, table := range s.synch.Tables {
-		rawDb1Records := (*s.database1).Select(table.Names.Table1, "")
-		rawDb2Records := (*s.database2).Select(table.Names.Table2, "")
-		table.Db1Records = TableRecords{records: MapToRecords(rawDb1Records)}
-		table.Db2Records = TableRecords{records: MapToRecords(rawDb2Records)}
+		DB1_rawRecords := (*s.database1).Select(table.Names.Table1, "")
+		DB2_rawRecords := (*s.database2).Select(table.Names.Table2, "")
+		table.Db1Records = &TableRecords{records: MapToRecords(DB1_rawRecords)}
+		table.Db2Records = &TableRecords{records: MapToRecords(DB2_rawRecords)}
 
 		for _, vector := range table.Vectors {
-			rawDb1ActiveRecords := (*s.database1).Select(table.Names.Table1, vector.Conditions.Table1)
-			rawDb2ActiveRecords := (*s.database2).Select(table.Names.Table2, vector.Conditions.Table2)
-			for _, db1record := range rawDb1ActiveRecords {
-				db1recordPointer := table.Db1Records.FindRecordPointer(db1record)
-				vector.Db1ActiveRecords = append(vector.Db1ActiveRecords, db1recordPointer)
+			DB1_rawActiveRecords := (*s.database1).Select(table.Names.Table1, vector.Conditions.Table1)
+			DB2_rawActiveRecords := (*s.database2).Select(table.Names.Table2, vector.Conditions.Table2)
+			for _, DB1_record := range DB1_rawActiveRecords {
+				DB1_recordPointer := table.Db1Records.FindRecordPointer(DB1_record)
+				vector.Db1ActiveRecords = append(vector.Db1ActiveRecords, DB1_recordPointer)
 			}
-			for _, db2record := range rawDb2ActiveRecords {
-				db2recordPointer := table.Db2Records.FindRecordPointer(db2record)
-				vector.Db2ActiveRecords = append(vector.Db2ActiveRecords, db2recordPointer)
-				log.Println(*db2recordPointer)
+			for _, DB2_record := range DB2_rawActiveRecords {
+				DB2_recordPointer := table.Db2Records.FindRecordPointer(DB2_record)
+				vector.Db2ActiveRecords = append(vector.Db2ActiveRecords, DB2_recordPointer)
+				// log.Println(*db2recordPointer)
 			}
 			log.Println(vector.Db1ActiveRecords)
-			// 	vector.Db1ActiveRecords = MapToRecords(rawDb1ActiveRecords)
-			// 	vector.Db2ActiveRecords = MapToRecords(rawDb2ActiveRecords)
+			log.Println(vector.Db2ActiveRecords)
 		}
 	}
 

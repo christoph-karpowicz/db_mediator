@@ -40,8 +40,9 @@ func (a *Application) synchronize(synchType string, synchKey string) {
 
 	synch.SetDatabases(a.dbs.DBMap)
 	synch.SelectData()
+	synch.PairData()
 
-	fmt.Println(*synch)
+	// fmt.Println(*synch)
 }
 
 func (a *Application) synchronizeArray(synchType string, synchKeys []string) {
