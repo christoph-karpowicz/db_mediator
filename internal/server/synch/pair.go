@@ -1,9 +1,8 @@
 package synch
 
 type Pair struct {
-	record1    *Record
-	record2    *Record
-	IsComplete bool
+	record1 *Record
+	record2 *Record
 }
 
 func (p *Pair) Synchronize() {

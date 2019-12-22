@@ -17,10 +17,12 @@ type Settings struct {
 }
 
 type Table struct {
-	Names      TableSpecifics `json:"names"`
-	Keys       TableSpecifics `json:"primaryKeys"`
-	Settings   Settings       `json:"settings"`
-	Vectors    []Vector       `json:"vectors"`
-	Db1Records TableRecords
-	Db2Records TableRecords
+	Names         TableSpecifics `json:"names"`
+	Keys          TableSpecifics `json:"primaryKeys"`
+	Settings      Settings       `json:"settings"`
+	Vectors       []Vector       `json:"vectors"`
+	Db1OldRecords *TableRecords
+	Db2OldRecords *TableRecords
+	Db1Records    *TableRecords
+	Db2Records    *TableRecords
 }

@@ -37,9 +37,8 @@ func (a *Application) synchronize(synchType string, synchKey string) {
 		panic("Synch '" + synchKey + "' not found.")
 	}
 
-	synch.SetDatabases(a.dbs.DBMap)
-	synch.SelectData()
-	synch.PairData()
+	synch.Init(a.dbs.DBMap)
+	synch.SynchPairs()
 
 	// fmt.Println(*synch)
 }

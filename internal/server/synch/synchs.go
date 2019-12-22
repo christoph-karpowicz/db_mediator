@@ -29,7 +29,7 @@ func (s *Synchs) ImportJSONDir() {
 			continue
 		}
 
-		s.SynchMap[synchData.Name] = &Synch{synch: &synchData}
+		s.SynchMap[synchData.Name] = &Synch{synch: &synchData, initial: true}
 		fmt.Println("Config file name: " + configFile.Name())
 		fmt.Println(synchData)
 	}
