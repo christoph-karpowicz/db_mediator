@@ -36,8 +36,6 @@ func (h *StartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("h.app.Lang::::::")
-	fmt.Println(h.app.Lang)
 	h.app.Lang = "test222222"
 	count++
 	// go tst(count, &w)

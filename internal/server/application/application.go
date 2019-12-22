@@ -22,7 +22,6 @@ func (a *Application) Init() {
 	a.synchs.ImportJSONDir()
 	a.synchs.ValidateJSON()
 
-	a.Lang = "sdsadsdsad"
 	a.listen()
 }
 
