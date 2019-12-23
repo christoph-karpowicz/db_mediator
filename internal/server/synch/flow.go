@@ -1,6 +1,8 @@
 package synch
 
 type Flow struct {
-	source *Record
-	target *Record
+	sourceColumnName string
+	targetColumnName string
+	source           *Record
+	target           *Record
 }

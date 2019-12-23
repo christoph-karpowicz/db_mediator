@@ -117,10 +117,10 @@ func isUnsignedInt(val reflect.Kind) bool {
 	return false
 }
 
-func MapToRecords(mapRecordArray []map[string]interface{}) []Record {
+func MapToRecords(mapRecordArray []map[string]interface{}, key string) []Record {
 	var recordArray []Record = make([]Record, 0)
 	for _, mapRecord := range mapRecordArray {
-		record := Record{Data: mapRecord}
+		record := Record{Data: mapRecord, Key: key}
 		recordArray = append(recordArray, record)
 	}
 	return recordArray

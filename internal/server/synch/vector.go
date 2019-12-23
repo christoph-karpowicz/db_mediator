@@ -18,40 +18,59 @@ type Vector struct {
 
 // For each active record in database1 find a corresponding acitve record in database2.
 func (v *Vector) CreatePairs(settings Settings) {
-	for i := range v.Db1ActiveRecords {
-		DB1_record := v.Db1ActiveRecords[i]
-		for j := range v.Db2ActiveRecords {
-			DB2_record := v.Db2ActiveRecords[j]
+	var sourceRecords []*Record
+	var targetRecords []*Record
+	var isBidirectional bool = false
+
+	if v.DataFlow == "=>" || v.DataFlow == "<=>*" {
+		sourceRecords = v.Db1ActiveRecords
+		targetRecords = v.Db2ActiveRecords
+	} else {
+		sourceRecords = v.Db2ActiveRecords
+		targetRecords = v.Db1ActiveRecords
+	}
+
+	if v.DataFlow == "*<=>" || v.DataFlow == "<=>*" {
+		isBidirectional = true
+	}
+
+	for i := range sourceRecords {
+		source := sourceRecords[i]
+		var pairFound bool = false
+		for j := range targetRecords {
+			target := targetRecords[j]
 
 			if settings.SynchType.MatchBy == "external_id_columns" {
-				var DB1_externalIdColumnName string = settings.SynchType.ColumnNames.Table1
-				var DB2_externalIdColumnName string = settings.SynchType.ColumnNames.Table2
-				DB1_externalId, DB1_ok := DB1_record.Data[DB1_externalIdColumnName]
-				DB2_externalId, DB2_ok := DB2_record.Data[DB2_externalIdColumnName]
+				var sourceExternalIdColumnName string = settings.SynchType.ColumnNames.Table1
+				var targetExternalIdColumnName string = settings.SynchType.ColumnNames.Table2
+				sourceExternalId, sourceOk := source.Data[sourceExternalIdColumnName]
+				targetExternalId, targetOk := target.Data[targetExternalIdColumnName]
 
-				if !DB1_ok || !DB2_ok {
+				if !sourceOk || !targetOk {
 					continue
 				}
 
-				if areEqual, err := AreEqual(DB1_externalId, DB2_externalId); err != nil {
+				if areEqual, err := AreEqual(sourceExternalId, targetExternalId); err != nil {
 					log.Println(err)
 				} else if areEqual {
-					newPair, err := CreatePair(DB1_record, DB2_record, v.DataFlow)
-					if err != nil {
-						log.Println(err)
-					}
-
+					newPair := CreatePair(source, target, v.DataFlow, v.ColumnNames)
 					v.Pairs = append(v.Pairs, newPair)
-					DB1_record.PairedIn = append(DB1_record.PairedIn, v)
-					DB2_record.PairedIn = append(DB2_record.PairedIn, v)
+					pairFound = true
+					source.PairedIn = append(source.PairedIn, v)
+					target.PairedIn = append(target.PairedIn, v)
 				}
 			}
-
+		}
+		if !pairFound && isBidirectional {
+			newPair := CreatePair(source, nil, v.DataFlow, v.ColumnNames)
+			v.Pairs = append(v.Pairs, newPair)
 		}
 	}
 	for _, pair := range v.Pairs {
 		fmt.Printf("rec1: %s\n", pair.primaryFlow.source.Data)
-		fmt.Printf("rec2: %s\n", pair.primaryFlow.target.Data)
+		if pair.IsComplete {
+			fmt.Printf("rec2: %s\n", pair.primaryFlow.target.Data)
+		}
 		fmt.Println("======")
 	}
 }

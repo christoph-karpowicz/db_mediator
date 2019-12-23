@@ -1,32 +1,69 @@
 package synch
 
-import "errors"
+import (
+	"log"
+
+	"github.com/christoph-karpowicz/unifier/internal/server/db"
+)
 
 type Pair struct {
 	primaryFlow   Flow
 	secondaryFlow Flow
+	IsComplete    bool
 }
 
-func CreatePair(rec1 *Record, rec2 *Record, flowSymbol string) (Pair, error) {
-	var newPair Pair
+func (p *Pair) Synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
+	// Updates
+	if p.IsComplete {
+		if p.primaryFlow.sourceColumnName != "*" && p.primaryFlow.targetColumnName != "*" {
+			source := p.primaryFlow.source
+			target := p.primaryFlow.target
+			sourceColumnValue := source.Data[p.primaryFlow.sourceColumnName]
+			targetColumnValue := target.Data[p.primaryFlow.targetColumnName]
 
-	if flowSymbol == "<=" || flowSymbol == "=>" {
-		if flowSymbol == "<=" {
-			newPair.primaryFlow = Flow{source: rec2, target: rec1}
-		} else {
-			newPair.primaryFlow = Flow{source: rec1, target: rec2}
+			if areEqual, err := AreEqual(sourceColumnValue, targetColumnValue); err != nil {
+				log.Println(err)
+			} else if !areEqual {
+				(*db2).Update(target.Key, sourceColumnValue)
+				// log.Println(sourceColumnValue)
+				// log.Println(targetColumnValue)
+			}
 		}
-		return newPair, nil
-	} else if flowSymbol == "*<=>" || flowSymbol == "<=>*" {
-		if flowSymbol == "*<=>" {
-			newPair.primaryFlow = Flow{source: rec2, target: rec1}
-			newPair.secondaryFlow = Flow{source: rec1, target: rec2}
-		} else {
-			newPair.primaryFlow = Flow{source: rec1, target: rec2}
-			newPair.secondaryFlow = Flow{source: rec2, target: rec1}
-		}
-		return newPair, nil
+		// Inserts
+	} else {
+
 	}
 
-	return newPair, errors.New("Unknown data flow direction.")
+	// if secondaryFlow != nil {
+
+	// }
+	return false, nil
+}
+
+func CreatePair(source *Record, target *Record, flowSymbol string, columnNames TableSpecifics) Pair {
+	var newPair Pair
+
+	newPair.primaryFlow = Flow{
+		source:           source,
+		target:           target,
+		sourceColumnName: columnNames.Table1,
+		targetColumnName: columnNames.Table2,
+	}
+
+	if flowSymbol == "*<=>" || flowSymbol == "<=>*" {
+		newPair.secondaryFlow = Flow{
+			source:           source,
+			target:           target,
+			sourceColumnName: columnNames.Table1,
+			targetColumnName: columnNames.Table2,
+		}
+	}
+
+	if target != nil {
+		newPair.IsComplete = true
+	} else {
+		newPair.IsComplete = false
+	}
+
+	return newPair
 }

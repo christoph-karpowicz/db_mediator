@@ -90,3 +90,7 @@ func (d *PostgresDatabase) TestConnection() {
 
 	fmt.Println("Successfully connected!")
 }
+
+func (d *PostgresDatabase) Update(key interface{}, val interface{}) (bool, error) {
+	return false, nil
+}

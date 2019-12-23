@@ -42,9 +42,6 @@ func (d *Databases) ImportJSON() {
 		switch dbType := databasesArray[i].Type; dbType {
 		case "mongo":
 			database = &MongoDatabase{DB: &databasesArray[i]}
-			dbb := database.(*MongoDatabase)
-			dbb.Tst = 2222222222
-			fmt.Println(dbb.Tst)
 		case "postgres":
 			database = &PostgresDatabase{DB: &databasesArray[i]}
 		default:
@@ -63,16 +60,6 @@ func (d *Databases) ValidateJSON() {
 	fmt.Println("Database JSON file validation...")
 	for _, database := range d.DBMap {
 		(*database).GetData().Validate()
-		// switch database.(type) {
-		// case *PostgresDatabase:
-		// 	db_ptr := database.(*PostgresDatabase)
-		// 	fmt.Println(db_ptr.DB)
-		// 	fmt.Println(db_ptr.GetData())
-		// case *MongoDatabase:
-		// 	db_ptr := database.(*MongoDatabase)
-		// 	fmt.Println(db_ptr.GetData())
-
-		// }
 	}
 	fmt.Println("...passed.")
 }

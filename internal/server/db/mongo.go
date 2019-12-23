@@ -14,7 +14,6 @@ import (
 
 type MongoDatabase struct {
 	DB               *DatabaseData
-	Tst              int
 	connectionString string
 	ctx              context.Context
 	close            context.CancelFunc
@@ -106,4 +105,10 @@ func (d *MongoDatabase) TestConnection() {
 	} else {
 		log.Println("Connected!")
 	}
+}
+
+func (d *MongoDatabase) Update(key interface{}, val interface{}) (bool, error) {
+	log.Println(key)
+	log.Println(val)
+	return false, nil
 }

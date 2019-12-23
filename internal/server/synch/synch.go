@@ -48,8 +48,8 @@ func (s *Synch) selectData() {
 			table.Db2OldRecords = table.Db2Records
 		}
 
-		table.Db1Records = &TableRecords{records: MapToRecords(DB1_rawRecords)}
-		table.Db2Records = &TableRecords{records: MapToRecords(DB2_rawRecords)}
+		table.Db1Records = &TableRecords{records: MapToRecords(DB1_rawRecords, table.Keys.Table1)}
+		table.Db2Records = &TableRecords{records: MapToRecords(DB2_rawRecords, table.Keys.Table2)}
 
 		for j, _ := range table.Vectors {
 			var vector *Vector = &table.Vectors[j]
@@ -89,20 +89,19 @@ func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
 }
 
 func (s *Synch) SynchPairs() {
-	// for i := range s.synch.Tables {
-	// 	var table *Table = &s.synch.Tables[i]
+	for i := range s.synch.Tables {
+		var table *Table = &s.synch.Tables[i]
 
-	// 	for j := range table.Vectors {
-	// 		var vector *Vector = &table.Vectors[j]
+		for j := range table.Vectors {
+			var vector *Vector = &table.Vectors[j]
 
-	// 		for k := range vector.Pairs {
-	// 			var pair *Pair = vector.Pairs[k]
-
-	// 			switch vector.DataFlow {
-	// 			case "=>":
-
-	// 			}
-	// 		}
-	// 	}
-	// }
+			for k := range vector.Pairs {
+				var pair *Pair = &vector.Pairs[k]
+				_, err := pair.Synchronize(s.database1, s.database2)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+		}
+	}
 }
