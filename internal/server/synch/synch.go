@@ -10,6 +10,7 @@ type Synch struct {
 	synch     *SynchData
 	database1 *db.Database
 	database2 *db.Database
+	running   bool
 	initial   bool
 }
 
@@ -55,19 +56,18 @@ func (s *Synch) selectData() {
 			DB1_rawActiveRecords := (*s.database1).Select(table.Names.Table1, vector.Conditions.Table1)
 			DB2_rawActiveRecords := (*s.database2).Select(table.Names.Table2, vector.Conditions.Table2)
 
+			if !s.initial {
+				vector.Db1OldActiveRecords = vector.Db1ActiveRecords
+				vector.Db2OldActiveRecords = vector.Db2ActiveRecords
+			}
+
 			for _, DB1_record := range DB1_rawActiveRecords {
 				DB1_recordPointer := table.Db1Records.FindRecordPointer(DB1_record)
-				if !s.initial {
-					vector.Db1OldActiveRecords = vector.Db1ActiveRecords
-				}
 				vector.Db1ActiveRecords = append(vector.Db1ActiveRecords, DB1_recordPointer)
 				DB1_recordPointer.ActiveIn = append(DB1_recordPointer.ActiveIn, vector)
 			}
 			for _, DB2_record := range DB2_rawActiveRecords {
 				DB2_recordPointer := table.Db2Records.FindRecordPointer(DB2_record)
-				if !s.initial {
-					vector.Db2OldActiveRecords = vector.Db2ActiveRecords
-				}
 				vector.Db2ActiveRecords = append(vector.Db2ActiveRecords, DB2_recordPointer)
 				DB2_recordPointer.ActiveIn = append(DB2_recordPointer.ActiveIn, vector)
 			}
@@ -89,20 +89,20 @@ func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
 }
 
 func (s *Synch) SynchPairs() {
-	for i := range s.synch.Tables {
-		var table *Table = &s.synch.Tables[i]
+	// for i := range s.synch.Tables {
+	// 	var table *Table = &s.synch.Tables[i]
 
-		for j := range table.Vectors {
-			var vector *Vector = &table.Vectors[j]
+	// 	for j := range table.Vectors {
+	// 		var vector *Vector = &table.Vectors[j]
 
-			for k := range vector.Pairs {
-				var pair *Pair = vector.Pairs[k]
+	// 		for k := range vector.Pairs {
+	// 			var pair *Pair = vector.Pairs[k]
 
-				switch vector.DataFlow {
-				case "=>":
+	// 			switch vector.DataFlow {
+	// 			case "=>":
 
-				}
-			}
-		}
-	}
+	// 			}
+	// 		}
+	// 	}
+	// }
 }

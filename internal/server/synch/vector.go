@@ -36,8 +36,14 @@ func (v *Vector) CreatePairs(settings Settings) {
 				if areEqual, err := AreEqual(DB1_externalId, DB2_externalId); err != nil {
 					log.Println(err)
 				} else if areEqual {
-					var newPair Pair = Pair{record1: DB1_record, record2: DB2_record}
-					v.Pairs = append(v.Pairs, newPair)
+					newPairs, err := CreatePair(DB1_record, DB2_record, v.DataFlow)
+					if err != nil {
+						log.Println(err)
+					}
+
+					for _, pair := range newPairs {
+						v.Pairs = append(v.Pairs, pair)
+					}
 					DB1_record.PairedIn = append(DB1_record.PairedIn, v)
 					DB2_record.PairedIn = append(DB2_record.PairedIn, v)
 				}
@@ -46,8 +52,8 @@ func (v *Vector) CreatePairs(settings Settings) {
 		}
 	}
 	for _, pair := range v.Pairs {
-		fmt.Printf("rec1: %s\n", pair.record1.Data)
-		fmt.Printf("rec2: %s\n", pair.record2.Data)
+		fmt.Printf("rec1: %s\n", pair.GetSource().Data)
+		fmt.Printf("rec2: %s\n", pair.GetTarget().Data)
 		fmt.Println("======")
 	}
 }
