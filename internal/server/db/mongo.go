@@ -115,8 +115,20 @@ func (d *mongoDatabase) TestConnection() {
 }
 
 // Update updates a document with the privided key.
-func (d *mongoDatabase) Update(key interface{}, column string, val interface{}) (bool, error) {
-	log.Println(key)
-	log.Println(val)
+func (d *mongoDatabase) Update(table string, key interface{}, column string, val interface{}) (bool, error) {
+	client := d.GetClient()
+	collection := client.Database(d.DB.Name).Collection(table)
+	filter := bson.D{{"name", "Ash"}}
+	update := bson.D{
+		{"$inc", bson.D{
+			{"age", 1},
+		}},
+	}
+
+	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(updateResult)
 	return false, nil
 }

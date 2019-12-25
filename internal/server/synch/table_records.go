@@ -3,6 +3,7 @@ package synch
 import "reflect"
 
 type tableRecords struct {
+	table   *table
 	records []record
 }
 

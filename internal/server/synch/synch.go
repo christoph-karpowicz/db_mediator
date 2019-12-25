@@ -22,23 +22,24 @@ func (s *synch) Init(DBMap map[string]*db.Database) {
 	s.setDatabases(DBMap)
 	s.selectData()
 	s.pairData()
+	s.setParentPointers()
 }
 
-// Pairs together records that are going to be synchronized.
+// pairData pairs together records that are going to be synchronized.
 func (s *synch) pairData() {
-	for i, _ := range s.synch.Tables {
+	for i := range s.synch.Tables {
 		var table *table = &s.synch.Tables[i]
 
-		for j, _ := range table.Vectors {
+		for j := range table.Vectors {
 			var vector *vector = &table.Vectors[j]
-			vector.createPairs(table.Settings)
+			vector.createPairs()
 		}
 	}
 }
 
 // Selects all records from all tables and filters them to get the relevant records.
 func (s *synch) selectData() {
-	for i, _ := range s.synch.Tables {
+	for i := range s.synch.Tables {
 		var table *table = &s.synch.Tables[i]
 		DB1_rawRecords := (*s.database1).Select(table.Names.Table1, "-")
 		DB2_rawRecords := (*s.database2).Select(table.Names.Table2, "-")
@@ -51,7 +52,7 @@ func (s *synch) selectData() {
 		table.Db1Records = &tableRecords{records: mapToRecords(DB1_rawRecords, table.Keys.Table1)}
 		table.Db2Records = &tableRecords{records: mapToRecords(DB2_rawRecords, table.Keys.Table2)}
 
-		for j, _ := range table.Vectors {
+		for j := range table.Vectors {
 			var vector *vector = &table.Vectors[j]
 			DB1_rawActiveRecords := (*s.database1).Select(table.Names.Table1, vector.Conditions.Table1)
 			DB2_rawActiveRecords := (*s.database2).Select(table.Names.Table2, vector.Conditions.Table2)
@@ -88,6 +89,22 @@ func (s *synch) setDatabases(DBMap map[string]*db.Database) {
 	(*s.database2).Init()
 }
 
+func (s *synch) setParentPointers() {
+	for i := range s.synch.Tables {
+		var table *table = &s.synch.Tables[i]
+
+		for j := range table.Vectors {
+			var vector *vector = &table.Vectors[j]
+			vector.table = table
+
+			for k := range vector.pairs {
+				var pair *pair = &table.Vectors[j].pairs[k]
+				pair.vector = vector
+			}
+		}
+	}
+}
+
 func (s *synch) SynchPairs() {
 	for i := range s.synch.Tables {
 		var table *table = &s.synch.Tables[i]
@@ -95,8 +112,8 @@ func (s *synch) SynchPairs() {
 		for j := range table.Vectors {
 			var vector *vector = &table.Vectors[j]
 
-			for k := range vector.Pairs {
-				var pair *pair = &vector.Pairs[k]
+			for k := range vector.pairs {
+				var pair *pair = &vector.pairs[k]
 				_, err := pair.synchronize(s.database1, s.database2)
 				if err != nil {
 					log.Println(err)

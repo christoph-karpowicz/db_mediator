@@ -1,7 +1,6 @@
 package synch
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"testing"
@@ -19,7 +18,10 @@ func TestDir(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	for _, f := range files {
-		fmt.Println(f.Name())
+	if len(files) == 0 {
+		log.Fatal("no config files")
 	}
+	// for _, f := range files {
+	// 	fmt.Println(f.Name())
+	// }
 }

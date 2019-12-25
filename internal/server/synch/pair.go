@@ -7,6 +7,7 @@ import (
 )
 
 type pair struct {
+	vector        *vector
 	primaryFlow   flow
 	secondaryFlow flow
 	IsComplete    bool
@@ -24,7 +25,7 @@ func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 			if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 				log.Println(err)
 			} else if !areEqual {
-				(*db2).Update(target.Key, p.primaryFlow.targetColumnName, sourceColumnValue)
+				(*db2).Update("", target.Key, p.primaryFlow.targetColumnName, sourceColumnValue)
 				// log.Println(sourceColumnValue)
 				// log.Println(targetColumnValue)
 			}
@@ -52,10 +53,10 @@ func createPair(source *record, target *record, flowSymbol string, columnNames t
 
 	if flowSymbol == "*<=>" || flowSymbol == "<=>*" {
 		newPair.secondaryFlow = flow{
-			source:           source,
-			target:           target,
-			sourceColumnName: columnNames.Table1,
-			targetColumnName: columnNames.Table2,
+			source:           target,
+			target:           source,
+			sourceColumnName: columnNames.Table2,
+			targetColumnName: columnNames.Table1,
 		}
 	}
 

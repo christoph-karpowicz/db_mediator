@@ -6,5 +6,5 @@ type Database interface {
 	Init()
 	Select(tableName string, conditions string) []map[string]interface{}
 	TestConnection()
-	Update(key interface{}, column string, val interface{}) (bool, error)
+	Update(table string, key interface{}, column string, val interface{}) (bool, error)
 }
