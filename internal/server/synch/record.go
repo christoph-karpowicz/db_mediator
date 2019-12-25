@@ -1,8 +1,8 @@
 package synch
 
-type Record struct {
+type record struct {
 	Data     map[string]interface{}
 	Key      string
-	ActiveIn []*Vector
-	PairedIn []*Vector
+	ActiveIn []*vector
+	PairedIn []*vector
 }

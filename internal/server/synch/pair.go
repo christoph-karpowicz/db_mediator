@@ -6,13 +6,13 @@ import (
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 )
 
-type Pair struct {
-	primaryFlow   Flow
-	secondaryFlow Flow
+type pair struct {
+	primaryFlow   flow
+	secondaryFlow flow
 	IsComplete    bool
 }
 
-func (p *Pair) Synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
+func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 	// Updates
 	if p.IsComplete {
 		if p.primaryFlow.sourceColumnName != "*" && p.primaryFlow.targetColumnName != "*" {
@@ -21,10 +21,10 @@ func (p *Pair) Synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 			sourceColumnValue := source.Data[p.primaryFlow.sourceColumnName]
 			targetColumnValue := target.Data[p.primaryFlow.targetColumnName]
 
-			if areEqual, err := AreEqual(sourceColumnValue, targetColumnValue); err != nil {
+			if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 				log.Println(err)
 			} else if !areEqual {
-				(*db2).Update(target.Key, sourceColumnValue)
+				(*db2).Update(target.Key, p.primaryFlow.targetColumnName, sourceColumnValue)
 				// log.Println(sourceColumnValue)
 				// log.Println(targetColumnValue)
 			}
@@ -40,10 +40,10 @@ func (p *Pair) Synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 	return false, nil
 }
 
-func CreatePair(source *Record, target *Record, flowSymbol string, columnNames TableSpecifics) Pair {
-	var newPair Pair
+func createPair(source *record, target *record, flowSymbol string, columnNames tableSpecifics) pair {
+	var newPair pair
 
-	newPair.primaryFlow = Flow{
+	newPair.primaryFlow = flow{
 		source:           source,
 		target:           target,
 		sourceColumnName: columnNames.Table1,
@@ -51,7 +51,7 @@ func CreatePair(source *Record, target *Record, flowSymbol string, columnNames T
 	}
 
 	if flowSymbol == "*<=>" || flowSymbol == "<=>*" {
-		newPair.secondaryFlow = Flow{
+		newPair.secondaryFlow = flow{
 			source:           source,
 			target:           target,
 			sourceColumnName: columnNames.Table1,

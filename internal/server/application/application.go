@@ -1,3 +1,7 @@
+/*
+Package application handles all initializations and
+I/O of the app.
+*/
 package application
 
 import (
@@ -8,17 +12,23 @@ import (
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 )
 
+/*
+Application is the main app object.
+Contains all synchronization and database objects.
+Starts a web server and handles all requests.
+*/
 type Application struct {
 	Lang   string
 	dbs    *db.Databases
 	synchs *synch.Synchs
 }
 
+// Init starts the application.
 func (a *Application) Init() {
 	a.dbs = &db.Databases{DBMap: make(map[string]*db.Database)}
 	a.dbs.ImportJSON()
 	a.dbs.ValidateJSON()
-	a.synchs = &synch.Synchs{SynchMap: make(map[string]*synch.Synch)}
+	a.synchs = synch.CreateSynchs()
 	a.synchs.ImportJSONDir()
 	a.synchs.ValidateJSON()
 
@@ -26,7 +36,7 @@ func (a *Application) Init() {
 }
 
 func (a *Application) listen() {
-	http.Handle("/init", &StartHandler{app: a})
+	http.Handle("/init", &startHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 

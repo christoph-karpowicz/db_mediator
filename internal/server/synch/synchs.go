@@ -1,3 +1,6 @@
+/*
+Package synch handles all data sychronization.
+*/
 package synch
 
 import (
@@ -10,7 +13,7 @@ import (
 )
 
 type Synchs struct {
-	SynchMap map[string]*Synch
+	SynchMap map[string]*synch
 }
 
 func (s *Synchs) ImportJSONDir() {
@@ -29,7 +32,7 @@ func (s *Synchs) ImportJSONDir() {
 			continue
 		}
 
-		s.SynchMap[synchData.Name] = &Synch{synch: &synchData, initial: true}
+		s.SynchMap[synchData.Name] = &synch{synch: &synchData, initial: true}
 		fmt.Println("Config file name: " + configFile.Name())
 		fmt.Println(synchData)
 	}
@@ -37,7 +40,7 @@ func (s *Synchs) ImportJSONDir() {
 
 }
 
-func (s *Synchs) ImportJSONFile(fileName string) SynchData {
+func (s *Synchs) ImportJSONFile(fileName string) synchData {
 	synchFilePath, _ := filepath.Abs("./config/synch-configs/" + fileName)
 
 	synchFile, err := os.Open(synchFilePath)
@@ -52,7 +55,7 @@ func (s *Synchs) ImportJSONFile(fileName string) SynchData {
 		panic(err)
 	}
 
-	var synch SynchData
+	var synch synchData
 
 	json.Unmarshal(byteArray, &synch)
 
@@ -66,4 +69,9 @@ func (s *Synchs) ValidateJSON() {
 		(*synch).GetData().Validate()
 	}
 	fmt.Println("...passed.")
+}
+
+func CreateSynchs() *Synchs {
+	synchs := &Synchs{SynchMap: make(map[string]*synch)}
+	return synchs
 }

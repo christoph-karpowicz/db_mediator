@@ -63,30 +63,32 @@ func (a *Application) SetCLI() {
 	a.CLI = cli.NewApp()
 	a.CLI.Name = "Unifier CLI"
 	a.CLI.Usage = "Database synchronization app."
-	a.CLI.Author = "Krzysztof Karpowicz"
+	// a.CLI.Author = "Krzysztof Karpowicz"
 	a.CLI.Version = "1.0.0"
 
-	a.CLI.Commands = []cli.Command{
+	a.CLI.Commands = []*cli.Command{
 		{
 			Name:    "one-off",
 			Aliases: []string{"oo"},
 			Usage:   "One off synchronization.",
-			Action: func(c *cli.Context) {
-				a.requestSynch("one-off", c.Args()[0])
+			Action: func(c *cli.Context) error {
+				a.requestSynch("one-off", c.Args().Get(0))
+				return nil
 			},
 		},
 		{
 			Name:    "ongoing",
 			Aliases: []string{"ng"},
 			Usage:   "Start ongoing synchronization.",
-			Action: func(c *cli.Context) {
-				a.requestSynch("ongoing", c.Args()[0])
+			Action: func(c *cli.Context) error {
+				a.requestSynch("ongoing", c.Args().Get(0))
+				return nil
 			},
 		},
 	}
 
 	a.CLI.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:        "lang",
 			Value:       "english",
 			Usage:       "language for the greeting",

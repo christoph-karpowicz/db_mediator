@@ -1,3 +1,7 @@
+/*
+Package db contains database configurations and
+methods for querying.
+*/
 package db
 
 import (
@@ -8,10 +12,12 @@ import (
 	"path/filepath"
 )
 
+// Databases imports, validates and holds information about databases from JSON config files.
 type Databases struct {
 	DBMap map[string]*Database
 }
 
+// ImportJSON parses and saves JSON config files.
 func (d *Databases) ImportJSON() {
 	databasesFilePath, _ := filepath.Abs("./config/databases.json")
 
@@ -28,7 +34,7 @@ func (d *Databases) ImportJSON() {
 	}
 
 	var databases map[string]json.RawMessage
-	var databasesArray []DatabaseData
+	var databasesArray []databaseData
 
 	json.Unmarshal(byteArray, &databases)
 	json.Unmarshal(databases["databases"], &databasesArray)
@@ -41,9 +47,9 @@ func (d *Databases) ImportJSON() {
 		fmt.Println(databasesArray[i].Type)
 		switch dbType := databasesArray[i].Type; dbType {
 		case "mongo":
-			database = &MongoDatabase{DB: &databasesArray[i]}
+			database = &mongoDatabase{DB: &databasesArray[i]}
 		case "postgres":
-			database = &PostgresDatabase{DB: &databasesArray[i]}
+			database = &postgresDatabase{DB: &databasesArray[i]}
 		default:
 			database = nil
 		}
@@ -56,6 +62,7 @@ func (d *Databases) ImportJSON() {
 	fmt.Println("----------------")
 }
 
+// ValidateJSON calls validation method on each database data object.
 func (d *Databases) ValidateJSON() {
 	fmt.Println("Database JSON file validation...")
 	for _, database := range d.DBMap {

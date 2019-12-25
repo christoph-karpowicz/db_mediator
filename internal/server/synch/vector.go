@@ -5,21 +5,21 @@ import (
 	"log"
 )
 
-type Vector struct {
-	ColumnNames         TableSpecifics `json:"columnNames"`
+type vector struct {
+	ColumnNames         tableSpecifics `json:"columnNames"`
 	DataFlow            string         `json:"dataFlow"`
-	Conditions          TableSpecifics `json:"conditions"`
-	Db1OldActiveRecords []*Record
-	Db2OldActiveRecords []*Record
-	Db1ActiveRecords    []*Record
-	Db2ActiveRecords    []*Record
-	Pairs               []Pair
+	Conditions          tableSpecifics `json:"conditions"`
+	Db1OldActiveRecords []*record
+	Db2OldActiveRecords []*record
+	Db1ActiveRecords    []*record
+	Db2ActiveRecords    []*record
+	Pairs               []pair
 }
 
 // For each active record in database1 find a corresponding acitve record in database2.
-func (v *Vector) CreatePairs(settings Settings) {
-	var sourceRecords []*Record
-	var targetRecords []*Record
+func (v *vector) createPairs(settings settings) {
+	var sourceRecords []*record
+	var targetRecords []*record
 	var isBidirectional bool = false
 
 	if v.DataFlow == "=>" || v.DataFlow == "<=>*" {
@@ -50,10 +50,10 @@ func (v *Vector) CreatePairs(settings Settings) {
 					continue
 				}
 
-				if areEqual, err := AreEqual(sourceExternalId, targetExternalId); err != nil {
+				if areEqual, err := areEqual(sourceExternalId, targetExternalId); err != nil {
 					log.Println(err)
 				} else if areEqual {
-					newPair := CreatePair(source, target, v.DataFlow, v.ColumnNames)
+					newPair := createPair(source, target, v.DataFlow, v.ColumnNames)
 					v.Pairs = append(v.Pairs, newPair)
 					pairFound = true
 					source.PairedIn = append(source.PairedIn, v)
@@ -62,7 +62,7 @@ func (v *Vector) CreatePairs(settings Settings) {
 			}
 		}
 		if !pairFound && isBidirectional {
-			newPair := CreatePair(source, nil, v.DataFlow, v.ColumnNames)
+			newPair := createPair(source, nil, v.DataFlow, v.ColumnNames)
 			v.Pairs = append(v.Pairs, newPair)
 		}
 	}

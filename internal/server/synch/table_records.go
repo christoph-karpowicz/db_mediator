@@ -2,11 +2,11 @@ package synch
 
 import "reflect"
 
-type TableRecords struct {
-	records []Record
+type tableRecords struct {
+	records []record
 }
 
-func (tr TableRecords) FindRecordPointer(searchedRecord map[string]interface{}) *Record {
+func (tr tableRecords) FindRecordPointer(searchedRecord map[string]interface{}) *record {
 	for _, rec := range tr.records {
 		if reflect.DeepEqual(rec.Data, searchedRecord) {
 			return &rec

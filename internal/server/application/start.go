@@ -18,11 +18,11 @@ func tst(i int, w *http.ResponseWriter) {
 	fmt.Fprintf(*w, "Done!")
 }
 
-type StartHandler struct {
+type startHandler struct {
 	app *Application
 }
 
-func (h *StartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	synchType, ok := r.URL.Query()["type"]
 	if !ok || len(synchType[0]) < 1 {

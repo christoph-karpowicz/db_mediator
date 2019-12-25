@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func AreEqual(val1 interface{}, val2 interface{}) (bool, error) {
+func areEqual(val1 interface{}, val2 interface{}) (bool, error) {
 	var val1kind reflect.Kind = reflect.TypeOf(val1).Kind()
 	var val2kind reflect.Kind = reflect.TypeOf(val2).Kind()
 
@@ -117,10 +117,10 @@ func isUnsignedInt(val reflect.Kind) bool {
 	return false
 }
 
-func MapToRecords(mapRecordArray []map[string]interface{}, key string) []Record {
-	var recordArray []Record = make([]Record, 0)
+func mapToRecords(mapRecordArray []map[string]interface{}, key string) []record {
+	var recordArray []record = make([]record, 0)
 	for _, mapRecord := range mapRecordArray {
-		record := Record{Data: mapRecord, Key: key}
+		record := record{Data: mapRecord, Key: key}
 		recordArray = append(recordArray, record)
 	}
 	return recordArray

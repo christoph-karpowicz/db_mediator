@@ -4,7 +4,8 @@ import (
 	validationUtil "github.com/christoph-karpowicz/unifier/internal/server/util/validation"
 )
 
-type DatabaseData struct {
+// DatabaseData reflects JSON database config.
+type databaseData struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Host     string `json:"host"`
@@ -13,6 +14,7 @@ type DatabaseData struct {
 	Password string `json:"password"`
 }
 
-func (d *DatabaseData) Validate() {
+// Validate calls a validation function on itself.
+func (d *databaseData) Validate() {
 	validationUtil.JSONStruct(*d)
 }

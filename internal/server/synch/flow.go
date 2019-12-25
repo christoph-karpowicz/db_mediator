@@ -1,8 +1,8 @@
 package synch
 
-type Flow struct {
+type flow struct {
 	sourceColumnName string
 	targetColumnName string
-	source           *Record
-	target           *Record
+	source           *record
+	target           *record
 }

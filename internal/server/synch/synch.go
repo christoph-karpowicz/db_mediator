@@ -6,40 +6,40 @@ import (
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 )
 
-type Synch struct {
-	synch     *SynchData
+type synch struct {
+	synch     *synchData
 	database1 *db.Database
 	database2 *db.Database
 	running   bool
 	initial   bool
 }
 
-func (s *Synch) GetData() *SynchData {
+func (s *synch) GetData() *synchData {
 	return s.synch
 }
 
-func (s *Synch) Init(DBMap map[string]*db.Database) {
+func (s *synch) Init(DBMap map[string]*db.Database) {
 	s.setDatabases(DBMap)
 	s.selectData()
 	s.pairData()
 }
 
 // Pairs together records that are going to be synchronized.
-func (s *Synch) pairData() {
+func (s *synch) pairData() {
 	for i, _ := range s.synch.Tables {
-		var table *Table = &s.synch.Tables[i]
+		var table *table = &s.synch.Tables[i]
 
 		for j, _ := range table.Vectors {
-			var vector *Vector = &table.Vectors[j]
-			vector.CreatePairs(table.Settings)
+			var vector *vector = &table.Vectors[j]
+			vector.createPairs(table.Settings)
 		}
 	}
 }
 
 // Selects all records from all tables and filters them to get the relevant records.
-func (s *Synch) selectData() {
+func (s *synch) selectData() {
 	for i, _ := range s.synch.Tables {
-		var table *Table = &s.synch.Tables[i]
+		var table *table = &s.synch.Tables[i]
 		DB1_rawRecords := (*s.database1).Select(table.Names.Table1, "-")
 		DB2_rawRecords := (*s.database2).Select(table.Names.Table2, "-")
 
@@ -48,11 +48,11 @@ func (s *Synch) selectData() {
 			table.Db2OldRecords = table.Db2Records
 		}
 
-		table.Db1Records = &TableRecords{records: MapToRecords(DB1_rawRecords, table.Keys.Table1)}
-		table.Db2Records = &TableRecords{records: MapToRecords(DB2_rawRecords, table.Keys.Table2)}
+		table.Db1Records = &tableRecords{records: mapToRecords(DB1_rawRecords, table.Keys.Table1)}
+		table.Db2Records = &tableRecords{records: mapToRecords(DB2_rawRecords, table.Keys.Table2)}
 
 		for j, _ := range table.Vectors {
-			var vector *Vector = &table.Vectors[j]
+			var vector *vector = &table.Vectors[j]
 			DB1_rawActiveRecords := (*s.database1).Select(table.Names.Table1, vector.Conditions.Table1)
 			DB2_rawActiveRecords := (*s.database2).Select(table.Names.Table2, vector.Conditions.Table2)
 
@@ -78,7 +78,7 @@ func (s *Synch) selectData() {
 }
 
 // Open chosen database connections.
-func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
+func (s *synch) setDatabases(DBMap map[string]*db.Database) {
 	if DBMap[s.synch.Databases.Db1.Name] == nil || DBMap[s.synch.Databases.Db2.Name] == nil {
 		panic(s.synch.Name + " database config is invalid.")
 	}
@@ -88,16 +88,16 @@ func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
 	(*s.database2).Init()
 }
 
-func (s *Synch) SynchPairs() {
+func (s *synch) SynchPairs() {
 	for i := range s.synch.Tables {
-		var table *Table = &s.synch.Tables[i]
+		var table *table = &s.synch.Tables[i]
 
 		for j := range table.Vectors {
-			var vector *Vector = &table.Vectors[j]
+			var vector *vector = &table.Vectors[j]
 
 			for k := range vector.Pairs {
-				var pair *Pair = &vector.Pairs[k]
-				_, err := pair.Synchronize(s.database1, s.database2)
+				var pair *pair = &vector.Pairs[k]
+				_, err := pair.synchronize(s.database1, s.database2)
 				if err != nil {
 					log.Println(err)
 				}

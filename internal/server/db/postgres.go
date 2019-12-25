@@ -5,22 +5,26 @@ import (
 	"fmt"
 )
 
-type PostgresDatabase struct {
-	DB               *DatabaseData
+// PostgresDatabase implements Database interface for PostgreSQL database.
+type postgresDatabase struct {
+	DB               *databaseData
 	connectionString string
 }
 
-func (d *PostgresDatabase) GetData() *DatabaseData {
+// GetData returns information about the database, which was parsed from JSON.
+func (d *postgresDatabase) GetData() *databaseData {
 	return d.DB
 }
 
-func (d *PostgresDatabase) Init() {
+// Init creates the db connection string.
+func (d *postgresDatabase) Init() {
 	d.connectionString = fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		d.DB.Host, d.DB.Port, d.DB.User, d.DB.Password, d.DB.Name)
 }
 
-func (d *PostgresDatabase) Select(tableName string, conditions string) []map[string]interface{} {
+// Select selects data from the database, with or without a WHERE clause.
+func (d *postgresDatabase) Select(tableName string, conditions string) []map[string]interface{} {
 	var allRecords []map[string]interface{}
 
 	d.TestConnection()
@@ -51,7 +55,7 @@ func (d *PostgresDatabase) Select(tableName string, conditions string) []map[str
 		// and a second slice to contain pointers to each item in the columns slice.
 		columns := make([]interface{}, len(cols))
 		columnPointers := make([]interface{}, len(cols))
-		for i, _ := range columns {
+		for i := range columns {
 			columnPointers[i] = &columns[i]
 		}
 
@@ -76,7 +80,8 @@ func (d *PostgresDatabase) Select(tableName string, conditions string) []map[str
 	return allRecords
 }
 
-func (d *PostgresDatabase) TestConnection() {
+// TestConnection pings the database.
+func (d *postgresDatabase) TestConnection() {
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
 		panic(err)
@@ -91,6 +96,7 @@ func (d *PostgresDatabase) TestConnection() {
 	fmt.Println("Successfully connected!")
 }
 
-func (d *PostgresDatabase) Update(key interface{}, val interface{}) (bool, error) {
+// Update updates a record with the privided key.
+func (d *postgresDatabase) Update(key interface{}, column string, val interface{}) (bool, error) {
 	return false, nil
 }

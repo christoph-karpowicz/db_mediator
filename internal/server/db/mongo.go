@@ -12,18 +12,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type MongoDatabase struct {
-	DB               *DatabaseData
+// MongoDatabase implements Database interface for MongoDB database.
+type mongoDatabase struct {
+	DB               *databaseData
 	connectionString string
 	ctx              context.Context
 	close            context.CancelFunc
 }
 
-func (d *MongoDatabase) CloseConnection() {
+// CloseConnection closes the db connection.
+func (d *mongoDatabase) CloseConnection() {
 	d.close()
 }
 
-func (d *MongoDatabase) GetClient() *mongo.Client {
+// GetClient returns a connection client object.
+func (d *mongoDatabase) GetClient() *mongo.Client {
 	authCredentials := options.Credential{Username: d.DB.User, Password: d.DB.Password}
 	clientOptions := options.Client().ApplyURI(d.connectionString).SetAuth(authCredentials)
 	client, err := mongo.NewClient(clientOptions)
@@ -37,11 +40,13 @@ func (d *MongoDatabase) GetClient() *mongo.Client {
 	return client
 }
 
-func (d *MongoDatabase) GetData() *DatabaseData {
+// GetData returns information about the database, which was parsed from JSON.
+func (d *mongoDatabase) GetData() *databaseData {
 	return d.DB
 }
 
-func (d *MongoDatabase) Init() {
+// Init creates the db connection string and context object.
+func (d *mongoDatabase) Init() {
 	d.connectionString = fmt.Sprintf(`mongodb://%s:%d/%s`,
 		d.DB.Host,
 		d.DB.Port,
@@ -53,7 +58,8 @@ func (d *MongoDatabase) Init() {
 	d.close = cancel
 }
 
-func (d *MongoDatabase) Select(tableName string, conditions string) []map[string]interface{} {
+// Select selects data from the database, with or without filters.
+func (d *mongoDatabase) Select(tableName string, conditions string) []map[string]interface{} {
 	var allDocuments []map[string]interface{}
 
 	// defer d.close()
@@ -97,7 +103,8 @@ func (d *MongoDatabase) Select(tableName string, conditions string) []map[string
 	return allDocuments
 }
 
-func (d *MongoDatabase) TestConnection() {
+// TestConnection pings the database.
+func (d *mongoDatabase) TestConnection() {
 	c := d.GetClient()
 	err := c.Ping(context.Background(), readpref.Primary())
 	if err != nil {
@@ -107,7 +114,8 @@ func (d *MongoDatabase) TestConnection() {
 	}
 }
 
-func (d *MongoDatabase) Update(key interface{}, val interface{}) (bool, error) {
+// Update updates a document with the privided key.
+func (d *mongoDatabase) Update(key interface{}, column string, val interface{}) (bool, error) {
 	log.Println(key)
 	log.Println(val)
 	return false, nil

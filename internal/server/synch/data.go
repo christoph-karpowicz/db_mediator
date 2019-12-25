@@ -4,24 +4,24 @@ import (
 	validationUtil "github.com/christoph-karpowicz/unifier/internal/server/util/validation"
 )
 
-type Databases struct {
-	Db1 Database `json:"db1"`
-	Db2 Database `json:"db2"`
+type databases struct {
+	Db1 database `json:"db1"`
+	Db2 database `json:"db2"`
 }
 
-type Database struct {
+type database struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
-type SynchData struct {
+type synchData struct {
 	Name      string    `json:"name"`
-	Databases Databases `json:"databases"`
-	Tables    []Table   `json:"tables"`
+	Databases databases `json:"databases"`
+	Tables    []table   `json:"tables"`
 	Active    bool      `json:"active"`
 }
 
-func (s *SynchData) Validate() {
+func (s *synchData) Validate() {
 	validationUtil.JSONStruct(*s)
 	validationUtil.JSONStruct(s.Databases.Db1)
 	validationUtil.JSONStruct(s.Databases.Db2)

@@ -1,28 +1,28 @@
 package synch
 
-type TableSpecifics struct {
+type tableSpecifics struct {
 	Table1 string `json:"table1"`
 	Table2 string `json:"table2"`
 }
 
-type SynchType struct {
+type synchType struct {
 	MatchBy     string         `json:"matchBy"`
-	ColumnNames TableSpecifics `json:"columnNames"`
+	ColumnNames tableSpecifics `json:"columnNames"`
 }
 
-type Settings struct {
-	SynchType     SynchType
-	CreateNewRows TableSpecifics
-	UpdateOldRows TableSpecifics
+type settings struct {
+	SynchType     synchType
+	CreateNewRows tableSpecifics
+	UpdateOldRows tableSpecifics
 }
 
-type Table struct {
-	Names         TableSpecifics `json:"names"`
-	Keys          TableSpecifics `json:"primaryKeys"`
-	Settings      Settings       `json:"settings"`
-	Vectors       []Vector       `json:"vectors"`
-	Db1OldRecords *TableRecords
-	Db2OldRecords *TableRecords
-	Db1Records    *TableRecords
-	Db2Records    *TableRecords
+type table struct {
+	Names         tableSpecifics `json:"names"`
+	Keys          tableSpecifics `json:"primaryKeys"`
+	Settings      settings       `json:"settings"`
+	Vectors       []vector       `json:"vectors"`
+	Db1OldRecords *tableRecords
+	Db2OldRecords *tableRecords
+	Db1Records    *tableRecords
+	Db2Records    *tableRecords
 }
