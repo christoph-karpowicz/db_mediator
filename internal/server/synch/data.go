@@ -22,20 +22,20 @@ type synchData struct {
 }
 
 func (s *synchData) Validate() {
-	validationUtil.JSONStruct(*s)
-	validationUtil.JSONStruct(s.Databases.Db1)
-	validationUtil.JSONStruct(s.Databases.Db2)
+	validationUtil.YAMLStruct(*s)
+	validationUtil.YAMLStruct(s.Databases.Db1)
+	validationUtil.YAMLStruct(s.Databases.Db2)
 	for _, table := range s.Tables {
-		validationUtil.JSONStruct(table)
+		validationUtil.YAMLStruct(table)
 
-		validationUtil.JSONStruct(table.Settings.SynchType)
-		validationUtil.JSONStruct(table.Settings.CreateNewRows)
-		validationUtil.JSONStruct(table.Settings.UpdateOldRows)
+		validationUtil.YAMLStruct(table.Settings.SynchType)
+		validationUtil.YAMLStruct(table.Settings.CreateNewRows)
+		validationUtil.YAMLStruct(table.Settings.UpdateOldRows)
 
 		for _, vector := range table.Vectors {
-			validationUtil.JSONStruct(vector)
-			validationUtil.JSONStruct(vector.ColumnNames)
-			validationUtil.JSONStruct(vector.Conditions)
+			validationUtil.YAMLStruct(vector)
+			validationUtil.YAMLStruct(vector.ColumnNames)
+			validationUtil.YAMLStruct(vector.Conditions)
 		}
 	}
 }

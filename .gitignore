@@ -1,8 +1,8 @@
-/config/databases.json
+/config/databases.yaml
 /vendor/
 /data/
 /server
 /client
 /docker-compose.yml
 /config/synch-configs/*
-!/config/synch-configs/example.json
+!/config/synch-configs/example.yaml

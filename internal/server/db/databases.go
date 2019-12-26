@@ -5,11 +5,13 @@ methods for querying.
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Databases imports, validates and holds information about databases from JSON config files.
@@ -17,9 +19,9 @@ type Databases struct {
 	DBMap map[string]*Database
 }
 
-// ImportJSON parses and saves JSON config files.
-func (d *Databases) ImportJSON() {
-	databasesFilePath, _ := filepath.Abs("./config/databases.json")
+// ImportYAML parses and saves YAML config files.
+func (d *Databases) ImportYAML() {
+	databasesFilePath, _ := filepath.Abs("./config/databases.yaml")
 
 	databasesConfigFile, err := os.Open(databasesFilePath)
 	if err != nil {
@@ -33,38 +35,38 @@ func (d *Databases) ImportJSON() {
 		panic(err)
 	}
 
-	var databases map[string]json.RawMessage
-	var databasesArray []databaseData
-
-	json.Unmarshal(byteArray, &databases)
-	json.Unmarshal(databases["databases"], &databasesArray)
+	var dbDataArr databaseDataArray = databaseDataArray{}
+	marshalErr := yaml.Unmarshal(byteArray, &dbDataArr)
+	if marshalErr != nil {
+		log.Fatalf("error: %v", marshalErr)
+	}
 
 	fmt.Println("----------------")
 	fmt.Println("Databases:")
-	for i := 0; i < len(databasesArray); i++ {
+	for i := 0; i < len(dbDataArr.Databases); i++ {
 		var database Database
 
-		fmt.Println(databasesArray[i].Type)
-		switch dbType := databasesArray[i].Type; dbType {
+		fmt.Println(dbDataArr.Databases[i].Type)
+		switch dbType := dbDataArr.Databases[i].Type; dbType {
 		case "mongo":
-			database = &mongoDatabase{DB: &databasesArray[i]}
+			database = &mongoDatabase{DB: &dbDataArr.Databases[i]}
 		case "postgres":
-			database = &postgresDatabase{DB: &databasesArray[i]}
+			database = &postgresDatabase{DB: &dbDataArr.Databases[i]}
 		default:
 			database = nil
 		}
 
-		d.DBMap[databasesArray[i].Name] = &database
+		d.DBMap[dbDataArr.Databases[i].Name] = &database
 
-		// fmt.Printf("key[%s] value[%s]\n", k, v)
+		// fmt.Printf("val: %s\n", dbDataArr.Databases[i].Name)
 	}
-	fmt.Println(d.DBMap)
+	// fmt.Println(d.DBMap)
 	fmt.Println("----------------")
 }
 
-// ValidateJSON calls validation method on each database data object.
-func (d *Databases) ValidateJSON() {
-	fmt.Println("Database JSON file validation...")
+// ValidateYAML calls validation method on each database data object.
+func (d *Databases) ValidateYAML() {
+	fmt.Println("Database YAML file validation...")
 	for _, database := range d.DBMap {
 		(*database).GetData().Validate()
 	}

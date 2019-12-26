@@ -4,17 +4,22 @@ import (
 	validationUtil "github.com/christoph-karpowicz/unifier/internal/server/util/validation"
 )
 
-// DatabaseData reflects JSON database config.
+// DatabaseData reflects an array of YAML database configs.
+type databaseDataArray struct {
+	Databases []databaseData
+}
+
+// DatabaseData reflects an individual YAML database config.
 type databaseData struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
+	Name     string `yaml:"name"`
+	Type     string `yaml:"type"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
 }
 
 // Validate calls a validation function on itself.
 func (d *databaseData) Validate() {
-	validationUtil.JSONStruct(*d)
+	validationUtil.YAMLStruct(*d)
 }

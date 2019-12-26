@@ -5,8 +5,9 @@ import (
 	"testing"
 )
 
-func TestJSON(t *testing.T) {
+func TestYAML(t *testing.T) {
 	os.Chdir("../../..")
 	dbs := Databases{DBMap: make(map[string]*Database)}
-	dbs.ImportJSON()
+	dbs.ImportYAML()
+	dbs.ValidateYAML()
 }
