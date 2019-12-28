@@ -1,8 +1,10 @@
 package db
 
 import (
-	validationUtil "github.com/christoph-karpowicz/unifier/internal/server/util/validation"
+	validationUtil "github.com/christoph-karpowicz/unifier/internal/util/validation"
 )
+
+var nullableFields = []string{"alias"}
 
 // DatabaseData reflects an array of YAML database configs.
 type databaseDataArray struct {
@@ -12,6 +14,7 @@ type databaseDataArray struct {
 // DatabaseData reflects an individual YAML database config.
 type databaseData struct {
 	Name     string `yaml:"name"`
+	Alias    string `yaml:"alias"`
 	Type     string `yaml:"type"`
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
@@ -21,5 +24,5 @@ type databaseData struct {
 
 // Validate calls a validation function on itself.
 func (d *databaseData) Validate() {
-	validationUtil.YAMLStruct(*d)
+	validationUtil.YAMLStruct(*d, nullableFields)
 }

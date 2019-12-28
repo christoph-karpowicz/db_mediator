@@ -4,7 +4,6 @@ Package synch handles all data sychronization.
 package synch
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,7 +15,7 @@ type Synchs struct {
 	SynchMap map[string]*synch
 }
 
-func (s *Synchs) ImportJSONDir() {
+func (s *Synchs) ImportYAMLDir() {
 	configFiles, err := ioutil.ReadDir("./config/synch-configs")
 	if err != nil {
 		log.Fatal(err)
@@ -25,7 +24,7 @@ func (s *Synchs) ImportJSONDir() {
 	fmt.Println("----------------")
 	fmt.Println("Synchs:")
 	for _, configFile := range configFiles {
-		synchData := s.ImportJSONFile(configFile.Name())
+		synchData := s.ImportYAMLFile(configFile.Name())
 
 		// Don't load inactive synchs.
 		if !synchData.Active {
@@ -40,7 +39,7 @@ func (s *Synchs) ImportJSONDir() {
 
 }
 
-func (s *Synchs) ImportJSONFile(fileName string) synchData {
+func (s *Synchs) ImportYAMLFile(fileName string) synchData {
 	synchFilePath, _ := filepath.Abs("./config/synch-configs/" + fileName)
 
 	synchFile, err := os.Open(synchFilePath)
@@ -57,13 +56,13 @@ func (s *Synchs) ImportJSONFile(fileName string) synchData {
 
 	var synch synchData
 
-	json.Unmarshal(byteArray, &synch)
+	YAML.Unmarshal(byteArray, &synch)
 
 	return synch
 }
 
-func (s *Synchs) ValidateJSON() {
-	fmt.Println("Synch JSON file validation...")
+func (s *Synchs) ValidateYAML() {
+	fmt.Println("Synch YAML file validation...")
 	for _, synch := range s.SynchMap {
 		fmt.Println((*synch).GetData())
 		(*synch).GetData().Validate()

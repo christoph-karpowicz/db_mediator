@@ -3,13 +3,14 @@ package synch
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"testing"
 )
 
-func TestJSON(t *testing.T) {
-	// os.Chdir("../../..")
-	// synchs := Synchs{SynchMap: make(map[string]*Synch)}
-	// synchs.ImportJSON()
+func TestYAML(t *testing.T) {
+	os.Chdir("../../..")
+	synchs := Synchs{SynchMap: make(map[string]*synch)}
+	synchs.ImportYAMLDir()
 }
 
 func TestDir(t *testing.T) {
