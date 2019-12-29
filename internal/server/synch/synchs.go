@@ -9,6 +9,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Synchs struct {
@@ -27,9 +29,9 @@ func (s *Synchs) ImportYAMLDir() {
 		synchData := s.ImportYAMLFile(configFile.Name())
 
 		// Don't load inactive synchs.
-		if !synchData.Active {
-			continue
-		}
+		// if !synchData.Settings.Active {
+		// 	continue
+		// }
 
 		s.SynchMap[synchData.Name] = &synch{synch: &synchData, initial: true}
 		fmt.Println("Config file name: " + configFile.Name())
@@ -54,9 +56,12 @@ func (s *Synchs) ImportYAMLFile(fileName string) synchData {
 		panic(err)
 	}
 
-	var synch synchData
+	var synch synchData = synchData{}
 
-	YAML.Unmarshal(byteArray, &synch)
+	marshalErr := yaml.Unmarshal(byteArray, &synch)
+	if marshalErr != nil {
+		log.Fatalf("error: %v", marshalErr)
+	}
 
 	return synch
 }

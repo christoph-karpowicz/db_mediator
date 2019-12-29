@@ -28,11 +28,11 @@ func (a *Application) Init() {
 	a.dbs = &db.Databases{DBMap: make(map[string]*db.Database)}
 	a.dbs.ImportYAML()
 	a.dbs.ValidateYAML()
-	// a.synchs = synch.CreateSynchs()
-	// a.synchs.ImportJSONDir()
-	// a.synchs.ValidateJSON()
+	a.synchs = synch.CreateSynchs()
+	a.synchs.ImportYAMLDir()
+	a.synchs.ValidateYAML()
 
-	// a.listen()
+	a.listen()
 }
 
 func (a *Application) listen() {
@@ -42,8 +42,8 @@ func (a *Application) listen() {
 
 func (a *Application) synchronize(synchType string, synchKey string) {
 	fmt.Printf("%s - %s\n", synchType, synchKey)
-	synch := a.synchs.SynchMap[synchKey]
-	if synch == nil {
+	synch, synchFound := a.synchs.SynchMap[synchKey]
+	if !synchFound {
 		panic("Synch '" + synchKey + "' not found.")
 	}
 

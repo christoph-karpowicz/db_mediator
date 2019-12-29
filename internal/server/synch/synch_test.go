@@ -11,6 +11,7 @@ func TestYAML(t *testing.T) {
 	os.Chdir("../../..")
 	synchs := Synchs{SynchMap: make(map[string]*synch)}
 	synchs.ImportYAMLDir()
+	synchs.ValidateYAML()
 }
 
 func TestDir(t *testing.T) {

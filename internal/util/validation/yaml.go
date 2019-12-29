@@ -1,6 +1,7 @@
 package validationUtil
 
 import (
+	"fmt"
 	arrayUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 	"reflect"
 	"strconv"
@@ -35,6 +36,9 @@ func YAMLStruct(structure interface{}, nullableFields []string) {
 	fieldType := fieldValue.Type()
 
 	for i := 0; i < fieldValue.NumField(); i++ {
+
+		fmt.Println(fieldValue.Field(i).IsZero())
+		// fieldVal, err := fieldValue.Field(i).Interface()
 
 		if !YAMLField(fieldValue.Field(i).Interface(), fieldType.Field(i).Name) {
 			if !arrayUtil.Contains(nullableFields, strings.ToLower(fieldType.Field(i).Name)) {
