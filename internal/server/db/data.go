@@ -22,6 +22,13 @@ type databaseData struct {
 	Password string `yaml:"password"`
 }
 
+func (d *databaseData) GetName() string {
+	if d.Alias != "" {
+		return d.Alias
+	}
+	return d.Name
+}
+
 // Validate calls a validation function on itself.
 func (d *databaseData) Validate() {
 	validationUtil.YAMLStruct(*d, nullableFields)

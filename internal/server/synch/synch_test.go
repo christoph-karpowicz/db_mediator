@@ -12,10 +12,12 @@ func TestYAML(t *testing.T) {
 	synchs := Synchs{SynchMap: make(map[string]*synch)}
 	synchs.ImportYAMLDir()
 	synchs.ValidateYAML()
+	// synchs.SynchMap["films"].Init()
+	// synchs.SynchMap["films"].SynchPairs()
 }
 
 func TestDir(t *testing.T) {
-	files, err := ioutil.ReadDir("../../../config/synch-configs")
+	files, err := ioutil.ReadDir("./config/synch-configs")
 	if err != nil {
 		log.Fatal(err)
 	}

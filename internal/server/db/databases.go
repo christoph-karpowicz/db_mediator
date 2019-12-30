@@ -56,7 +56,7 @@ func (d *Databases) ImportYAML() {
 			database = nil
 		}
 
-		d.DBMap[dbDataArr.Databases[i].Name] = &database
+		d.DBMap[dbDataArr.Databases[i].GetName()] = &database
 
 		// fmt.Printf("val: %s\n", dbDataArr.Databases[i].Name)
 	}

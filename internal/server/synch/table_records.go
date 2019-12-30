@@ -8,9 +8,9 @@ type tableRecords struct {
 }
 
 func (tr tableRecords) FindRecordPointer(searchedRecord map[string]interface{}) *record {
-	for _, rec := range tr.records {
-		if reflect.DeepEqual(rec.Data, searchedRecord) {
-			return &rec
+	for i := range tr.records {
+		if reflect.DeepEqual(tr.records[i].Data, searchedRecord) {
+			return &tr.records[i]
 		}
 	}
 	return nil

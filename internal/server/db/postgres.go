@@ -35,10 +35,8 @@ func (d *postgresDatabase) Select(tableName string, conditions string) []map[str
 	}
 	defer database.Close()
 
-	if conditions != "-" && conditions != "" {
+	if conditions != "" && conditions != "*" {
 		conditions = fmt.Sprintf(` WHERE %s`, conditions)
-	} else {
-		conditions = ""
 	}
 
 	query := fmt.Sprintf(`SELECT * FROM %s%s`, tableName, conditions)

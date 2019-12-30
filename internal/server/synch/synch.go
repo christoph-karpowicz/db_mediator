@@ -19,6 +19,7 @@ func (s *synch) GetData() *synchData {
 }
 
 func (s *synch) Init(DBMap map[string]*db.Database) {
+	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
 	s.setDatabases(DBMap)
 	s.copyTables()
@@ -32,8 +33,8 @@ func (s *synch) assignTablePointers() {
 	for i := range s.synch.Vectors {
 		var vctr *vector = &s.synch.Vectors[i]
 
-		vctr.sourceTable = s.tables[vctr.Source.Table]
-		vctr.targetTable = s.tables[vctr.Target.Table]
+		vctr.sourceTable = s.tables[vctr.Source.Database+"."+vctr.Source.Table]
+		vctr.targetTable = s.tables[vctr.Target.Database+"."+vctr.Target.Table]
 	}
 }
 
@@ -45,7 +46,7 @@ func (s *synch) copyTable(endpoint vectorEndpoint) {
 			dbName: endpoint.Database,
 			name:   endpoint.Table,
 		}
-		rawRecords := (*s.dbs[endpoint.Database]).Select(tbl.name, "-")
+		rawRecords := (*s.dbs[endpoint.Database]).Select(tbl.name, "")
 
 		if !s.initial {
 			tbl.oldRecords = tbl.records
@@ -95,8 +96,8 @@ func (s *synch) selectData() {
 			vctr.targetActiveRecords = append(vctr.targetActiveRecords, targetRecordPointer)
 			targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, vctr)
 		}
-		log.Println(vctr.sourceActiveRecords)
-		log.Println(vctr.targetActiveRecords)
+		// log.Println(vctr.sourceActiveRecords)
+		// log.Println(vctr.targetActiveRecords)
 	}
 }
 

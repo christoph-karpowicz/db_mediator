@@ -70,7 +70,7 @@ func (d *mongoDatabase) Select(tableName string, conditions string) []map[string
 	collection := client.Database(d.DB.Name).Collection(tableName)
 
 	var bsonConditions interface{}
-	if conditions != "-" && conditions != "" {
+	if conditions != "" && conditions != "*" {
 		err := bson.UnmarshalExtJSON([]byte(conditions), true, &bsonConditions)
 		if err != nil {
 			panic(err)

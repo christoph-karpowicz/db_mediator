@@ -1,6 +1,8 @@
 package synch
 
 import (
+	"log"
+
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 )
 
@@ -12,6 +14,8 @@ type pair struct {
 }
 
 func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
+	log.Println(*p.source)
+	log.Println(*p.target)
 	// // Updates
 	// if p.IsComplete {
 	// 	if p.primaryFlow.sourceColumnName != "*" && p.primaryFlow.targetColumnName != "*" {

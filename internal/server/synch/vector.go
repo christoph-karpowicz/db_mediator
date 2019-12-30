@@ -1,7 +1,6 @@
 package synch
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -45,15 +44,13 @@ type vector struct {
 
 // For each active record in database1 find a corresponding acitve record in database2.
 func (v *vector) createPairs() {
-	var sourceRecords []*record
-	var targetRecords []*record
 	var isBidirectional bool = false
 
-	for i := range sourceRecords {
-		source := sourceRecords[i]
+	for i := range v.sourceTable.records.records {
+		source := &v.sourceTable.records.records[i]
 		var pairFound bool = false
-		for j := range targetRecords {
-			target := targetRecords[j]
+		for j := range v.targetTable.records.records {
+			target := &v.targetTable.records.records[j]
 
 			if v.Settings.MatchBy == "external_id_columns" {
 				var sourceExternalIDColumnName string = v.Settings.ExternalIds.Source
@@ -81,11 +78,11 @@ func (v *vector) createPairs() {
 			v.pairs = append(v.pairs, newPair)
 		}
 	}
-	for _, pair := range v.pairs {
-		fmt.Printf("rec1: %s\n", pair.source.Data)
-		if pair.IsComplete {
-			fmt.Printf("rec2: %s\n", pair.target.Data)
-		}
-		fmt.Println("======")
-	}
+	// for _, pair := range v.pairs {
+	// 	fmt.Printf("rec1: %s\n", pair.source.Data)
+	// 	if pair.IsComplete {
+	// 		fmt.Printf("rec2: %s\n", pair.target.Data)
+	// 	}
+	// 	fmt.Println("======")
+	// }
 }

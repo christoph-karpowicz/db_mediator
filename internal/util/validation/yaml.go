@@ -1,11 +1,11 @@
 package validationUtil
 
 import (
-	"fmt"
-	arrayUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 	"reflect"
 	"strconv"
 	"strings"
+
+	arrayUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
 
 func YAMLField(fieldValue interface{}, fieldName string) bool {
@@ -37,8 +37,10 @@ func YAMLStruct(structure interface{}, nullableFields []string) {
 
 	for i := 0; i < fieldValue.NumField(); i++ {
 
-		fmt.Println(fieldValue.Field(i).IsZero())
-		// fieldVal, err := fieldValue.Field(i).Interface()
+		// If a field doesn't have a tag, it means it's value wasn't imported from YAML file.
+		if fieldType.Field(i).Tag == "" {
+			continue
+		}
 
 		if !YAMLField(fieldValue.Field(i).Interface(), fieldType.Field(i).Name) {
 			if !arrayUtil.Contains(nullableFields, strings.ToLower(fieldType.Field(i).Name)) {
