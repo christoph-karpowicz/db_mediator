@@ -1,9 +1,5 @@
 package synch
 
-import (
-	"log"
-)
-
 type vectorEndpointOptions struct {
 	CreateNewRows string `yaml:"createNewRows"`
 	UpdateOldRows string `yaml:"updateOldRows"`
@@ -43,46 +39,45 @@ type vector struct {
 }
 
 // For each active record in database1 find a corresponding acitve record in database2.
-func (v *vector) createPairs() {
-	var isBidirectional bool = false
+// func (v *vector) createPairs() {
+// 	for i := range v.sourceTable.records.records {
+// 		source := &v.sourceTable.records.records[i]
+// 		var pairFound bool = false
 
-	for i := range v.sourceTable.records.records {
-		source := &v.sourceTable.records.records[i]
-		var pairFound bool = false
-		for j := range v.targetTable.records.records {
-			target := &v.targetTable.records.records[j]
+// 		for j := range v.targetTable.records.records {
+// 			target := &v.targetTable.records.records[j]
 
-			if v.Settings.MatchBy == "external_id_columns" {
-				var sourceExternalIDColumnName string = v.Settings.ExternalIds.Source
-				var targetExternalIDColumnName string = v.Settings.ExternalIds.Target
-				sourceExternalID, sourceOk := source.Data[sourceExternalIDColumnName]
-				targetExternalID, targetOk := target.Data[targetExternalIDColumnName]
+// 			if v.Settings.MatchBy == "external_id_columns" {
+// 				var sourceExternalIDColumnName string = v.Settings.ExternalIds.Source
+// 				var targetExternalIDColumnName string = v.Settings.ExternalIds.Target
+// 				sourceExternalID, sourceOk := source.Data[sourceExternalIDColumnName]
+// 				targetExternalID, targetOk := target.Data[targetExternalIDColumnName]
 
-				if !sourceOk || !targetOk {
-					continue
-				}
+// 				if !sourceOk || !targetOk {
+// 					continue
+// 				}
 
-				if areEqual, err := areEqual(sourceExternalID, targetExternalID); err != nil {
-					log.Println(err)
-				} else if areEqual {
-					newPair := createPair(v, source, target)
-					v.pairs = append(v.pairs, newPair)
-					pairFound = true
-					source.PairedIn = append(source.PairedIn, v)
-					target.PairedIn = append(target.PairedIn, v)
-				}
-			}
-		}
-		if !pairFound && isBidirectional {
-			newPair := createPair(v, source, nil)
-			v.pairs = append(v.pairs, newPair)
-		}
-	}
-	// for _, pair := range v.pairs {
-	// 	fmt.Printf("rec1: %s\n", pair.source.Data)
-	// 	if pair.IsComplete {
-	// 		fmt.Printf("rec2: %s\n", pair.target.Data)
-	// 	}
-	// 	fmt.Println("======")
-	// }
-}
+// 				if areEqual, err := areEqual(sourceExternalID, targetExternalID); err != nil {
+// 					log.Println(err)
+// 				} else if areEqual {
+// 					newPair := createPair(v, source, target)
+// 					v.pairs = append(v.pairs, newPair)
+// 					pairFound = true
+// 					source.PairedIn = append(source.PairedIn, v)
+// 					target.PairedIn = append(target.PairedIn, v)
+// 				}
+// 			}
+// 		}
+// 		if !pairFound {
+// 			newPair := createPair(v, source, nil)
+// 			v.pairs = append(v.pairs, newPair)
+// 		}
+// 	}
+// 	// for _, pair := range v.pairs {
+// 	// 	fmt.Printf("rec1: %s\n", pair.source.Data)
+// 	// 	if pair.IsComplete {
+// 	// 		fmt.Printf("rec2: %s\n", pair.target.Data)
+// 	// 	}
+// 	// 	fmt.Println("======")
+// 	// }
+// }

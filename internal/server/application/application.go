@@ -48,7 +48,7 @@ func (a *Application) synchronize(synchType string, synchKey string) {
 	}
 
 	synch.Init(a.dbs.DBMap)
-	synch.SynchPairs()
+	// synch.SynchPairs()
 
 	// fmt.Println(*synch)
 }

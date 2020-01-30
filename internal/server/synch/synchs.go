@@ -18,7 +18,7 @@ type Synchs struct {
 }
 
 func (s *Synchs) ImportYAMLDir() {
-	configFiles, err := ioutil.ReadDir("./config/synch-configs")
+	configFiles, err := ioutil.ReadDir("./config/synchs")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func (s *Synchs) ImportYAMLDir() {
 }
 
 func (s *Synchs) ImportYAMLFile(fileName string) synchData {
-	synchFilePath, _ := filepath.Abs("./config/synch-configs/" + fileName)
+	synchFilePath, _ := filepath.Abs("./config/synchs/" + fileName)
 
 	synchFile, err := os.Open(synchFilePath)
 	if err != nil {

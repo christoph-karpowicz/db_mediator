@@ -4,5 +4,5 @@
 /server
 /client
 /docker-compose.yml
-/config/synch-configs/*
-!/config/synch-configs/example.yaml
+/config/synchs/*
+!/config/synchs/example.yaml

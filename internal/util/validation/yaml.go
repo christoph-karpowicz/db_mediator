@@ -19,7 +19,7 @@ func YAMLField(fieldValue interface{}, fieldName string) bool {
 			return false
 		}
 	case []string:
-		if len(fieldValue.([]string)) < 2 {
+		if len(fieldValue.([]string)) == 0 {
 			return false
 		}
 		for i, val := range fieldValue.([]string) {
