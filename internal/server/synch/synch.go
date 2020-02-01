@@ -1,15 +1,20 @@
 package synch
 
 import (
+	"fmt"
+
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
+	"github.com/christoph-karpowicz/unifier/internal/server/lang"
 )
 
 type synch struct {
-	synch   *synchData
-	dbs     map[string]*db.Database
-	tables  map[string]*table
-	running bool
-	initial bool
+	synch    *synchData
+	dbs      map[string]*db.Database
+	tables   map[string]*table
+	nodes    map[string]*node
+	mappings []*mapping
+	running  bool
+	initial  bool
 }
 
 func (s *synch) GetData() *synchData {
@@ -36,24 +41,24 @@ func (s *synch) Init(DBMap map[string]*db.Database) {
 // 	}
 // }
 
-// func (s *synch) copyTable(endpoint vectorEndpoint) {
-// 	_, tableCopied := s.tables[endpoint.Database+"."+endpoint.Table]
-// 	if !tableCopied {
-// 		tbl := &table{
-// 			id:     endpoint.Database + "." + endpoint.Table,
-// 			dbName: endpoint.Database,
-// 			name:   endpoint.Table,
-// 		}
-// 		rawRecords := (*s.dbs[endpoint.Database]).Select(tbl.name, "")
+func (s *synch) copyTable(endpoint vectorEndpoint) {
+	_, tableCopied := s.tables[endpoint.Database+"."+endpoint.Table]
+	if !tableCopied {
+		tbl := &table{
+			id:     endpoint.Database + "." + endpoint.Table,
+			dbName: endpoint.Database,
+			name:   endpoint.Table,
+		}
+		rawRecords := (*s.dbs[endpoint.Database]).Select(tbl.name, "")
 
-// 		if !s.initial {
-// 			tbl.oldRecords = tbl.records
-// 		}
+		if !s.initial {
+			tbl.oldRecords = tbl.records
+		}
 
-// 		tbl.records = &tableRecords{records: mapToRecords(rawRecords, endpoint.Key)}
-// 		s.tables[tbl.id] = tbl
-// 	}
-// }
+		tbl.records = &tableRecords{records: mapToRecords(rawRecords, endpoint.Key)}
+		s.tables[tbl.id] = tbl
+	}
+}
 
 // func (s *synch) copyTables() {
 // 	for i := range s.synch.Vectors {
@@ -71,6 +76,17 @@ func (s *synch) Init(DBMap map[string]*db.Database) {
 // 		vector.createPairs()
 // 	}
 // }
+
+func (s *synch) parseMappings() {
+	for _, mapping := range s.synch.Mappings {
+		fmt.Println(mapping)
+		rawMapping := lang.Parse(mapping)
+		for _, link := range rawMapping.Links {
+			parsedMapping := createMapping(link)
+			s.mappings = append(s.mappings, parsedMapping)
+		}
+	}
+}
 
 // // Selects all records from all tables and filters them to get the relevant records.
 // func (s *synch) selectData() {

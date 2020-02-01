@@ -1,0 +1,19 @@
+name: films
+nodes:
+    - 
+        name        : dvdrental_films
+        database    : dvdrental
+        table       : film
+        key         : film_id
+    -
+        name        : msamp_films
+        database    : msamp
+        table       : Sakila_films
+        key         : _id
+
+mappings: [
+    "MAP
+        [dvdrental_films.title WHERE title ILIKE 'A%'] TO [msamp_films.Title] 
+    MATCH BY IDS(dvdrental_films.film_id, msamp_films.ext_id)
+    DO UPDATE"
+]

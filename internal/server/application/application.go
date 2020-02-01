@@ -31,6 +31,7 @@ func (a *Application) Init() {
 	a.synchs = synch.CreateSynchs()
 	a.synchs.ImportYAMLDir()
 	a.synchs.ValidateYAML()
+	a.synchs.ParseMappings()
 
 	a.listen()
 }

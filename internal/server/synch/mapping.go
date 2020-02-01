@@ -1,8 +1,20 @@
 package synch
 
 type mapping struct {
-	source  string `yaml:"name"`
-	Databse string `yaml:"database"`
-	Table   string `yaml:"table"`
-	Key     string `yaml:"key"`
+	source     *node
+	target     *node
+	matchBy    string
+	sourceExID string
+	targetExID string
+	do         []string
+}
+
+func createMapping(str string) *mapping {
+
+	newMapping := mapping{}
+	return &newMapping
+}
+
+func (m *mapping) parse(str string) {
+
 }

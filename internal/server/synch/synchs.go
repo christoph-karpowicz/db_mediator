@@ -66,13 +66,21 @@ func (s *Synchs) ImportYAMLFile(fileName string) synchData {
 	return synch
 }
 
+func (s *Synchs) ParseMappings() {
+	fmt.Println("Parsing synch mappings...")
+	for _, synch := range s.SynchMap {
+		synch.parseMappings()
+	}
+	fmt.Println("... done.")
+}
+
 func (s *Synchs) ValidateYAML() {
 	fmt.Println("Synch YAML file validation...")
 	for _, synch := range s.SynchMap {
 		fmt.Println((*synch).GetData())
 		(*synch).GetData().Validate()
 	}
-	fmt.Println("...passed.")
+	fmt.Println("... passed.")
 }
 
 func CreateSynchs() *Synchs {
