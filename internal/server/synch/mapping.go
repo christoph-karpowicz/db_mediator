@@ -9,7 +9,7 @@ type mapping struct {
 	do         []string
 }
 
-func createMapping(str string) *mapping {
+func createMapping(link map[string]string, matchBy string, do string) *mapping {
 
 	newMapping := mapping{}
 	return &newMapping

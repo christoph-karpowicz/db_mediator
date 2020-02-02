@@ -1,8 +1,6 @@
 package synch
 
 import (
-	"fmt"
-
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	"github.com/christoph-karpowicz/unifier/internal/server/lang"
 )
@@ -79,10 +77,9 @@ func (s *synch) copyTable(endpoint vectorEndpoint) {
 
 func (s *synch) parseMappings() {
 	for _, mapping := range s.synch.Mappings {
-		fmt.Println(mapping)
-		rawMapping := lang.Parse(mapping)
-		for _, link := range rawMapping.Links {
-			parsedMapping := createMapping(link)
+		rawMapping := lang.ParseMapping(mapping)
+		for _, link := range rawMapping["links"].([]map[string]string) {
+			parsedMapping := createMapping(link, rawMapping["matchBy"].(string), rawMapping["do"].(string))
 			s.mappings = append(s.mappings, parsedMapping)
 		}
 	}
