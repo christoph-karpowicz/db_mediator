@@ -6,3 +6,4 @@
 /docker-compose.yml
 /config/synchs/*
 !/config/synchs/example.yaml
+/.vscode

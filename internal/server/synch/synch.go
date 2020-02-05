@@ -23,6 +23,8 @@ func (s *synch) Init(DBMap map[string]*db.Database) {
 	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
 	s.setDatabases(DBMap)
+	s.setTables()
+	s.setNodes()
 	// s.copyTables()
 	// s.assignTablePointers()
 	// s.selectData()
@@ -39,34 +41,6 @@ func (s *synch) Init(DBMap map[string]*db.Database) {
 // 	}
 // }
 
-func (s *synch) copyTable(endpoint vectorEndpoint) {
-	_, tableCopied := s.tables[endpoint.Database+"."+endpoint.Table]
-	if !tableCopied {
-		tbl := &table{
-			id:     endpoint.Database + "." + endpoint.Table,
-			dbName: endpoint.Database,
-			name:   endpoint.Table,
-		}
-		rawRecords := (*s.dbs[endpoint.Database]).Select(tbl.name, "")
-
-		if !s.initial {
-			tbl.oldRecords = tbl.records
-		}
-
-		tbl.records = &tableRecords{records: mapToRecords(rawRecords, endpoint.Key)}
-		s.tables[tbl.id] = tbl
-	}
-}
-
-// func (s *synch) copyTables() {
-// 	for i := range s.synch.Vectors {
-// 		var vctr *vector = &s.synch.Vectors[i]
-
-// 		s.copyTable(vctr.Source)
-// 		s.copyTable(vctr.Target)
-// 	}
-// }
-
 // // pairData pairs together records that are going to be synchronized.
 // func (s *synch) pairData() {
 // 	for i := range s.synch.Vectors {
@@ -79,7 +53,7 @@ func (s *synch) parseMappings() {
 	for _, mapping := range s.synch.Mappings {
 		rawMapping := lang.ParseMapping(mapping)
 		for _, link := range rawMapping["links"].([]map[string]string) {
-			parsedMapping := createMapping(link, rawMapping["matchBy"].(string), rawMapping["do"].(string))
+			parsedMapping := createMapping(s.nodes, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string))
 			s.mappings = append(s.mappings, parsedMapping)
 		}
 	}
@@ -112,21 +86,29 @@ func (s *synch) parseMappings() {
 // 	}
 // }
 
-func (s *synch) setDatabase(DBMap map[string]*db.Database, node *node) {
-	_, dbExists := DBMap[node.Database]
+func (s *synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
+	_, dbExists := DBMap[dbName]
 	if dbExists {
-		s.dbs[node.Database] = DBMap[node.Database]
-		(*s.dbs[node.Database]).Init()
+		s.dbs[dbName] = DBMap[dbName]
+		(*s.dbs[dbName]).Init()
 	} else {
-		panic("Database " + node.Database + " hasn't been configured.")
+		panic("Database " + dbName + " hasn't been configured.")
 	}
 }
 
 // Open chosen database connections.
 func (s *synch) setDatabases(DBMap map[string]*db.Database) {
 	for j := range s.synch.Nodes {
-		var node *node = &s.synch.Nodes[j]
-		s.setDatabase(DBMap, node)
+		var nodeData *nodeData = &s.synch.Nodes[j]
+		s.setDatabase(DBMap, nodeData.Database)
+	}
+}
+
+// setNodes creates node structs and adds them to the relevant synch struct field.
+func (s *synch) setNodes() {
+	for j := range s.synch.Nodes {
+		var nodeData *nodeData = &s.synch.Nodes[j]
+		s.nodes[nodeData.Name] = createNode(nodeData, s.dbs[nodeData.Database], s.tables[nodeData.Table])
 	}
 }
 
@@ -141,6 +123,36 @@ func (s *synch) setDatabases(DBMap map[string]*db.Database) {
 // 		}
 // 	}
 // }
+
+// setTable creates an individual table struct and selects all records from it.
+func (s *synch) setTable(tableName string, database *db.Database, key string) {
+	var tblID string = (*database).GetData().Name + "." + tableName
+	_, tableCopied := s.tables[tblID]
+
+	if !tableCopied {
+		tbl := &table{
+			id:   tblID,
+			db:   database,
+			name: tableName,
+		}
+		rawRecords := (*tbl.db).Select(tbl.name, "")
+
+		if !s.initial {
+			tbl.oldRecords = tbl.records
+		}
+
+		tbl.records = &tableRecords{records: mapToRecords(rawRecords, key)}
+		s.tables[tbl.id] = tbl
+	}
+}
+
+// setTables creates table structs based on node yaml data.
+func (s *synch) setTables() {
+	for j := range s.synch.Nodes {
+		var nodeData *nodeData = &s.synch.Nodes[j]
+		s.setTable(nodeData.Table, s.dbs[nodeData.Database], nodeData.Key)
+	}
+}
 
 // func (s *synch) SynchPairs() {
 // 	for j := range s.synch.Vectors {

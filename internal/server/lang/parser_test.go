@@ -24,10 +24,16 @@ func TestParser(t *testing.T) {
 	if len(rawMapping["links"].([]map[string]string)) == 0 {
 		log.Fatal("There should be 3 links.")
 	}
-	if rawMapping["matchBy"].(string) != "IDS(dvdrental_films.film_id, msamp_films.ext_id)" {
-		log.Fatal("matchBy hasn't been read properly.")
+	if rawMapping["matchMethod"].(map[string]interface{})["matchCmd"] != "IDS" {
+		log.Fatal("matchMethod hasn't been read properly.")
 	}
-	if rawMapping["do"].(string) != "UPDATE" {
+	if rawMapping["matchMethod"].(map[string]interface{})["matchArgs"].([]string)[0] != "dvdrental_films.film_id" {
+		log.Fatal("matchArgs haven't been read properly.")
+	}
+	if rawMapping["matchMethod"].(map[string]interface{})["matchArgs"].([]string)[1] != "msamp_films.ext_id" {
+		log.Fatal("matchArgs haven't been read properly.")
+	}
+	if len(rawMapping["do"].([]string)) == 1 && rawMapping["do"].([]string)[0] != "UPDATE" {
 		log.Fatal("'do' action hasn't been read properly.")
 	}
 

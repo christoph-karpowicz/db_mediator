@@ -11,9 +11,9 @@ var createNewRows = [3]string{"never", "initially", "always"}
 var updateOldRows = [3]string{"never", "initially", "always"}
 
 type synchData struct {
-	Name     string   `yaml:"name"`
-	Nodes    []node   `yaml:"nodes"`
-	Mappings []string `yaml:"mappings"`
+	Name     string     `yaml:"name"`
+	Nodes    []nodeData `yaml:"nodes"`
+	Mappings []string   `yaml:"mappings"`
 }
 
 func (s *synchData) Validate() {
