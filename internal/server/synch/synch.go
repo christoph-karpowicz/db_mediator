@@ -1,6 +1,8 @@
 package synch
 
 import (
+	"log"
+
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	"github.com/christoph-karpowicz/unifier/internal/server/lang"
 )
@@ -22,69 +24,64 @@ func (s *synch) GetData() *synchData {
 func (s *synch) Init(DBMap map[string]*db.Database) {
 	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
+	s.nodes = make(map[string]*node)
+
 	s.setDatabases(DBMap)
 	s.setTables()
 	s.setNodes()
-	// s.copyTables()
-	// s.assignTablePointers()
-	// s.selectData()
-	// s.pairData()
+	s.parseMappings()
+	s.selectData()
+	s.pairData()
 	// s.setParentPointers()
+	s.synchPairs()
 }
 
-// func (s *synch) assignTablePointers() {
-// 	for i := range s.synch.Vectors {
-// 		var vctr *vector = &s.synch.Vectors[i]
-
-// 		vctr.sourceTable = s.tables[vctr.Source.Database+"."+vctr.Source.Table]
-// 		vctr.targetTable = s.tables[vctr.Target.Database+"."+vctr.Target.Table]
-// 	}
-// }
-
-// // pairData pairs together records that are going to be synchronized.
-// func (s *synch) pairData() {
-// 	for i := range s.synch.Vectors {
-// 		var vector *vector = &s.synch.Vectors[i]
-// 		vector.createPairs()
-// 	}
-// }
+// pairData pairs together records that are going to be synchronized.
+func (s *synch) pairData() {
+	for i := range s.mappings {
+		var mpng *mapping = s.mappings[i]
+		mpng.createPairs()
+	}
+}
 
 func (s *synch) parseMappings() {
 	for _, mapping := range s.synch.Mappings {
 		rawMapping := lang.ParseMapping(mapping)
 		for _, link := range rawMapping["links"].([]map[string]string) {
-			parsedMapping := createMapping(s.nodes, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string))
-			s.mappings = append(s.mappings, parsedMapping)
+			mpng := createMapping(s.nodes, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string))
+			s.mappings = append(s.mappings, mpng)
 		}
 	}
 }
 
 // // Selects all records from all tables and filters them to get the relevant records.
-// func (s *synch) selectData() {
-// 	for i := range s.synch.Vectors {
-// 		var vctr *vector = &s.synch.Vectors[i]
-// 		sourceRawActiveRecords := (*s.dbs[vctr.Source.Database]).Select(vctr.Source.Table, vctr.Source.Condition)
-// 		targetRawActiveRecords := (*s.dbs[vctr.Target.Database]).Select(vctr.Target.Table, vctr.Target.Condition)
+func (s *synch) selectData() {
+	for i := range s.mappings {
+		var mpng *mapping = s.mappings[i]
+		log.Println(mpng.target)
+		log.Println(mpng.target.tbl.name)
+		sourceRawActiveRecords := (*mpng.source.db).Select(mpng.source.tbl.name, mpng.sourceWhere)
+		targetRawActiveRecords := (*mpng.target.db).Select(mpng.target.tbl.name, mpng.targetWhere)
 
-// 		if !s.initial {
-// 			vctr.sourceOldActiveRecords = vctr.sourceActiveRecords
-// 			vctr.targetOldActiveRecords = vctr.targetActiveRecords
-// 		}
+		if !s.initial {
+			mpng.sourceOldActiveRecords = mpng.sourceActiveRecords
+			mpng.targetOldActiveRecords = mpng.targetActiveRecords
+		}
 
-// 		for _, sourceRecord := range sourceRawActiveRecords {
-// 			sourceRecordPointer := vctr.sourceTable.records.FindRecordPointer(sourceRecord)
-// 			vctr.sourceActiveRecords = append(vctr.sourceActiveRecords, sourceRecordPointer)
-// 			sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, vctr)
-// 		}
-// 		for _, targetRecord := range targetRawActiveRecords {
-// 			targetRecordPointer := vctr.targetTable.records.FindRecordPointer(targetRecord)
-// 			vctr.targetActiveRecords = append(vctr.targetActiveRecords, targetRecordPointer)
-// 			targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, vctr)
-// 		}
-// 		// log.Println(vctr.sourceActiveRecords)
-// 		// log.Println(vctr.targetActiveRecords)
-// 	}
-// }
+		for _, sourceRecord := range sourceRawActiveRecords {
+			sourceRecordPointer := mpng.source.tbl.records.FindRecordPointer(sourceRecord)
+			mpng.sourceActiveRecords = append(mpng.sourceActiveRecords, sourceRecordPointer)
+			sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, mpng)
+		}
+		for _, targetRecord := range targetRawActiveRecords {
+			targetRecordPointer := mpng.target.tbl.records.FindRecordPointer(targetRecord)
+			mpng.targetActiveRecords = append(mpng.targetActiveRecords, targetRecordPointer)
+			targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, mpng)
+		}
+		// log.Println(mpng.sourceActiveRecords)
+		// log.Println(mpng.targetActiveRecords)
+	}
+}
 
 func (s *synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 	_, dbExists := DBMap[dbName]
@@ -106,9 +103,16 @@ func (s *synch) setDatabases(DBMap map[string]*db.Database) {
 
 // setNodes creates node structs and adds them to the relevant synch struct field.
 func (s *synch) setNodes() {
-	for j := range s.synch.Nodes {
-		var nodeData *nodeData = &s.synch.Nodes[j]
-		s.nodes[nodeData.Name] = createNode(nodeData, s.dbs[nodeData.Database], s.tables[nodeData.Table])
+	for i := range s.synch.Nodes {
+		var nodeData *nodeData = &s.synch.Nodes[i]
+
+		var tableName string = nodeData.Database + "." + nodeData.Table
+		_, tableFound := s.tables[tableName]
+		if !tableFound {
+			log.Fatalln("[create node] ERROR: table " + tableName + " not found.")
+		}
+
+		s.nodes[nodeData.Name] = createNode(nodeData, s.dbs[nodeData.Database], s.tables[tableName])
 	}
 }
 
@@ -126,7 +130,7 @@ func (s *synch) setNodes() {
 
 // setTable creates an individual table struct and selects all records from it.
 func (s *synch) setTable(tableName string, database *db.Database, key string) {
-	var tblID string = (*database).GetData().Name + "." + tableName
+	var tblID string = (*database).GetData().GetName() + "." + tableName
 	_, tableCopied := s.tables[tblID]
 
 	if !tableCopied {
@@ -154,16 +158,16 @@ func (s *synch) setTables() {
 	}
 }
 
-// func (s *synch) SynchPairs() {
-// 	for j := range s.synch.Vectors {
-// 		var vctr *vector = &s.synch.Vectors[j]
+func (s *synch) synchPairs() {
+	for j := range s.mappings {
+		var mpng *mapping = s.mappings[j]
 
-// 		for k := range vctr.pairs {
-// 			var pair *pair = &vctr.pairs[k]
-// 			_, err := pair.synchronize(s.dbs[vctr.Source.Database], s.dbs[vctr.Target.Database])
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 		}
-// 	}
-// }
+		for k := range mpng.pairs {
+			var pair *pair = mpng.pairs[k]
+			_, err := pair.synchronize(mpng.source.db, mpng.target.db)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+}
