@@ -114,7 +114,7 @@ func (d *mongoDatabase) TestConnection() {
 	}
 }
 
-// Update updates a document with the privided key.
+// Update updates a document with the provided key.
 func (d *mongoDatabase) Update(table string, key interface{}, column string, val interface{}) (bool, error) {
 	client := d.GetClient()
 	collection := client.Database(d.DB.Name).Collection(table)

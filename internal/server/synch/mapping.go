@@ -1,12 +1,16 @@
 package synch
 
-import "log"
+import (
+	"log"
+)
 
 type mapping struct {
 	source                 *node
 	target                 *node
 	sourceWhere            string
 	targetWhere            string
+	sourceColumn           string
+	targetColumn           string
 	matchMethod            string
 	sourceExID             string
 	targetExID             string
@@ -29,14 +33,24 @@ func createMapping(nodes map[string]*node, link map[string]string, matchMethod m
 	}
 
 	newMapping := mapping{
-		source:      nodes[link["sourceNode"]],
-		target:      nodes[link["targetNode"]],
-		sourceWhere: link["sourceWhere"],
-		targetWhere: link["targetWhere"],
-		matchMethod: matchMethod["matchCmd"].(string),
-		sourceExID:  matchMethod["matchArgs"].([]string)[0],
-		targetExID:  matchMethod["matchArgs"].([]string)[1],
-		do:          do,
+		source:       nodes[link["sourceNode"]],
+		target:       nodes[link["targetNode"]],
+		sourceWhere:  link["sourceWhere"],
+		targetWhere:  link["targetWhere"],
+		sourceColumn: link["sourceColumn"],
+		targetColumn: link["targetColumn"],
+		matchMethod:  matchMethod["matchCmd"].(string),
+		do:           do,
+	}
+
+	if newMapping.matchMethod == "IDS" {
+		for _, marg := range matchMethod["parsedMatchArgs"].([]map[string]string) {
+			if marg["node"] == newMapping.source.data.Name {
+				newMapping.sourceExID = marg["extIDColumn"]
+			} else {
+				newMapping.targetExID = marg["extIDColumn"]
+			}
+		}
 	}
 
 	return &newMapping
@@ -52,10 +66,8 @@ func (m *mapping) createPairs() {
 			target := &m.target.tbl.records.records[j]
 
 			if m.matchMethod == "IDS" {
-				var sourceExternalIDColumnName string = m.sourceExID
-				var targetExternalIDColumnName string = m.targetExID
-				sourceExternalID, sourceOk := source.Data[sourceExternalIDColumnName]
-				targetExternalID, targetOk := target.Data[targetExternalIDColumnName]
+				sourceExternalID, sourceOk := source.Data[m.sourceExID]
+				targetExternalID, targetOk := target.Data[m.targetExID]
 
 				if !sourceOk || !targetOk {
 					continue

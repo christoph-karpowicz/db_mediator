@@ -58,8 +58,6 @@ func (s *synch) parseMappings() {
 func (s *synch) selectData() {
 	for i := range s.mappings {
 		var mpng *mapping = s.mappings[i]
-		log.Println(mpng.target)
-		log.Println(mpng.target.tbl.name)
 		sourceRawActiveRecords := (*mpng.source.db).Select(mpng.source.tbl.name, mpng.sourceWhere)
 		targetRawActiveRecords := (*mpng.target.db).Select(mpng.target.tbl.name, mpng.targetWhere)
 
@@ -89,7 +87,7 @@ func (s *synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 		s.dbs[dbName] = DBMap[dbName]
 		(*s.dbs[dbName]).Init()
 	} else {
-		panic("Database " + dbName + " hasn't been configured.")
+		panic("[set database] ERROR: database " + dbName + " hasn't been configured.")
 	}
 }
 

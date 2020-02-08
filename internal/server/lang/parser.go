@@ -49,6 +49,7 @@ func parseMatchMethod(str string) map[string]interface{} {
 	subNames := r.SubexpNames()
 
 	commaSepRegexp := regexp.MustCompile(`(?s)\s*,\s*`)
+	dotSepRegexp := regexp.MustCompile(`(?s)\.`)
 
 	for i, match := range matches {
 		if subNames[i] == "matchArgs" {
@@ -58,6 +59,19 @@ func parseMatchMethod(str string) map[string]interface{} {
 			}
 		} else if subNames[i] != "" {
 			parsedMatchMethod[subNames[i]] = match
+		}
+	}
+
+	// Extract the node names and external ID column names from match method.
+	if parsedMatchMethod["matchCmd"].(string) == "IDS" {
+		parsedMatchMethod["parsedMatchArgs"] = make([]map[string]string, 0)
+
+		for _, matchArg := range parsedMatchMethod["matchArgs"].([]string) {
+			parsedArg := make(map[string]string)
+			splitArg := dotSepRegexp.Split(matchArg, -1)
+			parsedArg["node"] = splitArg[0]
+			parsedArg["extIDColumn"] = splitArg[1]
+			parsedMatchMethod["parsedMatchArgs"] = append(parsedMatchMethod["parsedMatchArgs"].([]map[string]string), parsedArg)
 		}
 	}
 

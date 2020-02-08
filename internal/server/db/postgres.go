@@ -94,7 +94,7 @@ func (d *postgresDatabase) TestConnection() {
 	fmt.Println("Successfully connected!")
 }
 
-// Update updates a record with the privided key.
+// Update updates a record with the provided key.
 func (d *postgresDatabase) Update(table string, key interface{}, column string, val interface{}) (bool, error) {
 	return false, nil
 }

@@ -10,36 +10,35 @@ type pair struct {
 	mapping    *mapping
 	source     *record
 	target     *record
-	IsComplete bool
+	IsComplete bool // does the source record have a corresponding target record
 }
 
 func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
-	log.Println(p.source)
-	log.Println(p.target)
-	// // Updates
-	// if p.IsComplete {
-	// 	if p.primaryFlow.sourceColumnName != "*" && p.primaryFlow.targetColumnName != "*" {
-	// 		source := p.primaryFlow.source
-	// 		target := p.primaryFlow.target
-	// 		sourceColumnValue := source.Data[p.primaryFlow.sourceColumnName]
-	// 		targetColumnValue := target.Data[p.primaryFlow.targetColumnName]
+	// Updates
+	if p.IsComplete {
+		log.Println(p.source)
+		log.Println(p.target)
 
-	// 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
-	// 			log.Println(err)
-	// 		} else if !areEqual {
-	// 			(*db2).Update("", target.Key, p.primaryFlow.targetColumnName, sourceColumnValue)
-	// 			// log.Println(sourceColumnValue)
-	// 			// log.Println(targetColumnValue)
-	// 		}
-	// 	}
-	// 	// Inserts
-	// } else {
+		if p.mapping.sourceColumn != "*" && p.mapping.targetColumn != "*" {
+			sourceColumnValue := p.source.Data[p.mapping.sourceColumn]
+			targetColumnValue := p.target.Data[p.mapping.targetColumn]
+
+			if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
+				log.Println(err)
+			} else if !areEqual {
+				// (*db2).Update("", p.target.Key, p.mapping.targetColumn, sourceColumnValue)
+				// log.Println(sourceColumnValue)
+				// log.Println(targetColumnValue)
+			}
+		}
+		// Inserts
+	} else {
+
+	}
+
+	// if secondaryFlow != nil {
 
 	// }
-
-	// // if secondaryFlow != nil {
-
-	// // }
 	return false, nil
 }
 
