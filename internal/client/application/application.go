@@ -6,15 +6,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/urfave/cli"
 )
 
 type Application struct {
-	CLI    *cli.App
-	client http.Client
-	Lang   string
+	CLI      *cli.App
+	client   http.Client
+	simulate string
 }
 
 func (a *Application) Init() {
@@ -52,47 +53,58 @@ func (a *Application) makeGETRequest(url string, params map[string]string) {
 	fmt.Println(resBody)
 }
 
-func (a *Application) requestSynch(synchType string, synchName string) {
+func (a *Application) requestSynch(synchType string, synchName string, simulation bool) {
 	paramMap := make(map[string]string)
 	paramMap["type"] = synchType
 	paramMap["synch"] = synchName
+	paramMap["simulation"] = strconv.FormatBool(simulation)
 	a.makeGETRequest("http://localhost:8000/init", paramMap)
 }
 
 func (a *Application) SetCLI() {
 	a.CLI = cli.NewApp()
-	a.CLI.Name = "Unifier CLI"
+	a.CLI.UseShortOptionHandling = true
+
+	a.CLI.Name = "Unifier cli"
 	a.CLI.Usage = "Database synchronization app."
-	// a.CLI.Author = "Krzysztof Karpowicz"
+	author := &cli.Author{Name: "Krzysztof Karpowicz", Email: "christoph.karpowicz@gmail.com"}
+	a.CLI.Authors = append(a.CLI.Authors, author)
 	a.CLI.Version = "1.0.0"
 
 	a.CLI.Commands = []*cli.Command{
 		{
-			Name:    "one-off",
-			Aliases: []string{"oo"},
-			Usage:   "One off synchronization.",
-			Action: func(c *cli.Context) error {
-				a.requestSynch("one-off", c.Args().Get(0))
-				return nil
+			Name:  "synch",
+			Usage: "Start synchronization.",
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "simulate",
+					Aliases: []string{"s"},
+					Usage:   "Simulate a synchronization and show what changes would be made.",
+				},
+				&cli.StringFlag{
+					Name:    "type",
+					Aliases: []string{"t"},
+					Usage:   "Specify the type of synchronization.",
+				},
 			},
-		},
-		{
-			Name:    "ongoing",
-			Aliases: []string{"ng"},
-			Usage:   "Start ongoing synchronization.",
 			Action: func(c *cli.Context) error {
-				a.requestSynch("ongoing", c.Args().Get(0))
-				return nil
-			},
-		},
-	}
+				var synchType string
+				synchTypeFlag := c.String("t")
+				simulateFlag := c.Bool("simulate")
 
-	a.CLI.Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:        "lang",
-			Value:       "english",
-			Usage:       "language for the greeting",
-			Destination: &a.Lang,
+				switch true {
+				case synchTypeFlag == "" || synchTypeFlag == "oo" || synchTypeFlag == "one-off":
+					synchType = "one-off"
+				case synchTypeFlag == "ng" || synchTypeFlag == "ongoing":
+					synchType = "ongoing"
+				default:
+					log.Fatalln("ERROR: unknown synchronization type: " + synchTypeFlag + ".")
+				}
+
+				a.requestSynch(synchType, c.Args().Get(0), simulateFlag)
+
+				return nil
+			},
 		},
 	}
 }
