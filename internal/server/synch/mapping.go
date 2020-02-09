@@ -5,6 +5,7 @@ import (
 )
 
 type mapping struct {
+	synch                  *synch
 	source                 *node
 	target                 *node
 	sourceWhere            string
@@ -22,7 +23,7 @@ type mapping struct {
 	pairs                  []*pair
 }
 
-func createMapping(nodes map[string]*node, link map[string]string, matchMethod map[string]interface{}, do []string) *mapping {
+func createMapping(synch *synch, link map[string]string, matchMethod map[string]interface{}, do []string) *mapping {
 	_, sourceNodeFound := link["sourceNode"]
 	if !sourceNodeFound {
 		log.Fatalln("[create mapping] ERROR: source node not found.")
@@ -33,8 +34,9 @@ func createMapping(nodes map[string]*node, link map[string]string, matchMethod m
 	}
 
 	newMapping := mapping{
-		source:       nodes[link["sourceNode"]],
-		target:       nodes[link["targetNode"]],
+		synch:        synch,
+		source:       synch.nodes[link["sourceNode"]],
+		target:       synch.nodes[link["targetNode"]],
 		sourceWhere:  link["sourceWhere"],
 		targetWhere:  link["targetWhere"],
 		sourceColumn: link["sourceColumn"],
@@ -77,7 +79,7 @@ func (m *mapping) createPairs() {
 					log.Println(err)
 				} else if areEqual {
 					newPair := createPair(m, source, target)
-					m.pairs = append(m.pairs, &newPair)
+					m.pairs = append(m.pairs, newPair)
 					pairFound = true
 					source.PairedIn = append(source.PairedIn, m)
 					target.PairedIn = append(target.PairedIn, m)
@@ -86,7 +88,7 @@ func (m *mapping) createPairs() {
 		}
 		if !pairFound {
 			newPair := createPair(m, source, nil)
-			m.pairs = append(m.pairs, &newPair)
+			m.pairs = append(m.pairs, newPair)
 		}
 	}
 	// for _, pair := range m.pairs {

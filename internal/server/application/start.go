@@ -26,18 +26,25 @@ func (h *startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	synchType, ok := r.URL.Query()["type"]
 	if !ok || len(synchType[0]) < 1 {
-		log.Println("Url Param 'synchType' is missing")
-		return
+		log.Fatalln("[http request] ERROR: URL param 'type' is missing.")
 	}
 
 	synch, ok := r.URL.Query()["synch"]
 	if !ok || len(synch[0]) < 1 {
-		log.Println("Url Param 'synch' is missing")
-		return
+		log.Fatalln("[http request] ERROR: URL param 'synch' is missing.")
+	}
+
+	simulationStr, ok := r.URL.Query()["simulation"]
+	if !ok {
+		simulationStr = []string{"false"}
+	}
+	simulation, err := strconv.ParseBool(simulationStr[0])
+	if err != nil {
+		log.Fatalln("[http request] ERROR: Wrong 'simulation' URL param value.")
 	}
 
 	h.app.Lang = "test222222"
 	count++
 	// go tst(count, &w)
-	go h.app.synchronize(synchType[0], synch[0])
+	go h.app.synchronize(synchType[0], synch[0], simulation)
 }

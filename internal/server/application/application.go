@@ -40,21 +40,19 @@ func (a *Application) listen() {
 	http.ListenAndServe(":8000", nil)
 }
 
-func (a *Application) synchronize(synchType string, synchKey string) {
+func (a *Application) synchronize(synchType string, synchKey string, simulation bool) {
 	fmt.Printf("%s - %s\n", synchType, synchKey)
 	synch, synchFound := a.synchs.SynchMap[synchKey]
 	if !synchFound {
 		panic("Synch '" + synchKey + "' not found.")
 	}
 
-	synch.Init(a.dbs.DBMap)
-	// synch.SynchPairs()
-
-	// fmt.Println(*synch)
+	synch.Init(a.dbs.DBMap, simulation)
+	synch.SynchPairs()
 }
 
-func (a *Application) synchronizeArray(synchType string, synchKeys []string) {
+func (a *Application) synchronizeArray(synchType string, synchKeys []string, simulation bool) {
 	for _, arg := range synchKeys {
-		a.synchronize(synchType, arg)
+		a.synchronize(synchType, arg, simulation)
 	}
 }

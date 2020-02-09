@@ -5,26 +5,32 @@ import (
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	"github.com/christoph-karpowicz/unifier/internal/server/lang"
+	"github.com/christoph-karpowicz/unifier/internal/server/sim"
 )
 
 type synch struct {
-	synch    *synchData
-	dbs      map[string]*db.Database
-	tables   map[string]*table
-	nodes    map[string]*node
-	mappings []*mapping
-	running  bool
-	initial  bool
+	synch      *synchData
+	dbs        map[string]*db.Database
+	tables     map[string]*table
+	nodes      map[string]*node
+	mappings   []*mapping
+	running    bool
+	initial    bool
+	simulation *sim.Simulation
 }
 
 func (s *synch) GetData() *synchData {
 	return s.synch
 }
 
-func (s *synch) Init(DBMap map[string]*db.Database) {
+func (s *synch) Init(DBMap map[string]*db.Database, simulation bool) {
 	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
 	s.nodes = make(map[string]*node)
+
+	if simulation {
+		s.simulation = sim.CreateSimulation()
+	}
 
 	s.setDatabases(DBMap)
 	s.setTables()
@@ -32,8 +38,6 @@ func (s *synch) Init(DBMap map[string]*db.Database) {
 	s.parseMappings()
 	s.selectData()
 	s.pairData()
-	// s.setParentPointers()
-	s.synchPairs()
 }
 
 // pairData pairs together records that are going to be synchronized.
@@ -48,7 +52,7 @@ func (s *synch) parseMappings() {
 	for _, mapping := range s.synch.Mappings {
 		rawMapping := lang.ParseMapping(mapping)
 		for _, link := range rawMapping["links"].([]map[string]string) {
-			mpng := createMapping(s.nodes, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string))
+			mpng := createMapping(s, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string))
 			s.mappings = append(s.mappings, mpng)
 		}
 	}
@@ -114,18 +118,6 @@ func (s *synch) setNodes() {
 	}
 }
 
-// func (s *synch) setParentPointers() {
-// 	for j := range s.synch.Vectors {
-// 		var vector *vector = &s.synch.Vectors[j]
-// 		// vector.table = table
-
-// 		for k := range vector.pairs {
-// 			var pair *pair = &s.synch.Vectors[j].pairs[k]
-// 			pair.vector = vector
-// 		}
-// 	}
-// }
-
 // setTable creates an individual table struct and selects all records from it.
 func (s *synch) setTable(tableName string, database *db.Database, key string) {
 	var tblID string = (*database).GetData().GetName() + "." + tableName
@@ -156,7 +148,7 @@ func (s *synch) setTables() {
 	}
 }
 
-func (s *synch) synchPairs() {
+func (s *synch) SynchPairs() {
 	for j := range s.mappings {
 		var mpng *mapping = s.mappings[j]
 
