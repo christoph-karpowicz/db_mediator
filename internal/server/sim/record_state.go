@@ -1,9 +1,10 @@
 package sim
 
+// RecordState holds information about a certain state of a data record.
 type RecordState struct {
-	keyName      interface{}
-	keyValue     interface{}
-	columnName   string
-	currentValue interface{}
-	newValue     interface{}
+	KeyName      interface{}
+	KeyValue     interface{}
+	ColumnName   string
+	CurrentValue interface{}
+	NewValue     interface{}
 }
