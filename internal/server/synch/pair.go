@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	"github.com/christoph-karpowicz/unifier/internal/server/sim"
 )
 
 type pair struct {
@@ -39,23 +38,8 @@ func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 				log.Println(err)
 			} else if !areEqual {
 				if p.mapping.synch.simulation != nil {
-					src := &sim.RecordState{
-						KeyName:      p.source.Key,
-						KeyValue:     p.source.Data[p.source.Key],
-						ColumnName:   p.mapping.sourceColumn,
-						CurrentValue: p.source.Data[p.mapping.sourceColumn],
-						NewValue:     nil,
-					}
-					trgt := &sim.RecordState{
-						KeyName:      p.target.Key,
-						KeyValue:     p.target.Data[p.target.Key],
-						ColumnName:   p.mapping.targetColumn,
-						CurrentValue: p.target.Data[p.mapping.targetColumn],
-						NewValue:     sourceColumnValue,
-					}
-
-					p.mapping.synch.simulation.AddUpdate(src, trgt)
-					fmt.Println(p.mapping.synch.simulation)
+					p.mapping.synch.simulation.AddUpdate(p)
+					// fmt.Println(p.mapping.synch.simulation)
 				}
 				// (*db2).Update("", p.target.Key, p.mapping.targetColumn, sourceColumnValue)
 				// log.Println(sourceColumnValue)
@@ -69,4 +53,18 @@ func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (p *pair) CreateSimulationString() string {
+	return fmt.Sprintf("|%6v: %6v, %6v: %16v| => |%6v: %6v, %6s: %16v -> %16v|\n",
+		p.source.Key,
+		p.source.Data[p.source.Key],
+		p.mapping.sourceColumn,
+		p.source.Data[p.mapping.sourceColumn],
+		p.target.Key,
+		p.target.Data[p.target.Key],
+		p.mapping.targetColumn,
+		p.target.Data[p.mapping.targetColumn],
+		p.source.Data[p.mapping.sourceColumn],
+	)
 }
