@@ -9,11 +9,11 @@ import (
 
 func TestYAML(t *testing.T) {
 	os.Chdir("../../..")
-	synchs := Synchs{SynchMap: make(map[string]*synch)}
+	synchs := Synchs{SynchMap: make(map[string]*Synch)}
 	synchs.ImportYAMLDir()
 	synchs.ValidateYAML()
 	// synchs.SynchMap["films"].Init()
-	// synchs.SynchMap["films"].SynchPairs()
+	// synchs.SynchMap["films"].Synchronize()
 }
 
 func TestDir(t *testing.T) {

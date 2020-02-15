@@ -5,7 +5,7 @@ import (
 )
 
 type mapping struct {
-	synch                  *synch
+	synch                  *Synch
 	source                 *node
 	target                 *node
 	sourceWhere            string
@@ -20,10 +20,10 @@ type mapping struct {
 	sourceActiveRecords    []*record
 	targetOldActiveRecords []*record
 	targetActiveRecords    []*record
-	pairs                  []*pair
+	pairs                  []*Pair
 }
 
-func createMapping(synch *synch, link map[string]string, matchMethod map[string]interface{}, do []string) *mapping {
+func createMapping(synch *Synch, link map[string]string, matchMethod map[string]interface{}, do []string) *mapping {
 	_, sourceNodeFound := link["sourceNode"]
 	if !sourceNodeFound {
 		log.Fatalln("[create mapping] ERROR: source node not found.")

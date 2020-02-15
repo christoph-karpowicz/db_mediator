@@ -14,7 +14,7 @@ import (
 )
 
 type Synchs struct {
-	SynchMap map[string]*synch
+	SynchMap map[string]*Synch
 }
 
 func (s *Synchs) ImportYAMLDir() {
@@ -33,7 +33,7 @@ func (s *Synchs) ImportYAMLDir() {
 		// 	continue
 		// }
 
-		s.SynchMap[synchData.Name] = &synch{synch: &synchData, initial: true}
+		s.SynchMap[synchData.Name] = &Synch{synch: &synchData, initial: true}
 		fmt.Println("Config file name: " + configFile.Name())
 		// fmt.Println(synchData)
 	}
@@ -69,13 +69,13 @@ func (s *Synchs) ImportYAMLFile(fileName string) synchData {
 func (s *Synchs) ValidateYAML() {
 	fmt.Println("Synch YAML file validation...")
 	for _, synch := range s.SynchMap {
-		// fmt.Println((*synch).GetData())
+		// fmt.Println((*Synch).GetData())
 		(*synch).GetData().Validate()
 	}
 	fmt.Println("... passed.")
 }
 
 func CreateSynchs() *Synchs {
-	synchs := &Synchs{SynchMap: make(map[string]*synch)}
+	synchs := &Synchs{SynchMap: make(map[string]*Synch)}
 	return synchs
 }

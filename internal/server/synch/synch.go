@@ -5,10 +5,10 @@ import (
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	"github.com/christoph-karpowicz/unifier/internal/server/lang"
-	"github.com/christoph-karpowicz/unifier/internal/server/sim"
+	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
 
-type synch struct {
+type Synch struct {
 	synch      *synchData
 	dbs        map[string]*db.Database
 	tables     map[string]*table
@@ -16,21 +16,17 @@ type synch struct {
 	mappings   []*mapping
 	running    bool
 	initial    bool
-	simulation *sim.Simulation
+	Simulation unifier.Simulator
 }
 
-func (s *synch) GetData() *synchData {
+func (s *Synch) GetData() *synchData {
 	return s.synch
 }
 
-func (s *synch) Init(DBMap map[string]*db.Database, simulation bool) {
+func (s *Synch) Init(DBMap map[string]*db.Database, simulation bool) {
 	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
 	s.nodes = make(map[string]*node)
-
-	if simulation {
-		s.simulation = sim.CreateSimulation()
-	}
 
 	s.setDatabases(DBMap)
 	s.setTables()
@@ -40,15 +36,15 @@ func (s *synch) Init(DBMap map[string]*db.Database, simulation bool) {
 	s.pairData()
 }
 
-// pairData pairs together records that are going to be synchronized.
-func (s *synch) pairData() {
+// pairData pairs together records that are going to be Synchronized.
+func (s *Synch) pairData() {
 	for i := range s.mappings {
 		var mpng *mapping = s.mappings[i]
 		mpng.createPairs()
 	}
 }
 
-func (s *synch) parseMappings() {
+func (s *Synch) parseMappings() {
 	for _, mapping := range s.synch.Mappings {
 		rawMapping := lang.ParseMapping(mapping)
 		for _, link := range rawMapping["links"].([]map[string]string) {
@@ -59,7 +55,7 @@ func (s *synch) parseMappings() {
 }
 
 // // Selects all records from all tables and filters them to get the relevant records.
-func (s *synch) selectData() {
+func (s *Synch) selectData() {
 	for i := range s.mappings {
 		var mpng *mapping = s.mappings[i]
 		sourceRawActiveRecords := (*mpng.source.db).Select(mpng.source.tbl.name, mpng.sourceWhere)
@@ -85,7 +81,7 @@ func (s *synch) selectData() {
 	}
 }
 
-func (s *synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
+func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 	_, dbExists := DBMap[dbName]
 	if dbExists {
 		s.dbs[dbName] = DBMap[dbName]
@@ -96,7 +92,7 @@ func (s *synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 }
 
 // Open chosen database connections.
-func (s *synch) setDatabases(DBMap map[string]*db.Database) {
+func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
 	for j := range s.synch.Nodes {
 		var nodeData *nodeData = &s.synch.Nodes[j]
 		s.setDatabase(DBMap, nodeData.Database)
@@ -104,7 +100,7 @@ func (s *synch) setDatabases(DBMap map[string]*db.Database) {
 }
 
 // setNodes creates node structs and adds them to the relevant synch struct field.
-func (s *synch) setNodes() {
+func (s *Synch) setNodes() {
 	for i := range s.synch.Nodes {
 		var nodeData *nodeData = &s.synch.Nodes[i]
 
@@ -119,7 +115,7 @@ func (s *synch) setNodes() {
 }
 
 // setTable creates an individual table struct and selects all records from it.
-func (s *synch) setTable(tableName string, database *db.Database) {
+func (s *Synch) setTable(tableName string, database *db.Database) {
 	var tblID string = (*database).GetData().GetName() + "." + tableName
 	_, tableCopied := s.tables[tblID]
 
@@ -141,23 +137,25 @@ func (s *synch) setTable(tableName string, database *db.Database) {
 }
 
 // setTables creates table structs based on node yaml data.
-func (s *synch) setTables() {
+func (s *Synch) setTables() {
 	for j := range s.synch.Nodes {
 		var nodeData *nodeData = &s.synch.Nodes[j]
 		s.setTable(nodeData.Table, s.dbs[nodeData.Database])
 	}
 }
 
-func (s *synch) SynchPairs() {
+func (s *Synch) Synchronize() (bool, error) {
 	for j := range s.mappings {
 		var mpng *mapping = s.mappings[j]
 
 		for k := range mpng.pairs {
-			var pair *pair = mpng.pairs[k]
-			_, err := pair.synchronize(mpng.source.db, mpng.target.db)
+			var pair *Pair = mpng.pairs[k]
+			_, err := pair.Synchronize()
 			if err != nil {
 				log.Println(err)
 			}
 		}
 	}
+
+	return false, nil
 }

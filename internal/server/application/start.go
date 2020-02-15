@@ -46,5 +46,5 @@ func (h *startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.app.Lang = "test222222"
 	count++
 	// go tst(count, &w)
-	go h.app.synchronize(synchType[0], synch[0], simulation)
+	go h.app.Synchronize(synchType[0], synch[0], simulation)
 }

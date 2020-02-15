@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
+	"github.com/christoph-karpowicz/unifier/internal/server/sim"
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 )
 
@@ -40,7 +41,7 @@ func (a *Application) listen() {
 	http.ListenAndServe(":8000", nil)
 }
 
-func (a *Application) synchronize(synchType string, synchKey string, simulation bool) {
+func (a *Application) Synchronize(synchType string, synchKey string, simulation bool) {
 	fmt.Printf("%s - %s\n", synchType, synchKey)
 	synch, synchFound := a.synchs.SynchMap[synchKey]
 	if !synchFound {
@@ -48,11 +49,15 @@ func (a *Application) synchronize(synchType string, synchKey string, simulation 
 	}
 
 	synch.Init(a.dbs.DBMap, simulation)
-	synch.SynchPairs()
+	if simulation {
+		synch.Simulation = sim.CreateSimulation(synch)
+	}
+
+	synch.Synchronize()
 }
 
-func (a *Application) synchronizeArray(synchType string, synchKeys []string, simulation bool) {
+func (a *Application) SynchronizeArray(synchType string, synchKeys []string, simulation bool) {
 	for _, arg := range synchKeys {
-		a.synchronize(synchType, arg, simulation)
+		a.Synchronize(synchType, arg, simulation)
 	}
 }

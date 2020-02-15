@@ -7,7 +7,7 @@ import (
 // ParseMapping uses regexp to split the mapping string into smaller parts.
 func ParseMapping(str string) map[string]interface{} {
 	rawMpng := make(map[string]interface{})
-	mappingParseRegexp := regexp.MustCompile(`(?isU)^\s*(?P<command>[a-z]+)\s+(?P<links>\[.*\]\sTO\s\[.*\],?)+\s+MATCH\sBY\s(?P<matchMethod>[a-z]+\(.+\))\s+DO\s(?P<do>[a-z]+)\s*$`)
+	mappingParseRegexp := regexp.MustCompile(`(?isU)^\s*(?P<command>[a-z]+)\s+(?P<links>\[.*\]\sTO\s\[.*\],?)+\s+MATCH\sBY\s(?P<matchMethod>[a-z]+\(.+\))\s+DO\s(?P<do>[a-z\s,]+)\s*$`)
 	matches := mappingParseRegexp.FindStringSubmatch(str)
 	subNames := mappingParseRegexp.SubexpNames()
 
