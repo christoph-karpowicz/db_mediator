@@ -119,7 +119,7 @@ func (s *synch) setNodes() {
 }
 
 // setTable creates an individual table struct and selects all records from it.
-func (s *synch) setTable(tableName string, database *db.Database, key string) {
+func (s *synch) setTable(tableName string, database *db.Database) {
 	var tblID string = (*database).GetData().GetName() + "." + tableName
 	_, tableCopied := s.tables[tblID]
 
@@ -135,7 +135,7 @@ func (s *synch) setTable(tableName string, database *db.Database, key string) {
 			tbl.oldRecords = tbl.records
 		}
 
-		tbl.records = &tableRecords{records: mapToRecords(rawRecords, key)}
+		tbl.records = &tableRecords{records: mapToRecords(rawRecords)}
 		s.tables[tbl.id] = tbl
 	}
 }
@@ -144,7 +144,7 @@ func (s *synch) setTable(tableName string, database *db.Database, key string) {
 func (s *synch) setTables() {
 	for j := range s.synch.Nodes {
 		var nodeData *nodeData = &s.synch.Nodes[j]
-		s.setTable(nodeData.Table, s.dbs[nodeData.Database], nodeData.Key)
+		s.setTable(nodeData.Table, s.dbs[nodeData.Database])
 	}
 }
 

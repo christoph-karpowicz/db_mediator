@@ -23,10 +23,18 @@ func createPair(mpng *mapping, source *record, target *record) *pair {
 	return &newPair
 }
 
-func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
-	// Updates
-	// If this pair is complete.
+func (p pair) getSourceNodeKey() string {
+	return p.mapping.source.data.Key
+}
+
+func (p pair) getTargetNodeKey() string {
+	return p.mapping.target.data.Key
+}
+
+func (p pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 	if p.target != nil {
+		// Updates
+		// If this pair is complete.
 		// log.Println(p.source)
 		// log.Println(p.target)
 
@@ -44,25 +52,58 @@ func (p *pair) synchronize(db1 *db.Database, db2 *db.Database) (bool, error) {
 				// (*db2).Update("", p.target.Key, p.mapping.targetColumn, sourceColumnValue)
 				// log.Println(sourceColumnValue)
 				// log.Println(targetColumnValue)
+			} else {
+				if p.mapping.synch.simulation != nil {
+					p.mapping.synch.simulation.AddIdle(p)
+				}
 			}
 		}
+	} else {
 		// Inserts
 		// If a target record has to be created.
-	} else {
-
+		if p.mapping.synch.simulation != nil {
+			p.mapping.synch.simulation.AddInsert(p)
+			// fmt.Println(p.mapping.synch.simulation)
+		}
 	}
 
 	return false, nil
 }
 
-func (p *pair) CreateSimulationString() string {
-	return fmt.Sprintf("|%6v: %6v, %6v: %16v| => |%6v: %6v, %6s: %16v -> %16v|\n",
-		p.source.Key,
-		p.source.Data[p.source.Key],
+func (p pair) SimIdleString() string {
+	return fmt.Sprintf("|%6v: %6v, %6v: %25v|  ==  |%6v: %6v, %6s: %25v|\n",
+		p.getSourceNodeKey(),
+		p.source.Data[p.getSourceNodeKey()],
 		p.mapping.sourceColumn,
 		p.source.Data[p.mapping.sourceColumn],
-		p.target.Key,
-		p.target.Data[p.target.Key],
+		p.getTargetNodeKey(),
+		p.target.Data[p.getTargetNodeKey()],
+		p.mapping.targetColumn,
+		p.target.Data[p.mapping.targetColumn],
+	)
+}
+
+func (p pair) SimInsertString() string {
+	return fmt.Sprintf("|%6v: %6v, %6v: %25v|  =>  |%6v: %6v, %6s: %25v|\n",
+		p.getSourceNodeKey(),
+		p.source.Data[p.getSourceNodeKey()],
+		p.mapping.sourceColumn,
+		p.source.Data[p.mapping.sourceColumn],
+		p.getTargetNodeKey(),
+		"-",
+		p.mapping.targetColumn,
+		p.source.Data[p.mapping.sourceColumn],
+	)
+}
+
+func (p pair) SimUpdateString() string {
+	return fmt.Sprintf("|%6v: %6v, %6v: %25v|  =^  |%6v: %6v, %6s: %16v -> %25v|\n",
+		p.getSourceNodeKey(),
+		p.source.Data[p.getSourceNodeKey()],
+		p.mapping.sourceColumn,
+		p.source.Data[p.mapping.sourceColumn],
+		p.getTargetNodeKey(),
+		p.target.Data[p.getTargetNodeKey()],
 		p.mapping.targetColumn,
 		p.target.Data[p.mapping.targetColumn],
 		p.source.Data[p.mapping.sourceColumn],
