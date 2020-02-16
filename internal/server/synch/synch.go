@@ -9,18 +9,18 @@ import (
 )
 
 type Synch struct {
-	synch      *synchData
+	Data       *synchData
 	dbs        map[string]*db.Database
 	tables     map[string]*table
 	nodes      map[string]*node
-	mappings   []*mapping
+	Mappings   []*Mapping
 	running    bool
 	initial    bool
 	Simulation unifier.Simulator
 }
 
 func (s *Synch) GetData() *synchData {
-	return s.synch
+	return s.Data
 }
 
 func (s *Synch) Init(DBMap map[string]*db.Database, simulation bool) {
@@ -38,26 +38,26 @@ func (s *Synch) Init(DBMap map[string]*db.Database, simulation bool) {
 
 // pairData pairs together records that are going to be Synchronized.
 func (s *Synch) pairData() {
-	for i := range s.mappings {
-		var mpng *mapping = s.mappings[i]
+	for i := range s.Mappings {
+		var mpng *Mapping = s.Mappings[i]
 		mpng.createPairs()
 	}
 }
 
 func (s *Synch) parseMappings() {
-	for _, mapping := range s.synch.Mappings {
+	for i, mapping := range s.Data.Mappings {
 		rawMapping := lang.ParseMapping(mapping)
-		for _, link := range rawMapping["links"].([]map[string]string) {
-			mpng := createMapping(s, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string))
-			s.mappings = append(s.mappings, mpng)
+		for j, link := range rawMapping["links"].([]map[string]string) {
+			mpng := createMapping(s, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string), i, j)
+			s.Mappings = append(s.Mappings, mpng)
 		}
 	}
 }
 
 // // Selects all records from all tables and filters them to get the relevant records.
 func (s *Synch) selectData() {
-	for i := range s.mappings {
-		var mpng *mapping = s.mappings[i]
+	for i := range s.Mappings {
+		var mpng *Mapping = s.Mappings[i]
 		sourceRawActiveRecords := (*mpng.source.db).Select(mpng.source.tbl.name, mpng.sourceWhere)
 		targetRawActiveRecords := (*mpng.target.db).Select(mpng.target.tbl.name, mpng.targetWhere)
 
@@ -93,16 +93,16 @@ func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 
 // Open chosen database connections.
 func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
-	for j := range s.synch.Nodes {
-		var nodeData *nodeData = &s.synch.Nodes[j]
+	for j := range s.Data.Nodes {
+		var nodeData *nodeData = &s.Data.Nodes[j]
 		s.setDatabase(DBMap, nodeData.Database)
 	}
 }
 
 // setNodes creates node structs and adds them to the relevant synch struct field.
 func (s *Synch) setNodes() {
-	for i := range s.synch.Nodes {
-		var nodeData *nodeData = &s.synch.Nodes[i]
+	for i := range s.Data.Nodes {
+		var nodeData *nodeData = &s.Data.Nodes[i]
 
 		var tableName string = nodeData.Database + "." + nodeData.Table
 		_, tableFound := s.tables[tableName]
@@ -138,15 +138,15 @@ func (s *Synch) setTable(tableName string, database *db.Database) {
 
 // setTables creates table structs based on node yaml data.
 func (s *Synch) setTables() {
-	for j := range s.synch.Nodes {
-		var nodeData *nodeData = &s.synch.Nodes[j]
+	for j := range s.Data.Nodes {
+		var nodeData *nodeData = &s.Data.Nodes[j]
 		s.setTable(nodeData.Table, s.dbs[nodeData.Database])
 	}
 }
 
 func (s *Synch) Synchronize() (bool, error) {
-	for j := range s.mappings {
-		var mpng *mapping = s.mappings[j]
+	for j := range s.Mappings {
+		var mpng *Mapping = s.Mappings[j]
 
 		for k := range mpng.pairs {
 			var pair *Pair = mpng.pairs[k]

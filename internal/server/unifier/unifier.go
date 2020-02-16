@@ -11,4 +11,5 @@ type Simulator interface {
 	AddIdle(pair Synchronizer) (bool, error)
 	AddInsert(pair Synchronizer) (bool, error)
 	AddUpdate(pair Synchronizer) (bool, error)
+	Init()
 }

@@ -4,7 +4,13 @@ import (
 	"log"
 )
 
-type mapping struct {
+type MappingSimData struct {
+	MappingIndex int
+	LinkIndex    int
+	Link         map[string]string
+}
+
+type Mapping struct {
 	synch                  *Synch
 	source                 *node
 	target                 *node
@@ -21,9 +27,13 @@ type mapping struct {
 	targetOldActiveRecords []*record
 	targetActiveRecords    []*record
 	pairs                  []*Pair
+
+	// Optional, if the user requested a simulation.
+	Sim *MappingSimData
 }
 
-func createMapping(synch *Synch, link map[string]string, matchMethod map[string]interface{}, do []string) *mapping {
+func createMapping(synch *Synch, link map[string]string, matchMethod map[string]interface{}, do []string, indexes ...int) *Mapping {
+
 	_, sourceNodeFound := link["sourceNode"]
 	if !sourceNodeFound {
 		log.Fatalln("[create mapping] ERROR: source node not found.")
@@ -33,7 +43,7 @@ func createMapping(synch *Synch, link map[string]string, matchMethod map[string]
 		log.Fatalln("[create mapping] ERROR: target node not found.")
 	}
 
-	newMapping := mapping{
+	newMapping := Mapping{
 		synch:        synch,
 		source:       synch.nodes[link["sourceNode"]],
 		target:       synch.nodes[link["targetNode"]],
@@ -55,11 +65,19 @@ func createMapping(synch *Synch, link map[string]string, matchMethod map[string]
 		}
 	}
 
+	if synch.Simulation != nil {
+		newMapping.Sim = &MappingSimData{
+			MappingIndex: indexes[0],
+			LinkIndex:    indexes[1],
+			Link:         link,
+		}
+	}
+
 	return &newMapping
 }
 
 // createPairs for each active record in source database finds a corresponding acitve record in target database.
-func (m *mapping) createPairs() {
+func (m *Mapping) createPairs() {
 	for i := range m.source.tbl.records.records {
 		source := &m.source.tbl.records.records[i]
 		var pairFound bool = false

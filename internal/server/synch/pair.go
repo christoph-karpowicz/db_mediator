@@ -8,14 +8,14 @@ import (
 )
 
 type Pair struct {
-	mapping *mapping
+	Mapping *Mapping
 	source  *record
 	target  *record
 }
 
-func createPair(mpng *mapping, source *record, target *record) *Pair {
+func createPair(mpng *Mapping, source *record, target *record) *Pair {
 	var newPair Pair = Pair{
-		mapping: mpng,
+		Mapping: mpng,
 		source:  source,
 		target:  target,
 	}
@@ -24,49 +24,49 @@ func createPair(mpng *mapping, source *record, target *record) *Pair {
 }
 
 func (p Pair) getSourceNodeKey() string {
-	return p.mapping.source.data.Key
+	return p.Mapping.source.data.Key
 }
 
 func (p Pair) getTargetNodeKey() string {
-	return p.mapping.target.data.Key
+	return p.Mapping.target.data.Key
 }
 
 func (p Pair) Synchronize() (bool, error) {
-	// db1 := p.mapping.source.db
-	// db2 := p.mapping.target.db
+	// db1 := p.Mapping.source.db
+	// db2 := p.Mapping.target.db
 
-	if p.target != nil && arrUtil.Contains(p.mapping.do, "UPDATE") {
+	if p.target != nil && arrUtil.Contains(p.Mapping.do, "UPDATE") {
 		// Updates
 		// If this pair is complete.
 		// log.Println(p.source)
 		// log.Println(p.target)
 
-		if p.mapping.sourceColumn != "*" && p.mapping.targetColumn != "*" {
-			sourceColumnValue := p.source.Data[p.mapping.sourceColumn]
-			targetColumnValue := p.target.Data[p.mapping.targetColumn]
+		if p.Mapping.sourceColumn != "*" && p.Mapping.targetColumn != "*" {
+			sourceColumnValue := p.source.Data[p.Mapping.sourceColumn]
+			targetColumnValue := p.target.Data[p.Mapping.targetColumn]
 
 			if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 				log.Println(err)
 			} else if !areEqual {
-				if p.mapping.synch.Simulation != nil {
-					p.mapping.synch.Simulation.AddUpdate(p)
-					// fmt.Println(p.mapping.synch.Simulation)
+				if p.Mapping.synch.Simulation != nil {
+					p.Mapping.synch.Simulation.AddUpdate(p)
+					// fmt.Println(p.Mapping.synch.Simulation)
 				}
-				// (*db2).Update("", p.target.Key, p.mapping.targetColumn, sourceColumnValue)
+				// (*db2).Update("", p.target.Key, p.Mapping.targetColumn, sourceColumnValue)
 				// log.Println(sourceColumnValue)
 				// log.Println(targetColumnValue)
 			} else {
-				if p.mapping.synch.Simulation != nil {
-					p.mapping.synch.Simulation.AddIdle(p)
+				if p.Mapping.synch.Simulation != nil {
+					p.Mapping.synch.Simulation.AddIdle(p)
 				}
 			}
 		}
-	} else if p.target == nil && arrUtil.Contains(p.mapping.do, "INSERT") {
+	} else if p.target == nil && arrUtil.Contains(p.Mapping.do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
-		if p.mapping.synch.Simulation != nil {
-			p.mapping.synch.Simulation.AddInsert(p)
-			// fmt.Println(p.mapping.synch.Simulation)
+		if p.Mapping.synch.Simulation != nil {
+			p.Mapping.synch.Simulation.AddInsert(p)
+			// fmt.Println(p.Mapping.synch.Simulation)
 		}
 	}
 
@@ -77,12 +77,12 @@ func (p Pair) SimIdleString() string {
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  ==  |%6v: %6v, %6s: %25v|\n",
 		p.getSourceNodeKey(),
 		p.source.Data[p.getSourceNodeKey()],
-		p.mapping.sourceColumn,
-		p.source.Data[p.mapping.sourceColumn],
+		p.Mapping.sourceColumn,
+		p.source.Data[p.Mapping.sourceColumn],
 		p.getTargetNodeKey(),
 		p.target.Data[p.getTargetNodeKey()],
-		p.mapping.targetColumn,
-		p.target.Data[p.mapping.targetColumn],
+		p.Mapping.targetColumn,
+		p.target.Data[p.Mapping.targetColumn],
 	)
 }
 
@@ -90,12 +90,12 @@ func (p Pair) SimInsertString() string {
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =>  |%6v: %6v, %6s: %25v|\n",
 		p.getSourceNodeKey(),
 		p.source.Data[p.getSourceNodeKey()],
-		p.mapping.sourceColumn,
-		p.source.Data[p.mapping.sourceColumn],
+		p.Mapping.sourceColumn,
+		p.source.Data[p.Mapping.sourceColumn],
 		p.getTargetNodeKey(),
 		"-",
-		p.mapping.targetColumn,
-		p.source.Data[p.mapping.sourceColumn],
+		p.Mapping.targetColumn,
+		p.source.Data[p.Mapping.sourceColumn],
 	)
 }
 
@@ -103,12 +103,12 @@ func (p Pair) SimUpdateString() string {
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =^  |%6v: %6v, %6s: %25v -> %25v|\n",
 		p.getSourceNodeKey(),
 		p.source.Data[p.getSourceNodeKey()],
-		p.mapping.sourceColumn,
-		p.source.Data[p.mapping.sourceColumn],
+		p.Mapping.sourceColumn,
+		p.source.Data[p.Mapping.sourceColumn],
 		p.getTargetNodeKey(),
 		p.target.Data[p.getTargetNodeKey()],
-		p.mapping.targetColumn,
-		p.target.Data[p.mapping.targetColumn],
-		p.source.Data[p.mapping.sourceColumn],
+		p.Mapping.targetColumn,
+		p.target.Data[p.Mapping.targetColumn],
+		p.source.Data[p.Mapping.sourceColumn],
 	)
 }

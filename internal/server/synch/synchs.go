@@ -33,7 +33,7 @@ func (s *Synchs) ImportYAMLDir() {
 		// 	continue
 		// }
 
-		s.SynchMap[synchData.Name] = &Synch{synch: &synchData, initial: true}
+		s.SynchMap[synchData.Name] = &Synch{Data: &synchData, initial: true}
 		fmt.Println("Config file name: " + configFile.Name())
 		// fmt.Println(synchData)
 	}

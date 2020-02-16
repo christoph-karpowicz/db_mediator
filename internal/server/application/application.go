@@ -48,9 +48,14 @@ func (a *Application) Synchronize(synchType string, synchKey string, simulation 
 		panic("Synch '" + synchKey + "' not found.")
 	}
 
-	synch.Init(a.dbs.DBMap, simulation)
 	if simulation {
 		synch.Simulation = sim.CreateSimulation(synch)
+	}
+
+	synch.Init(a.dbs.DBMap, simulation)
+
+	if simulation {
+		synch.Simulation.Init()
 	}
 
 	synch.Synchronize()
