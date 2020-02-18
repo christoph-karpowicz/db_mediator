@@ -1,6 +1,7 @@
 package sim
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
@@ -16,27 +17,27 @@ type PairSimulator interface {
 }
 
 type linkSimulation struct {
-	idle    []string
-	inserts []string
-	updates []string
+	Idle    []string `json:"idle"`
+	Inserts []string `json:"inserts"`
+	Updates []string `json:"updates"`
 }
 
 type mappingSimulation struct {
 	mapping  *synch.Mapping
-	linkSims map[int]*linkSimulation
+	LinkSims map[int]*linkSimulation `json:"links"`
 }
 
 // Simulation is basically a report about what will happen after an actual synchronization is launched.
 type Simulation struct {
 	synch        *synch.Synch
-	mappingsSims map[int]*mappingSimulation
+	mappingsSims map[*synch.Mapping]*mappingSimulation
 }
 
 // CreateSimulation creates a Simulation instance.
 func CreateSimulation(s *synch.Synch) unifier.Simulator {
 	var newSimulation Simulation = Simulation{
 		synch:        s,
-		mappingsSims: make(map[int]*mappingSimulation),
+		mappingsSims: make(map[*synch.Mapping]*mappingSimulation),
 	}
 
 	return &newSimulation
@@ -47,10 +48,9 @@ func CreateSimulation(s *synch.Synch) unifier.Simulator {
 func (s *Simulation) AddIdle(p unifier.Synchronizer) (bool, error) {
 	var pair synch.Pair = p.(synch.Pair)
 	var str string = pair.SimIdleString()
-	var mpngIdx int = pair.Mapping.Sim.MappingIndex
 	var lnkIdx int = pair.Mapping.Sim.LinkIndex
 
-	s.mappingsSims[mpngIdx].linkSims[lnkIdx].idle = append(s.mappingsSims[mpngIdx].linkSims[lnkIdx].idle, str)
+	s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Idle = append(s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Idle, str)
 	fmt.Print(str)
 
 	return false, nil
@@ -60,10 +60,9 @@ func (s *Simulation) AddIdle(p unifier.Synchronizer) (bool, error) {
 func (s *Simulation) AddInsert(p unifier.Synchronizer) (bool, error) {
 	var pair synch.Pair = p.(synch.Pair)
 	var str string = pair.SimInsertString()
-	var mpngIdx int = pair.Mapping.Sim.MappingIndex
 	var lnkIdx int = pair.Mapping.Sim.LinkIndex
 
-	s.mappingsSims[mpngIdx].linkSims[lnkIdx].inserts = append(s.mappingsSims[mpngIdx].linkSims[lnkIdx].inserts, str)
+	s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Inserts = append(s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Inserts, str)
 	fmt.Print(str)
 
 	return false, nil
@@ -73,10 +72,9 @@ func (s *Simulation) AddInsert(p unifier.Synchronizer) (bool, error) {
 func (s *Simulation) AddUpdate(p unifier.Synchronizer) (bool, error) {
 	var pair synch.Pair = p.(synch.Pair)
 	var str string = pair.SimUpdateString()
-	var mpngIdx int = pair.Mapping.Sim.MappingIndex
 	var lnkIdx int = pair.Mapping.Sim.LinkIndex
 
-	s.mappingsSims[mpngIdx].linkSims[lnkIdx].updates = append(s.mappingsSims[mpngIdx].linkSims[lnkIdx].updates, str)
+	s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Updates = append(s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Updates, str)
 	fmt.Print(str)
 
 	return false, nil
@@ -85,12 +83,36 @@ func (s *Simulation) AddUpdate(p unifier.Synchronizer) (bool, error) {
 // Init fills the necessary fields after the Synch instance finished its Init execution.
 func (s *Simulation) Init() {
 	for _, mapping := range s.synch.Mappings {
-		_, mpngSimExists := s.mappingsSims[mapping.Sim.MappingIndex]
+		_, mpngSimExists := s.mappingsSims[mapping]
 		if !mpngSimExists {
-			s.mappingsSims[mapping.Sim.MappingIndex] = &mappingSimulation{mapping: mapping}
-			s.mappingsSims[mapping.Sim.MappingIndex].linkSims = make(map[int]*linkSimulation)
+			s.mappingsSims[mapping] = &mappingSimulation{mapping: mapping}
+			s.mappingsSims[mapping].LinkSims = make(map[int]*linkSimulation)
 		}
 
-		s.mappingsSims[mapping.Sim.MappingIndex].linkSims[mapping.Sim.LinkIndex] = &linkSimulation{}
+		s.mappingsSims[mapping].LinkSims[mapping.Sim.LinkIndex] = &linkSimulation{}
 	}
+}
+
+// MarshalJSON implements the Marshaler interface for custom JSON creation.
+func (s *Simulation) MarshalJSON() ([]byte, error) {
+	mappingsMap := make(map[int]*mappingSimulation)
+	for _, mappingSim := range s.mappingsSims {
+		mappingsMap[mappingSim.mapping.Sim.MappingIndex] = mappingSim
+	}
+
+	customStruct := struct {
+		SynchName    string                     `json:"synchName"`
+		MappingsSims map[int]*mappingSimulation `json:"mappings"`
+	}{
+		SynchName:    s.synch.Data.Name,
+		MappingsSims: mappingsMap,
+	}
+
+	return json.Marshal(&customStruct)
+}
+
+// ToJSON turns the simulation into a JSON object.
+func (s *Simulation) ToJSON() ([]byte, error) {
+	fmt.Println(s)
+	return json.Marshal(s)
 }

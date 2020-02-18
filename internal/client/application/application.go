@@ -36,7 +36,7 @@ func (a *Application) makeGETRequest(url string, params map[string]string) {
 	}
 	req.URL.RawQuery = q.Encode()
 
-	fmt.Println(req.URL.RawQuery)
+	// fmt.Println(req.URL.RawQuery)
 
 	res, err := a.client.Do(req)
 	if err != nil {
@@ -50,7 +50,7 @@ func (a *Application) makeGETRequest(url string, params map[string]string) {
 		log.Fatalln(err)
 	}
 
-	fmt.Println(resBody)
+	fmt.Println(string(resBody))
 }
 
 func (a *Application) requestSynch(synchType string, synchName string, simulation bool) {

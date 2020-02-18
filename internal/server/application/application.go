@@ -41,7 +41,7 @@ func (a *Application) listen() {
 	http.ListenAndServe(":8000", nil)
 }
 
-func (a *Application) Synchronize(synchType string, synchKey string, simulation bool) {
+func (a *Application) Synchronize(synchType string, synchKey string, simulation bool) ([]byte, error) {
 	fmt.Printf("%s - %s\n", synchType, synchKey)
 	synch, synchFound := a.synchs.SynchMap[synchKey]
 	if !synchFound {
@@ -58,7 +58,7 @@ func (a *Application) Synchronize(synchType string, synchKey string, simulation 
 		synch.Simulation.Init()
 	}
 
-	synch.Synchronize()
+	return synch.Synchronize()
 }
 
 func (a *Application) SynchronizeArray(synchType string, synchKeys []string, simulation bool) {

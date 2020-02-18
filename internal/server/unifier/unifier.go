@@ -12,4 +12,5 @@ type Simulator interface {
 	AddInsert(pair Synchronizer) (bool, error)
 	AddUpdate(pair Synchronizer) (bool, error)
 	Init()
+	ToJSON() ([]byte, error)
 }

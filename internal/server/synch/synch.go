@@ -144,7 +144,7 @@ func (s *Synch) setTables() {
 	}
 }
 
-func (s *Synch) Synchronize() (bool, error) {
+func (s *Synch) Synchronize() ([]byte, error) {
 	for j := range s.Mappings {
 		var mpng *Mapping = s.Mappings[j]
 
@@ -157,5 +157,9 @@ func (s *Synch) Synchronize() (bool, error) {
 		}
 	}
 
-	return false, nil
+	if s.Simulation != nil {
+		return s.Simulation.ToJSON()
+	}
+
+	return []byte{}, nil
 }
