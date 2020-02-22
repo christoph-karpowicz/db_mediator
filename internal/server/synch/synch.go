@@ -9,7 +9,7 @@ import (
 )
 
 type Synch struct {
-	Data       *synchData
+	Data       *SynchData
 	dbs        map[string]*db.Database
 	tables     map[string]*table
 	nodes      map[string]*node
@@ -19,7 +19,7 @@ type Synch struct {
 	Simulation unifier.Simulator
 }
 
-func (s *Synch) GetData() *synchData {
+func (s *Synch) GetData() *SynchData {
 	return s.Data
 }
 

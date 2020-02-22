@@ -101,10 +101,10 @@ func (s *Simulation) MarshalJSON() ([]byte, error) {
 	}
 
 	customStruct := struct {
-		SynchName    string                     `json:"synchName"`
+		SynchInfo    *synch.SynchData           `json:"synchInfo"`
 		MappingsSims map[int]*mappingSimulation `json:"mappings"`
 	}{
-		SynchName:    s.synch.Data.Name,
+		SynchInfo:    s.synch.Data,
 		MappingsSims: mappingsMap,
 	}
 

@@ -1,7 +1,6 @@
 package application
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,18 +11,27 @@ import (
 	"github.com/urfave/cli"
 )
 
+// Application is the main struct of the app.
 type Application struct {
 	CLI      *cli.App
 	client   http.Client
 	simulate string
 }
 
+// Init initializes the client side app.
 func (a *Application) Init() {
 	timeout := time.Duration(5 * time.Second)
 	a.client = http.Client{Timeout: timeout}
+
+	a.setCLI()
+
+	err := a.CLI.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func (a *Application) makeGETRequest(url string, params map[string]string) {
+func (a *Application) makeGETRequest(url string, params map[string]string) map[string]interface{} {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Print(err)
@@ -50,7 +58,7 @@ func (a *Application) makeGETRequest(url string, params map[string]string) {
 		log.Fatalln(err)
 	}
 
-	fmt.Println(string(resBody))
+	return parseResponse(resBody)
 }
 
 func (a *Application) requestSynch(synchType string, synchName string, simulation bool) {
@@ -58,10 +66,21 @@ func (a *Application) requestSynch(synchType string, synchName string, simulatio
 	paramMap["type"] = synchType
 	paramMap["synch"] = synchName
 	paramMap["simulation"] = strconv.FormatBool(simulation)
-	a.makeGETRequest("http://localhost:8000/init", paramMap)
+
+	response := a.makeGETRequest("http://localhost:8000/init", paramMap)
+
+	var resType string
+	if simulation {
+		resType = "simulation"
+	} else {
+		resType = synchName
+	}
+
+	printResponse(response, resType)
 }
 
-func (a *Application) SetCLI() {
+// setCLI configures the app's command line interface.
+func (a *Application) setCLI() {
 	a.CLI = cli.NewApp()
 	a.CLI.UseShortOptionHandling = true
 

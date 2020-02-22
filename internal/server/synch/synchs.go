@@ -41,7 +41,7 @@ func (s *Synchs) ImportYAMLDir() {
 
 }
 
-func (s *Synchs) ImportYAMLFile(fileName string) synchData {
+func (s *Synchs) ImportYAMLFile(fileName string) SynchData {
 	synchFilePath, _ := filepath.Abs("./config/synchs/" + fileName)
 
 	synchFile, err := os.Open(synchFilePath)
@@ -56,7 +56,7 @@ func (s *Synchs) ImportYAMLFile(fileName string) synchData {
 		panic(err)
 	}
 
-	var synch synchData = synchData{}
+	var synch SynchData = SynchData{}
 
 	marshalErr := yaml.Unmarshal(byteArray, &synch)
 	if marshalErr != nil {
