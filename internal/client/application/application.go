@@ -61,7 +61,7 @@ func (a *Application) makeGETRequest(url string, params map[string]string) map[s
 	return parseResponse(resBody)
 }
 
-func (a *Application) requestSynch(synchType string, synchName string, simulation bool) {
+func (a *Application) RequestSynch(synchType string, synchName string, simulation bool) {
 	paramMap := make(map[string]string)
 	paramMap["type"] = synchType
 	paramMap["synch"] = synchName
@@ -120,7 +120,7 @@ func (a *Application) setCLI() {
 					log.Fatalln("ERROR: unknown synchronization type: " + synchTypeFlag + ".")
 				}
 
-				a.requestSynch(synchType, c.Args().Get(0), simulateFlag)
+				a.RequestSynch(synchType, c.Args().Get(0), simulateFlag)
 
 				return nil
 			},

@@ -13,7 +13,6 @@ func parseResponse(res []byte) map[string]interface{} {
 	if err := json.Unmarshal(res, &result); err != nil {
 		panic(err)
 	}
-	printDebug(result)
 
 	return result
 }
@@ -33,7 +32,7 @@ var responsePrinters map[string]func(map[string]interface{}) string = map[string
 		mappingsStrArray := synchInfo["Mappings"].([]interface{})
 		mappings := res["mappings"].(map[string]interface{})
 
-		var mappingsArray string
+		var allMappingsStr string
 		for key, mapping := range mappings {
 			mappingLinks := mapping.(map[string]interface{})["links"].(map[string]interface{})
 			keyInt, err := strconv.Atoi(key)
@@ -42,9 +41,9 @@ var responsePrinters map[string]func(map[string]interface{}) string = map[string
 			}
 
 			mappingStr := fmt.Sprintf(`
-Mapping index: %s
-Mapping command: %s
-Mapping links:
+	Mapping index: %s
+	command: %s
+	links:
 			`,
 				key,
 				mappingsStrArray[keyInt],
@@ -52,24 +51,20 @@ Mapping links:
 
 			for linkKey, link := range mappingLinks {
 				linkStr := fmt.Sprintf(`
-Link index: %s
-				`,
+		Link index: %s
+`,
 					linkKey,
 				)
 
 				for action, actionStrings := range link.(map[string]interface{}) {
-					linkStr += fmt.Sprintf(`
-Action: %s
-Records affected:
-					`,
+					linkStr += fmt.Sprintf(`			%s:
+`,
 						action,
 					)
 
 					if actionStrings != nil {
 						for _, actionString := range actionStrings.([]interface{}) {
-							linkStr += fmt.Sprintf(`
-	%s
-							`,
+							linkStr += fmt.Sprintf(`%s`,
 								actionString.(string),
 							)
 
@@ -81,17 +76,15 @@ Records affected:
 				mappingStr += linkStr
 			}
 
-			// mappingsArray = append(mappingsArray, mappingStr)
-			mappingsArray += mappingStr
+			allMappingsStr += mappingStr
 		}
 
-		return fmt.Sprintf(`
-Synch name: %s
-Mapping simulations:
+		return fmt.Sprintf(`Synch name: %s
+Mappings:
 %s
 		`,
 			synchInfo["Name"].(string),
-			mappingsArray,
+			allMappingsStr,
 		)
 	},
 }
