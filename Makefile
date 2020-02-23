@@ -9,8 +9,8 @@ run:
 test:
 	go test -v ./...
 
-test client:
+test-client:
 	go test -v ./internal/client/...
 
-test server:
+test-server:
 	go test -v ./internal/server/...

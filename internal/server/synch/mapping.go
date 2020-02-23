@@ -1,6 +1,7 @@
 package synch
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -78,12 +79,12 @@ func createMapping(synch *Synch, link map[string]string, matchMethod map[string]
 
 // createPairs for each active record in source database finds a corresponding acitve record in target database.
 func (m *Mapping) createPairs() {
-	for i := range m.source.tbl.records.records {
-		source := &m.source.tbl.records.records[i]
+	for i := range m.sourceActiveRecords {
+		source := m.sourceActiveRecords[i]
 		var pairFound bool = false
 
-		for j := range m.target.tbl.records.records {
-			target := &m.target.tbl.records.records[j]
+		for j := range m.targetActiveRecords {
+			target := m.targetActiveRecords[j]
 
 			if m.matchMethod == "IDS" {
 				sourceExternalID, sourceOk := source.Data[m.sourceExID]
@@ -96,6 +97,8 @@ func (m *Mapping) createPairs() {
 				if areEqual, err := areEqual(sourceExternalID, targetExternalID); err != nil {
 					log.Println(err)
 				} else if areEqual {
+					fmt.Println(source)
+					fmt.Println(target)
 					newPair := createPair(m, source, target)
 					m.pairs = append(m.pairs, newPair)
 					pairFound = true

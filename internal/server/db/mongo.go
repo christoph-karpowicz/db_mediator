@@ -96,8 +96,7 @@ func (d *mongoDatabase) Select(tableName string, conditions string) []map[string
 	defer cur.Close(context.TODO())
 
 	// for _, element := range allDocuments {
-	// 	book := element
-	// 	fmt.Println(book)
+	// 	fmt.Println(element)
 	// }
 
 	return allDocuments

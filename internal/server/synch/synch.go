@@ -1,6 +1,7 @@
 package synch
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -54,12 +55,16 @@ func (s *Synch) parseMappings() {
 	}
 }
 
-// // Selects all records from all tables and filters them to get the relevant records.
+// selectData selects all records from all tables and filters them to get the relevant records.
 func (s *Synch) selectData() {
 	for i := range s.Mappings {
 		var mpng *Mapping = s.Mappings[i]
 		sourceRawActiveRecords := (*mpng.source.db).Select(mpng.source.tbl.name, mpng.sourceWhere)
 		targetRawActiveRecords := (*mpng.target.db).Select(mpng.target.tbl.name, mpng.targetWhere)
+
+		for _, v := range sourceRawActiveRecords {
+			fmt.Println(v["film_id"])
+		}
 
 		if !s.initial {
 			mpng.sourceOldActiveRecords = mpng.sourceActiveRecords
@@ -91,7 +96,7 @@ func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 	}
 }
 
-// Open chosen database connections.
+// setDatabases opens the chosen database connections.
 func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
 	for j := range s.Data.Nodes {
 		var nodeData *nodeData = &s.Data.Nodes[j]

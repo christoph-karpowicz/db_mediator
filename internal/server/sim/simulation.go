@@ -90,6 +90,8 @@ func (s *Simulation) Init() {
 		}
 
 		s.mappingsSims[mapping].LinkSims[mapping.Sim.LinkIndex] = &linkSimulation{}
+		fmt.Println("s.mappingsSims")
+		fmt.Println(s.mappingsSims[mapping].LinkSims)
 	}
 }
 
@@ -97,7 +99,14 @@ func (s *Simulation) Init() {
 func (s *Simulation) MarshalJSON() ([]byte, error) {
 	mappingsMap := make(map[int]*mappingSimulation)
 	for _, mappingSim := range s.mappingsSims {
-		mappingsMap[mappingSim.mapping.Sim.MappingIndex] = mappingSim
+		_, mpngSimExists := mappingsMap[mappingSim.mapping.Sim.MappingIndex]
+		if !mpngSimExists {
+			mappingsMap[mappingSim.mapping.Sim.MappingIndex] = mappingSim
+		} else {
+			for k, v := range mappingSim.LinkSims {
+				mappingsMap[mappingSim.mapping.Sim.MappingIndex].LinkSims[k] = v
+			}
+		}
 	}
 
 	customStruct := struct {

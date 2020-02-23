@@ -61,6 +61,7 @@ func (a *Application) makeGETRequest(url string, params map[string]string) map[s
 	return parseResponse(resBody)
 }
 
+// RequestSynch prepares the parameters for a synchronization request and invokes a GET function.
 func (a *Application) RequestSynch(synchType string, synchName string, simulation bool) {
 	paramMap := make(map[string]string)
 	paramMap["type"] = synchType
