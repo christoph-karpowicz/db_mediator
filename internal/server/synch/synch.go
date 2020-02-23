@@ -1,7 +1,10 @@
 package synch
 
 import (
+	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	"github.com/christoph-karpowicz/unifier/internal/server/lang"
@@ -29,6 +32,7 @@ func (s *Synch) GetConfig() *Config {
 // Init prepares the synchronization by fetching all necessary data
 // and parsing it.
 func (s *Synch) Init(DBMap map[string]*db.Database, simulation bool) {
+	tStart := time.Now()
 	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
 	s.nodes = make(map[string]*node)
@@ -39,23 +43,44 @@ func (s *Synch) Init(DBMap map[string]*db.Database, simulation bool) {
 	s.parseMappings()
 	s.selectData()
 	s.pairData()
+
+	// fmt.Println(runtime.NumCPU())
+	fmt.Println("Synch init finished in: ", time.Since(tStart).String())
 }
 
 // pairData pairs together records that are going to be synchronized.
 func (s *Synch) pairData() {
+	var wg sync.WaitGroup
+
 	for i := range s.Mappings {
 		var mpng *Mapping = s.Mappings[i]
-		mpng.createPairs()
+
+		wg.Add(1)
+		go mpng.createPairs(&wg)
 	}
+
+	wg.Wait()
+}
+
+func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
+	rawMapping := lang.ParseMapping(mpngStr)
+	for j, link := range rawMapping["links"].([]map[string]string) {
+		mpng := createMapping(s, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string), i, j)
+		s.Mappings = append(s.Mappings, mpng)
+	}
+	c <- true
 }
 
 func (s *Synch) parseMappings() {
+	var ch chan bool
+	ch = make(chan bool)
+
 	for i, mapping := range s.Cfg.Mappings {
-		rawMapping := lang.ParseMapping(mapping)
-		for j, link := range rawMapping["links"].([]map[string]string) {
-			mpng := createMapping(s, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string), i, j)
-			s.Mappings = append(s.Mappings, mpng)
-		}
+		go s.parseMapping(mapping, i, ch)
+	}
+
+	for i := 0; i < len(s.Cfg.Mappings); i++ {
+		<-ch
 	}
 }
 

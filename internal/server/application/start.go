@@ -49,7 +49,7 @@ func (h *startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if simulation {
 		response, err := h.app.Synchronize(synchType[0], synch[0], simulation)
-		fmt.Println(string(response))
+		// fmt.Println(string(response))
 		if err == nil {
 			fmt.Fprintf(w, "%s", response)
 		}

@@ -1,8 +1,8 @@
 package synch
 
 import (
-	"fmt"
 	"log"
+	"sync"
 )
 
 // MappingSimData mapping data for simulation purposes.
@@ -82,41 +82,49 @@ func createMapping(synch *Synch, link map[string]string, matchMethod map[string]
 	return &newMapping
 }
 
-// createPairs for each active record in source database finds a corresponding acitve record in target database.
-func (m *Mapping) createPairs() {
-	for i := range m.sourceActiveRecords {
-		source := m.sourceActiveRecords[i]
-		var pairFound bool = false
+func (m *Mapping) comparePair(src *record, c chan bool) {
+	var pairFound bool = false
 
-		for j := range m.targetActiveRecords {
-			target := m.targetActiveRecords[j]
+	for j := range m.targetActiveRecords {
+		target := m.targetActiveRecords[j]
 
-			if m.matchMethod == "IDS" {
-				sourceExternalID, sourceOk := source.Data[m.sourceExID]
-				targetExternalID, targetOk := target.Data[m.targetExID]
+		if m.matchMethod == "IDS" {
+			sourceExternalID, sourceOk := src.Data[m.sourceExID]
+			targetExternalID, targetOk := target.Data[m.targetExID]
 
-				if !sourceOk || !targetOk {
-					continue
-				}
+			if !sourceOk || !targetOk {
+				continue
+			}
 
-				if areEqual, err := areEqual(sourceExternalID, targetExternalID); err != nil {
-					log.Println(err)
-				} else if areEqual {
-					fmt.Println(source)
-					fmt.Println(target)
-					newPair := createPair(m, source, target)
-					m.pairs = append(m.pairs, newPair)
-					pairFound = true
-					source.PairedIn = append(source.PairedIn, m)
-					target.PairedIn = append(target.PairedIn, m)
-				}
+			if areEqual, err := areEqual(sourceExternalID, targetExternalID); err != nil {
+				log.Println(err)
+			} else if areEqual {
+				newPair := createPair(m, src, target)
+				m.pairs = append(m.pairs, newPair)
+				pairFound = true
+				src.PairedIn = append(src.PairedIn, m)
+				target.PairedIn = append(target.PairedIn, m)
 			}
 		}
-		if !pairFound {
+	}
+
+	c <- pairFound
+}
+
+// createPairs for each active record in source database finds a corresponding acitve record in target database.
+func (m *Mapping) createPairs(wg *sync.WaitGroup) {
+	for i := range m.sourceActiveRecords {
+		ch := make(chan bool)
+		source := m.sourceActiveRecords[i]
+
+		go m.comparePair(source, ch)
+
+		if !<-ch {
 			newPair := createPair(m, source, nil)
 			m.pairs = append(m.pairs, newPair)
 		}
 	}
+	wg.Done()
 	// for _, pair := range m.pairs {
 	// 	fmt.Printf("rec1: %s\n", pair.source.Data)
 	// 	if pair.IsComplete {

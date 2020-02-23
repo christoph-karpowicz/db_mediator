@@ -2,7 +2,6 @@ package sim
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
@@ -51,7 +50,7 @@ func (s *Simulation) AddIdle(p unifier.Synchronizer) (bool, error) {
 	var lnkIdx int = pair.Mapping.Sim.LinkIndex
 
 	s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Idle = append(s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Idle, str)
-	fmt.Print(str)
+	// fmt.Print(str)
 
 	return false, nil
 }
@@ -63,7 +62,7 @@ func (s *Simulation) AddInsert(p unifier.Synchronizer) (bool, error) {
 	var lnkIdx int = pair.Mapping.Sim.LinkIndex
 
 	s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Inserts = append(s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Inserts, str)
-	fmt.Print(str)
+	// fmt.Print(str)
 
 	return false, nil
 }
@@ -75,7 +74,7 @@ func (s *Simulation) AddUpdate(p unifier.Synchronizer) (bool, error) {
 	var lnkIdx int = pair.Mapping.Sim.LinkIndex
 
 	s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Updates = append(s.mappingsSims[pair.Mapping].LinkSims[lnkIdx].Updates, str)
-	fmt.Print(str)
+	// fmt.Print(str)
 
 	return false, nil
 }
@@ -120,6 +119,6 @@ func (s *Simulation) MarshalJSON() ([]byte, error) {
 
 // ToJSON turns the simulation into a JSON object.
 func (s *Simulation) ToJSON() ([]byte, error) {
-	fmt.Println(s)
+	// fmt.Println(s)
 	return json.Marshal(s)
 }
