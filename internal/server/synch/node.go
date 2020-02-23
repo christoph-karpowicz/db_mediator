@@ -2,7 +2,7 @@ package synch
 
 import "github.com/christoph-karpowicz/unifier/internal/server/db"
 
-type nodeData struct {
+type nodeConfig struct {
 	Name     string `yaml:"name"`
 	Database string `yaml:"database"`
 	Table    string `yaml:"table"`
@@ -10,16 +10,16 @@ type nodeData struct {
 }
 
 type node struct {
-	data *nodeData
-	db   *db.Database
-	tbl  *table
+	cfg *nodeConfig
+	db  *db.Database
+	tbl *table
 }
 
-func createNode(data *nodeData, db *db.Database, tbl *table) *node {
+func createNode(cfg *nodeConfig, db *db.Database, tbl *table) *node {
 	newNode := node{
-		data: data,
-		db:   db,
-		tbl:  tbl,
+		cfg: cfg,
+		db:  db,
+		tbl: tbl,
 	}
 	return &newNode
 }

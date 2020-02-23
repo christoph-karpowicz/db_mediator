@@ -35,7 +35,7 @@ func (d *Databases) ImportYAML() {
 		panic(err)
 	}
 
-	var dbDataArr databaseDataArray = databaseDataArray{}
+	var dbDataArr configArray = configArray{}
 	marshalErr := yaml.Unmarshal(byteArray, &dbDataArr)
 	if marshalErr != nil {
 		log.Fatalf("error: %v", marshalErr)
@@ -49,9 +49,9 @@ func (d *Databases) ImportYAML() {
 		fmt.Println(dbDataArr.Databases[i].Type)
 		switch dbType := dbDataArr.Databases[i].Type; dbType {
 		case "mongo":
-			database = &mongoDatabase{DB: &dbDataArr.Databases[i]}
+			database = &mongoDatabase{cfg: &dbDataArr.Databases[i]}
 		case "postgres":
-			database = &postgresDatabase{DB: &dbDataArr.Databases[i]}
+			database = &postgresDatabase{cfg: &dbDataArr.Databases[i]}
 		default:
 			database = nil
 		}
@@ -68,7 +68,7 @@ func (d *Databases) ImportYAML() {
 func (d *Databases) ValidateYAML() {
 	fmt.Println("Database YAML file validation...")
 	for _, database := range d.DBMap {
-		(*database).GetData().Validate()
+		(*database).GetConfig().Validate()
 	}
 	fmt.Println("...passed.")
 }

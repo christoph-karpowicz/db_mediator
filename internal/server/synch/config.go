@@ -10,13 +10,15 @@ var synchConnectionTypes = [2]string{"external_id_columns", "persistence"}
 var createNewRows = [3]string{"never", "initially", "always"}
 var updateOldRows = [3]string{"never", "initially", "always"}
 
-type SynchData struct {
-	Name     string     `yaml:"name"`
-	Nodes    []nodeData `yaml:"nodes"`
-	Mappings []string   `yaml:"mappings"`
+// Config holds raw data from the YAML config file.
+type Config struct {
+	Name     string       `yaml:"name"`
+	Nodes    []nodeConfig `yaml:"nodes"`
+	Mappings []string     `yaml:"mappings"`
 }
 
-func (s *SynchData) Validate() {
+// Validate data from the YAML file.
+func (s *Config) Validate() {
 	validationUtil.YAMLStruct(*s, nullableFields)
 
 	for _, node := range s.Nodes {

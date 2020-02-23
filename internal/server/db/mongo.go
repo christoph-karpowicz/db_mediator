@@ -14,7 +14,7 @@ import (
 
 // MongoDatabase implements Database interface for MongoDB database.
 type mongoDatabase struct {
-	DB               *databaseData
+	cfg              *config
 	connectionString string
 	ctx              context.Context
 	close            context.CancelFunc
@@ -27,7 +27,7 @@ func (d *mongoDatabase) CloseConnection() {
 
 // GetClient returns a connection client object.
 func (d *mongoDatabase) GetClient() *mongo.Client {
-	authCredentials := options.Credential{Username: d.DB.User, Password: d.DB.Password}
+	authCredentials := options.Credential{Username: d.cfg.User, Password: d.cfg.Password}
 	clientOptions := options.Client().ApplyURI(d.connectionString).SetAuth(authCredentials)
 	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
@@ -40,17 +40,17 @@ func (d *mongoDatabase) GetClient() *mongo.Client {
 	return client
 }
 
-// GetData returns information about the database, which was parsed from JSON.
-func (d *mongoDatabase) GetData() *databaseData {
-	return d.DB
+// GetConfig returns information about the database, which was parsed from JSON.
+func (d *mongoDatabase) GetConfig() *config {
+	return d.cfg
 }
 
 // Init creates the db connection string and context object.
 func (d *mongoDatabase) Init() {
 	d.connectionString = fmt.Sprintf(`mongodb://%s:%d/%s`,
-		d.DB.Host,
-		d.DB.Port,
-		d.DB.Name,
+		d.cfg.Host,
+		d.cfg.Port,
+		d.cfg.Name,
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
@@ -67,7 +67,7 @@ func (d *mongoDatabase) Select(tableName string, conditions string) []map[string
 	d.TestConnection()
 
 	client := d.GetClient()
-	collection := client.Database(d.DB.Name).Collection(tableName)
+	collection := client.Database(d.cfg.Name).Collection(tableName)
 
 	var bsonConditions interface{}
 	if conditions != "" && conditions != "*" {
@@ -116,7 +116,7 @@ func (d *mongoDatabase) TestConnection() {
 // Update updates a document with the provided key.
 func (d *mongoDatabase) Update(table string, key interface{}, column string, val interface{}) (bool, error) {
 	client := d.GetClient()
-	collection := client.Database(d.DB.Name).Collection(table)
+	collection := client.Database(d.cfg.Name).Collection(table)
 	filter := bson.D{{"name", "Ash"}}
 	update := bson.D{
 		{"$inc", bson.D{

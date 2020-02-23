@@ -6,13 +6,13 @@ import (
 
 var nullableFields = []string{"alias"}
 
-// DatabaseData reflects an array of YAML database configs.
-type databaseDataArray struct {
-	Databases []databaseData
+// configArray is an array of YAML database configs.
+type configArray struct {
+	Databases []config
 }
 
-// DatabaseData reflects an individual YAML database config.
-type databaseData struct {
+// config represents an individual YAML database config.
+type config struct {
 	Name     string `yaml:"name"`
 	Alias    string `yaml:"alias"`
 	Type     string `yaml:"type"`
@@ -22,7 +22,8 @@ type databaseData struct {
 	Password string `yaml:"password"`
 }
 
-func (d *databaseData) GetName() string {
+// GetName returns the DB's name if an alias hasn't been provided.
+func (d *config) GetName() string {
 	if d.Alias != "" {
 		return d.Alias
 	}
@@ -30,6 +31,6 @@ func (d *databaseData) GetName() string {
 }
 
 // Validate calls a validation function on itself.
-func (d *databaseData) Validate() {
+func (d *config) Validate() {
 	validationUtil.YAMLStruct(*d, nullableFields)
 }

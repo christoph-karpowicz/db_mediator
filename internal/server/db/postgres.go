@@ -7,20 +7,20 @@ import (
 
 // PostgresDatabase implements Database interface for PostgreSQL database.
 type postgresDatabase struct {
-	DB               *databaseData
+	cfg              *config
 	connectionString string
 }
 
-// GetData returns information about the database, which was parsed from JSON.
-func (d *postgresDatabase) GetData() *databaseData {
-	return d.DB
+// GetConfig returns information about the database, which was parsed from JSON.
+func (d *postgresDatabase) GetConfig() *config {
+	return d.cfg
 }
 
 // Init creates the db connection string.
 func (d *postgresDatabase) Init() {
 	d.connectionString = fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		d.DB.Host, d.DB.Port, d.DB.User, d.DB.Password, d.DB.Name)
+		d.cfg.Host, d.cfg.Port, d.cfg.User, d.cfg.Password, d.cfg.Name)
 }
 
 // Select selects data from the database, with or without a WHERE clause.

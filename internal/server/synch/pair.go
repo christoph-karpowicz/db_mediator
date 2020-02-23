@@ -7,6 +7,13 @@ import (
 	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
 
+// Pair represents a connection between two records, that are going
+// to be synchronized.
+// Can be complete or incomplete, where incomplete means that there's
+// only a source record and the target record will have to be created
+// if the synchronization is to be carried out.
+// When a pair is incomplete, a target record will be created only if the
+// parent mapping is configured to DO INSERTs.
 type Pair struct {
 	Mapping *Mapping
 	source  *record
@@ -24,13 +31,14 @@ func createPair(mpng *Mapping, source *record, target *record) *Pair {
 }
 
 func (p Pair) getSourceNodeKey() string {
-	return p.Mapping.source.data.Key
+	return p.Mapping.source.cfg.Key
 }
 
 func (p Pair) getTargetNodeKey() string {
-	return p.Mapping.target.data.Key
+	return p.Mapping.target.cfg.Key
 }
 
+// Synchronize carries out the synchronization of the two records.
 func (p Pair) Synchronize() (bool, error) {
 	// db1 := p.Mapping.source.db
 	// db2 := p.Mapping.target.db
@@ -73,6 +81,8 @@ func (p Pair) Synchronize() (bool, error) {
 	return false, nil
 }
 
+// SimIdleString creates a string representation of two records that
+// are the same and no action will be carried out.
 func (p Pair) SimIdleString() string {
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  ==  |%6v: %6v, %6s: %25v|\n",
 		p.getSourceNodeKey(),
@@ -86,6 +96,8 @@ func (p Pair) SimIdleString() string {
 	)
 }
 
+// SimInsertString creates a string representation of an insert
+// that would be carried out due to the pair's incompleteness.
 func (p Pair) SimInsertString() string {
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =>  |%6v: %6v, %6s: %25v|\n",
 		p.getSourceNodeKey(),
@@ -99,6 +111,9 @@ func (p Pair) SimInsertString() string {
 	)
 }
 
+// SimUpdateString creates a string representation of an update
+// that would be carried out because the data in the pair's records
+// was found to be different.
 func (p Pair) SimUpdateString() string {
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =^  |%6v: %6v, %6s: %25v -> %25v|\n",
 		p.getSourceNodeKey(),

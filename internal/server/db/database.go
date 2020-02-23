@@ -2,7 +2,7 @@ package db
 
 // Database interface is the blueprint for all structs for specific databases.
 type Database interface {
-	GetData() *databaseData
+	GetConfig() *config
 	Init()
 	Select(tableName string, conditions string) []map[string]interface{}
 	TestConnection()

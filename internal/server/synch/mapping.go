@@ -5,12 +5,17 @@ import (
 	"log"
 )
 
+// MappingSimData mapping data for simulation purposes.
 type MappingSimData struct {
 	MappingIndex int
 	LinkIndex    int
 	Link         map[string]string
 }
 
+// Mapping represents a single link in the config file like:
+// [example_node1.example_column1 WHERE ...] TO [example_node2.example_column2 WHERE ...]
+// It contains all data from the surrounding MAP command.
+// There is no struct representing the whole MAP command.
 type Mapping struct {
 	synch                  *Synch
 	source                 *node
@@ -58,7 +63,7 @@ func createMapping(synch *Synch, link map[string]string, matchMethod map[string]
 
 	if newMapping.matchMethod == "IDS" {
 		for _, marg := range matchMethod["parsedMatchArgs"].([]map[string]string) {
-			if marg["node"] == newMapping.source.data.Name {
+			if marg["node"] == newMapping.source.cfg.Name {
 				newMapping.sourceExID = marg["extIDColumn"]
 			} else {
 				newMapping.targetExID = marg["extIDColumn"]

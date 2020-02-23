@@ -82,7 +82,7 @@ func areEqual(val1 interface{}, val2 interface{}) (bool, error) {
 		return val1uint64 == val2uint64, nil
 	}
 
-	return false, errors.New("Invalid data types.")
+	return false, errors.New("Invalid data types")
 }
 
 func isSignedInt(val reflect.Kind) bool {

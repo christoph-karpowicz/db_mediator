@@ -90,8 +90,6 @@ func (s *Simulation) Init() {
 		}
 
 		s.mappingsSims[mapping].LinkSims[mapping.Sim.LinkIndex] = &linkSimulation{}
-		fmt.Println("s.mappingsSims")
-		fmt.Println(s.mappingsSims[mapping].LinkSims)
 	}
 }
 
@@ -110,10 +108,10 @@ func (s *Simulation) MarshalJSON() ([]byte, error) {
 	}
 
 	customStruct := struct {
-		SynchInfo    *synch.SynchData           `json:"synchInfo"`
+		SynchInfo    *synch.Config              `json:"synchInfo"`
 		MappingsSims map[int]*mappingSimulation `json:"mappings"`
 	}{
-		SynchInfo:    s.synch.Data,
+		SynchInfo:    s.synch.Cfg,
 		MappingsSims: mappingsMap,
 	}
 

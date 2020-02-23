@@ -13,10 +13,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Synchs is a collection of all synchronizations.
 type Synchs struct {
 	SynchMap map[string]*Synch
 }
 
+// ImportYAMLDir invokes the import function on all .yaml files from
+// a directory.
 func (s *Synchs) ImportYAMLDir() {
 	configFiles, err := ioutil.ReadDir("./config/synchs")
 	if err != nil {
@@ -33,7 +36,7 @@ func (s *Synchs) ImportYAMLDir() {
 		// 	continue
 		// }
 
-		s.SynchMap[synchData.Name] = &Synch{Data: &synchData, initial: true}
+		s.SynchMap[synchData.Name] = &Synch{Cfg: &synchData, initial: true}
 		fmt.Println("Config file name: " + configFile.Name())
 		// fmt.Println(synchData)
 	}
@@ -41,7 +44,8 @@ func (s *Synchs) ImportYAMLDir() {
 
 }
 
-func (s *Synchs) ImportYAMLFile(fileName string) SynchData {
+// ImportYAMLFile imports a configuration file into a Config struct.
+func (s *Synchs) ImportYAMLFile(fileName string) Config {
 	synchFilePath, _ := filepath.Abs("./config/synchs/" + fileName)
 
 	synchFile, err := os.Open(synchFilePath)
@@ -56,7 +60,7 @@ func (s *Synchs) ImportYAMLFile(fileName string) SynchData {
 		panic(err)
 	}
 
-	var synch SynchData = SynchData{}
+	var synch Config = Config{}
 
 	marshalErr := yaml.Unmarshal(byteArray, &synch)
 	if marshalErr != nil {
@@ -66,15 +70,16 @@ func (s *Synchs) ImportYAMLFile(fileName string) SynchData {
 	return synch
 }
 
+// ValidateYAML validates data imported from a config file.
 func (s *Synchs) ValidateYAML() {
 	fmt.Println("Synch YAML file validation...")
 	for _, synch := range s.SynchMap {
-		// fmt.Println((*Synch).GetData())
-		(*synch).GetData().Validate()
+		(*synch).GetConfig().Validate()
 	}
 	fmt.Println("... passed.")
 }
 
+// CreateSynchs constructor function for the Synchs struct.
 func CreateSynchs() *Synchs {
 	synchs := &Synchs{SynchMap: make(map[string]*Synch)}
 	return synchs
