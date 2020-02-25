@@ -49,24 +49,22 @@ func (p Pair) Synchronize() (bool, error) {
 		// log.Println(p.source)
 		// log.Println(p.target)
 
-		if p.Mapping.sourceColumn != "*" && p.Mapping.targetColumn != "*" {
-			sourceColumnValue := p.source.Data[p.Mapping.sourceColumn]
-			targetColumnValue := p.target.Data[p.Mapping.targetColumn]
+		sourceColumnValue := p.source.Data[p.Mapping.sourceColumn]
+		targetColumnValue := p.target.Data[p.Mapping.targetColumn]
 
-			if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
-				log.Println(err)
-			} else if !areEqual {
-				if p.Mapping.synch.Simulation != nil {
-					p.Mapping.synch.Simulation.AddUpdate(p)
-					// fmt.Println(p.Mapping.synch.Simulation)
-				}
-				// (*db2).Update("", p.target.Key, p.Mapping.targetColumn, sourceColumnValue)
-				// log.Println(sourceColumnValue)
-				// log.Println(targetColumnValue)
-			} else {
-				if p.Mapping.synch.Simulation != nil {
-					p.Mapping.synch.Simulation.AddIdle(p)
-				}
+		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
+			log.Println(err)
+		} else if !areEqual {
+			if p.Mapping.synch.Simulation != nil {
+				p.Mapping.synch.Simulation.AddUpdate(p)
+				// fmt.Println(p.Mapping.synch.Simulation)
+			}
+			// (*db2).Update("", p.target.Key, p.Mapping.targetColumn, sourceColumnValue)
+			// log.Println(sourceColumnValue)
+			// log.Println(targetColumnValue)
+		} else {
+			if p.Mapping.synch.Simulation != nil {
+				p.Mapping.synch.Simulation.AddIdle(p)
 			}
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Mapping.do, "INSERT") {
@@ -84,30 +82,45 @@ func (p Pair) Synchronize() (bool, error) {
 // SimIdleString creates a string representation of two records that
 // are the same and no action will be carried out.
 func (p Pair) SimIdleString() string {
+	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
+	if len(sourceColumnData) > 25 {
+		sourceColumnData = sourceColumnData[:22] + "..."
+	}
+
+	var targetColumnData string = p.target.Data[p.Mapping.targetColumn].(string)
+	if len(targetColumnData) > 25 {
+		targetColumnData = targetColumnData[:22] + "..."
+	}
+
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  ==  |%6v: %6v, %6s: %25v|\n",
 		p.getSourceNodeKey(),
 		p.source.Data[p.getSourceNodeKey()],
 		p.Mapping.sourceColumn,
-		p.source.Data[p.Mapping.sourceColumn],
+		sourceColumnData,
 		p.getTargetNodeKey(),
 		p.target.Data[p.getTargetNodeKey()],
 		p.Mapping.targetColumn,
-		p.target.Data[p.Mapping.targetColumn],
+		targetColumnData,
 	)
 }
 
 // SimInsertString creates a string representation of an insert
 // that would be carried out due to the pair's incompleteness.
 func (p Pair) SimInsertString() string {
+	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
+	if len(sourceColumnData) > 25 {
+		sourceColumnData = sourceColumnData[:22] + "..."
+	}
+
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =>  |%6v: %6v, %6s: %25v|\n",
 		p.getSourceNodeKey(),
 		p.source.Data[p.getSourceNodeKey()],
 		p.Mapping.sourceColumn,
-		p.source.Data[p.Mapping.sourceColumn],
+		sourceColumnData,
 		p.getTargetNodeKey(),
 		"-",
 		p.Mapping.targetColumn,
-		p.source.Data[p.Mapping.sourceColumn],
+		sourceColumnData,
 	)
 }
 
@@ -115,15 +128,25 @@ func (p Pair) SimInsertString() string {
 // that would be carried out because the data in the pair's records
 // was found to be different.
 func (p Pair) SimUpdateString() string {
+	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
+	if len(sourceColumnData) > 25 {
+		sourceColumnData = sourceColumnData[:22] + "..."
+	}
+
+	var targetColumnData string = p.target.Data[p.Mapping.targetColumn].(string)
+	if len(targetColumnData) > 25 {
+		targetColumnData = targetColumnData[:22] + "..."
+	}
+
 	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =^  |%6v: %6v, %6s: %25v -> %25v|\n",
 		p.getSourceNodeKey(),
 		p.source.Data[p.getSourceNodeKey()],
 		p.Mapping.sourceColumn,
-		p.source.Data[p.Mapping.sourceColumn],
+		sourceColumnData,
 		p.getTargetNodeKey(),
 		p.target.Data[p.getTargetNodeKey()],
 		p.Mapping.targetColumn,
-		p.target.Data[p.Mapping.targetColumn],
-		p.source.Data[p.Mapping.sourceColumn],
+		targetColumnData,
+		sourceColumnData,
 	)
 }

@@ -16,6 +16,7 @@ type PairSimulator interface {
 }
 
 type linkSimulation struct {
+	Cmd     string   `json:"cmd"`
 	Idle    []string `json:"idle"`
 	Inserts []string `json:"inserts"`
 	Updates []string `json:"updates"`
@@ -88,7 +89,7 @@ func (s *Simulation) Init() {
 			s.mappingsSims[mapping].LinkSims = make(map[int]*linkSimulation)
 		}
 
-		s.mappingsSims[mapping].LinkSims[mapping.Sim.LinkIndex] = &linkSimulation{}
+		s.mappingsSims[mapping].LinkSims[mapping.Sim.LinkIndex] = &linkSimulation{Cmd: mapping.Sim.Link["raw"]}
 	}
 }
 

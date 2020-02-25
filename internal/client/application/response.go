@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // parseResponse turns a JSON backend reponse to a processable map.
@@ -32,6 +33,7 @@ var responsePrinters map[string]func(map[string]interface{}) string = map[string
 		mappingsStrArray := synchInfo["Mappings"].([]interface{})
 		mappings := res["mappings"].(map[string]interface{})
 
+		// MAPPINGS
 		var allMappingsStr string
 		for key, mapping := range mappings {
 			mappingLinks := mapping.(map[string]interface{})["links"].(map[string]interface{})
@@ -41,35 +43,64 @@ var responsePrinters map[string]func(map[string]interface{}) string = map[string
 			}
 
 			mappingStr := fmt.Sprintf(`
-	Mapping index: %s
-	command: %s
-	links:
+==================================
+Mapping index: %s
+command: %s
+links:
 			`,
 				key,
 				mappingsStrArray[keyInt],
 			)
 
+			// LINKS
 			for linkKey, link := range mappingLinks {
 				linkStr := fmt.Sprintf(`
-		Link index: %s
-`,
+=================
+Link index: %s
+Link command: %s`,
 					linkKey,
+					link.(map[string]interface{})["cmd"].(string),
 				)
 
+				// ACTIONS
 				for action, actionStrings := range link.(map[string]interface{}) {
-					linkStr += fmt.Sprintf(`			%s:
-`,
-						action,
+					if action == "cmd" {
+						continue
+					}
+
+					var horizontalBorder string
+					switch action {
+					case "updates":
+						horizontalBorder = strings.Repeat("-", 64*2+7)
+					default:
+						horizontalBorder = strings.Repeat("-", 50*2+6)
+					}
+
+					linkStr += fmt.Sprintf(`
+%s:`,
+						strings.ToUpper(action),
 					)
 
+					if actionStrings == nil {
+						linkStr += fmt.Sprintf("\nno %s actions", action)
+						continue
+					} else {
+						linkStr += fmt.Sprintf("\n%s\n", horizontalBorder)
+					}
+
+					// ACTUAL MODIFICATIONS OF RECORDS
 					if actionStrings != nil {
 						for _, actionString := range actionStrings.([]interface{}) {
-							linkStr += fmt.Sprintf(`%s`,
+							linkStr += fmt.Sprintf("%s",
 								actionString.(string),
 							)
 
 						}
 					}
+
+					linkStr += fmt.Sprintf("%s",
+						horizontalBorder,
+					)
 
 				}
 
@@ -79,8 +110,9 @@ var responsePrinters map[string]func(map[string]interface{}) string = map[string
 			allMappingsStr += mappingStr
 		}
 
-		return fmt.Sprintf(`Synch name: %s
-Mappings:
+		// WHOLE SIMULATION
+		return fmt.Sprintf(`SYNCH NAME: %s
+MAPPINGS:
 %s
 		`,
 			synchInfo["Name"].(string),

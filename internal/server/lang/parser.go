@@ -85,6 +85,7 @@ func parseLink(str string) map[string]string {
 	matches := r.FindStringSubmatch(str)
 	subNames := r.SubexpNames()
 
+	parsedLink["raw"] = str
 	for i, match := range matches {
 		if subNames[i] != "" {
 			parsedLink[subNames[i]] = match
