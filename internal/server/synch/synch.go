@@ -63,7 +63,11 @@ func (s *Synch) pairData() {
 }
 
 func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
-	rawMapping := lang.ParseMapping(mpngStr)
+	rawMapping, err := lang.ParseMapping(mpngStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for j, link := range rawMapping["links"].([]map[string]string) {
 		mpng := createMapping(s, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string), i, j)
 		s.Mappings = append(s.Mappings, mpng)

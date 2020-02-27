@@ -1,12 +1,15 @@
 package lang
 
 import (
+	"errors"
+	"fmt"
 	"regexp"
+	"strings"
 )
 
 // ParseMapping uses regexp to split the mapping string into smaller parts.
-func ParseMapping(str string) map[string]interface{} {
-	rawMpng := make(map[string]interface{})
+func ParseMapping(str string) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
 	mappingParseRegexp := regexp.MustCompile(`(?isU)^\s*(?P<command>[a-z]+)\s+(?P<links>\[.*\]\sTO\s\[.*\],?)+\s+MATCH\sBY\s(?P<matchMethod>[a-z]+\(.+\))\s+DO\s(?P<do>[a-z\s,]+)\s*$`)
 	matches := mappingParseRegexp.FindStringSubmatch(str)
 	subNames := mappingParseRegexp.SubexpNames()
@@ -21,24 +24,26 @@ func ParseMapping(str string) map[string]interface{} {
 
 		switch subNames[i] {
 		case "links":
-			rawMpng[subNames[i]] = make([]map[string]string, 0)
+			result[subNames[i]] = make([]map[string]string, 0)
 			for _, link := range commaSepRegexp.Split(match, -1) {
-				rawMpng[subNames[i]] = append(rawMpng[subNames[i]].([]map[string]string), parseLink(link))
+				result[subNames[i]] = append(result[subNames[i]].([]map[string]string), parseLink(link))
 			}
 		case "matchMethod":
-			rawMpng[subNames[i]] = parseMatchMethod(match)
+			result[subNames[i]] = parseMatchMethod(match)
 		case "do":
-			rawMpng[subNames[i]] = make([]string, 0)
+			result[subNames[i]] = make([]string, 0)
 			for _, doCmd := range commaSepRegexp.Split(match, -1) {
-				rawMpng[subNames[i]] = append(rawMpng[subNames[i]].([]string), doCmd)
+				result[subNames[i]] = append(result[subNames[i]].([]string), doCmd)
 			}
-			rawMpng[subNames[i]] = commaSepRegexp.Split(match, -1)
+			result[subNames[i]] = commaSepRegexp.Split(match, -1)
 		default:
-			rawMpng[subNames[i]] = match
+			result[subNames[i]] = match
 		}
 	}
 
-	return rawMpng
+	err := validateMapping(result)
+
+	return result, err
 }
 
 // parseLink splits an individual link into smaller parts.
@@ -93,4 +98,28 @@ func parseLink(str string) map[string]string {
 	}
 
 	return parsedLink
+}
+
+func validateMapping(result map[string]interface{}) error {
+	errorsArr := make([]string, 0)
+	var err error = nil
+	var preError string = "[mapping parsing] ERROR: "
+
+	fmt.Println(result)
+
+	// command
+	if result["command"] == nil || len(result["command"].(string)) == 0 {
+		errorsArr = append(errorsArr, preError+"no command found")
+	}
+
+	// links
+	if result["links"] == nil || len(result["links"].([]map[string]string)) == 0 {
+		errorsArr = append(errorsArr, preError+"no links found")
+	}
+
+	if len(errorsArr) > 0 {
+		errorsArrJoined := strings.Join(errorsArr, "\n")
+		err = errors.New(errorsArrJoined)
+	}
+	return err
 }
