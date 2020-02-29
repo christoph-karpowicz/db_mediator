@@ -1,3 +1,6 @@
+/*
+Package synch handles all data sychronization.
+*/
 package synch
 
 import (

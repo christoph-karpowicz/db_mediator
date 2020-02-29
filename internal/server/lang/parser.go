@@ -1,11 +1,24 @@
 package lang
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 )
+
+/*
+TODO:
+1. change mapping parsing so if an error occurs,
+	it could specify where exactly.
+*/
+
+type mappingParserError struct {
+	msg string
+}
+
+func (e *mappingParserError) Error() string {
+	return fmt.Sprintf("[mapping parser] %s", e.msg)
+}
 
 // ParseMapping uses regexp to split the mapping string into smaller parts.
 func ParseMapping(str string) (map[string]interface{}, error) {
@@ -22,22 +35,22 @@ func ParseMapping(str string) (map[string]interface{}, error) {
 			continue
 		}
 
-		switch subNames[i] {
+		switch sub := subNames[i]; sub {
 		case "links":
-			result[subNames[i]] = make([]map[string]string, 0)
+			result[sub] = make([]map[string]string, 0)
 			for _, link := range commaSepRegexp.Split(match, -1) {
-				result[subNames[i]] = append(result[subNames[i]].([]map[string]string), parseLink(link))
+				result[sub] = append(result[sub].([]map[string]string), parseLink(link))
 			}
 		case "matchMethod":
-			result[subNames[i]] = parseMatchMethod(match)
+			result[sub] = parseMatchMethod(match)
 		case "do":
-			result[subNames[i]] = make([]string, 0)
+			result[sub] = make([]string, 0)
 			for _, doCmd := range commaSepRegexp.Split(match, -1) {
-				result[subNames[i]] = append(result[subNames[i]].([]string), doCmd)
+				result[sub] = append(result[sub].([]string), doCmd)
 			}
-			result[subNames[i]] = commaSepRegexp.Split(match, -1)
+			result[sub] = commaSepRegexp.Split(match, -1)
 		default:
-			result[subNames[i]] = match
+			result[sub] = match
 		}
 	}
 
@@ -103,23 +116,27 @@ func parseLink(str string) map[string]string {
 func validateMapping(result map[string]interface{}) error {
 	errorsArr := make([]string, 0)
 	var err error = nil
-	var preError string = "[mapping parsing] ERROR: "
 
 	fmt.Println(result)
 
-	// command
-	if result["command"] == nil || len(result["command"].(string)) == 0 {
-		errorsArr = append(errorsArr, preError+"no command found")
+	// entire mapping
+	if len(result) == 0 {
+		errorsArr = append(errorsArr, "there's a syntax error in the mapping")
 	}
 
-	// links
-	if result["links"] == nil || len(result["links"].([]map[string]string)) == 0 {
-		errorsArr = append(errorsArr, preError+"no links found")
-	}
+	// command
+	// if result["command"] == nil || len(result["command"].(string)) == 0 {
+	// 	errorsArr = append(errorsArr, "no command found")
+	// }
+
+	// // links
+	// if result["links"] == nil || len(result["links"].([]map[string]string)) == 0 {
+	// 	errorsArr = append(errorsArr, "no links found")
+	// }
 
 	if len(errorsArr) > 0 {
 		errorsArrJoined := strings.Join(errorsArr, "\n")
-		err = errors.New(errorsArrJoined)
+		err = &mappingParserError{msg: errorsArrJoined}
 	}
 	return err
 }
