@@ -128,7 +128,8 @@ func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 		s.dbs[dbName] = DBMap[dbName]
 		(*s.dbs[dbName]).Init()
 	} else {
-		panic("[set database] ERROR: database " + dbName + " hasn't been configured.")
+		dbErr := &db.DatabaseError{DBName: dbName, ErrMsg: "hasn't been configured"}
+		panic(dbErr)
 	}
 }
 
@@ -203,5 +204,6 @@ func (s *Synch) Synchronize() ([]byte, error) {
 		return s.Simulation.ToJSON()
 	}
 
+	// TODO: create JSON synch report
 	return []byte{}, nil
 }

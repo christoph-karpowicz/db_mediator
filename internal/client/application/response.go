@@ -20,18 +20,37 @@ func parseResponse(res []byte) map[string]interface{} {
 
 // printResponse dispatches the response to the corresponding printer function.
 func printResponse(res map[string]interface{}, resType string) {
-	resStr := responsePrinters[resType](res)
+	var resStr string
+
+	if res["err"].(bool) {
+		resStr = responsePrinters["error"](res)
+	} else {
+		resStr = responsePrinters[resType](res)
+	}
+
 	fmt.Println(resStr)
 }
 
 // responsePrinters is a map of functions that print the JSON responses received from the backend.
 var responsePrinters map[string]func(map[string]interface{}) string = map[string]func(map[string]interface{}) string{
 
+	// Error printer.
+	"error": func(res map[string]interface{}) string {
+		return res["msg"].(string)
+	},
+
 	// Simulation printer.
 	"simulation": func(res map[string]interface{}) string {
-		synchInfo := res["synchInfo"].(map[string]interface{})
+		resMsgStr := res["msg"].(string)
+		resMsg := make(map[string]interface{})
+
+		if err := json.Unmarshal([]byte(resMsgStr), &resMsg); err != nil {
+			panic(err)
+		}
+
+		synchInfo := resMsg["synchInfo"].(map[string]interface{})
 		mappingsStrArray := synchInfo["Mappings"].([]interface{})
-		mappings := res["mappings"].(map[string]interface{})
+		mappings := resMsg["mappings"].(map[string]interface{})
 
 		// MAPPINGS
 		var allMappingsStr string

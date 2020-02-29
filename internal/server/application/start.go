@@ -1,28 +1,29 @@
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
-
-var count int = 0
-
-func tst(i int, w *http.ResponseWriter) {
-	for i := 0; i < 10; i++ {
-		time.Sleep(time.Second)
-		fmt.Println(strconv.Itoa(i) + "*")
-	}
-	fmt.Fprintf(*w, "Done!")
-}
 
 type startHandler struct {
 	app *Application
 }
 
 func (h *startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		synchInitErr := r.(error)
+	// 		synchInitErrJSON, err := json.Marshal(synchInitErr)
+	// 		if err == nil {
+	// 			fmt.Println(string(synchInitErrJSON))
+	// 			fmt.Fprintf(w, "%s", synchInitErrJSON)
+	// 		}
+	// 	}
+	// }()
 
 	synchType, ok := r.URL.Query()["type"]
 	if !ok || len(synchType[0]) < 1 {
@@ -43,17 +44,15 @@ func (h *startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln("[http request] ERROR: Wrong 'simulation' URL param value.")
 	}
 
-	h.app.Lang = "test222222"
-	count++
-	// go tst(count, &w)
+	// A reponse channel can receive data of type 'error' or []byte.
+	resChan := make(chan interface{})
+	go h.app.synchronize(resChan, synchType[0], synch[0], simulation)
 
-	if simulation {
-		response, err := h.app.Synchronize(synchType[0], synch[0], simulation)
-		// fmt.Println(string(response))
-		if err == nil {
-			fmt.Fprintf(w, "%s", response)
-		}
-	} else {
-		go h.app.Synchronize(synchType[0], synch[0], simulation)
+	response := createResponse(<-resChan)
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		panic("Error while marshalling response.")
 	}
+
+	fmt.Fprintf(w, "%s", responseJSON)
 }

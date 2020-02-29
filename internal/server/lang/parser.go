@@ -13,11 +13,11 @@ TODO:
 */
 
 type mappingParserError struct {
-	msg string
+	errMsg string
 }
 
 func (e *mappingParserError) Error() string {
-	return fmt.Sprintf("[mapping parser] %s", e.msg)
+	return fmt.Sprintf("[mapping parser] %s", e.errMsg)
 }
 
 // ParseMapping uses regexp to split the mapping string into smaller parts.
@@ -136,7 +136,7 @@ func validateMapping(result map[string]interface{}) error {
 
 	if len(errorsArr) > 0 {
 		errorsArrJoined := strings.Join(errorsArr, "\n")
-		err = &mappingParserError{msg: errorsArrJoined}
+		err = &mappingParserError{errMsg: errorsArrJoined}
 	}
 	return err
 }

@@ -19,7 +19,6 @@ Contains all synchronization and database objects.
 Starts a web server and handles all requests.
 */
 type Application struct {
-	Lang   string
 	dbs    *db.Databases
 	synchs *synch.Synchs
 }
@@ -41,7 +40,14 @@ func (a *Application) listen() {
 	http.ListenAndServe(":8000", nil)
 }
 
-func (a *Application) Synchronize(synchType string, synchKey string, simulation bool) ([]byte, error) {
+// synchronize carries out a synchronization requested by the client.
+func (a *Application) synchronize(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			resChan <- r.(error)
+		}
+	}()
+
 	fmt.Printf("%s - %s\n", synchType, synchKey)
 	synch, synchFound := a.synchs.SynchMap[synchKey]
 	if !synchFound {
@@ -58,11 +64,17 @@ func (a *Application) Synchronize(synchType string, synchKey string, simulation 
 		synch.Simulation.Init()
 	}
 
-	return synch.Synchronize()
+	synchRes, synchErr := synch.Synchronize()
+	if synchErr != nil {
+
+	}
+
+	resChan <- synchRes
 }
 
-func (a *Application) SynchronizeArray(synchType string, synchKeys []string, simulation bool) {
-	for _, arg := range synchKeys {
-		a.Synchronize(synchType, arg, simulation)
-	}
-}
+// synchronizeArray carries out aan array of synchronizations requested by the client.
+// func (a *Application) synchronizeArray(synchType string, synchKeys []string, simulation bool) {
+// 	for _, arg := range synchKeys {
+// 		a.synchronize(synchType, arg, simulation)
+// 	}
+// }
