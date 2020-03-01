@@ -55,33 +55,33 @@ func (p Pair) Synchronize() (bool, error) {
 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 			log.Println(err)
 		} else if !areEqual {
-			if p.Mapping.synch.Simulation != nil {
-				p.Mapping.synch.Simulation.AddUpdate(p)
-				// fmt.Println(p.Mapping.synch.Simulation)
+			if !p.Mapping.synch.Simulation {
 			}
+
+			p.Mapping.synch.Rep.AddUpdate(p)
+			// fmt.Println(p.Mapping.synch.Simulation)
 			// (*db2).Update("", p.target.Key, p.Mapping.targetColumn, sourceColumnValue)
 			// log.Println(sourceColumnValue)
 			// log.Println(targetColumnValue)
 		} else {
-			if p.Mapping.synch.Simulation != nil {
-				p.Mapping.synch.Simulation.AddIdle(p)
-			}
+			p.Mapping.synch.Rep.AddIdle(p)
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Mapping.do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
-		if p.Mapping.synch.Simulation != nil {
-			p.Mapping.synch.Simulation.AddInsert(p)
-			// fmt.Println(p.Mapping.synch.Simulation)
+		if !p.Mapping.synch.Simulation {
 		}
+
+		p.Mapping.synch.Rep.AddInsert(p)
+		// fmt.Println(p.Mapping.synch.Simulation)
 	}
 
 	return false, nil
 }
 
-// SimIdleString creates a string representation of two records that
+// RepIdleString creates a string representation of two records that
 // are the same and no action will be carried out.
-func (p Pair) SimIdleString() string {
+func (p Pair) RepIdleString() string {
 	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
 	if len(sourceColumnData) > 25 {
 		sourceColumnData = sourceColumnData[:22] + "..."
@@ -104,9 +104,9 @@ func (p Pair) SimIdleString() string {
 	)
 }
 
-// SimInsertString creates a string representation of an insert
+// RepInsertString creates a string representation of an insert
 // that would be carried out due to the pair's incompleteness.
-func (p Pair) SimInsertString() string {
+func (p Pair) RepInsertString() string {
 	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
 	if len(sourceColumnData) > 25 {
 		sourceColumnData = sourceColumnData[:22] + "..."
@@ -124,10 +124,10 @@ func (p Pair) SimInsertString() string {
 	)
 }
 
-// SimUpdateString creates a string representation of an update
+// RepUpdateString creates a string representation of an update
 // that would be carried out because the data in the pair's records
 // was found to be different.
-func (p Pair) SimUpdateString() string {
+func (p Pair) RepUpdateString() string {
 	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
 	if len(sourceColumnData) > 25 {
 		sourceColumnData = sourceColumnData[:22] + "..."

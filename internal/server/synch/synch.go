@@ -15,7 +15,7 @@ import (
 )
 
 // Synch represents an individual synchronzation configration.
-// It holds all config data from an .yaml file, raw and parsed.
+// It holds all configuration from an .yaml file, raw and parsed.
 type Synch struct {
 	Cfg        *Config
 	dbs        map[string]*db.Database
@@ -24,17 +24,18 @@ type Synch struct {
 	Mappings   []*Mapping
 	running    bool
 	initial    bool
-	Simulation unifier.Simulator
+	Simulation bool
+	Rep        unifier.Reporter
 }
 
-// GetConfig returns raw synch data.
+// GetConfig returns the synch config struct.
 func (s *Synch) GetConfig() *Config {
 	return s.Cfg
 }
 
 // Init prepares the synchronization by fetching all necessary data
 // and parsing it.
-func (s *Synch) Init(DBMap map[string]*db.Database, simulation bool) {
+func (s *Synch) Init(DBMap map[string]*db.Database) {
 	tStart := time.Now()
 	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
@@ -200,8 +201,8 @@ func (s *Synch) Synchronize() ([]byte, error) {
 		}
 	}
 
-	if s.Simulation != nil {
-		return s.Simulation.ToJSON()
+	if s.Rep != nil {
+		return s.Rep.ToJSON()
 	}
 
 	// TODO: create JSON synch report

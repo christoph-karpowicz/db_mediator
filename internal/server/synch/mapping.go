@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-// MappingSimData mapping data for simulation purposes.
-type MappingSimData struct {
+// MappingReportData mapping data for simulation purposes.
+type MappingReportData struct {
 	MappingIndex int
 	LinkIndex    int
 	Link         map[string]string
@@ -33,9 +33,7 @@ type Mapping struct {
 	targetOldActiveRecords []*record
 	targetActiveRecords    []*record
 	pairs                  []*Pair
-
-	// Optional, if the user requested a simulation.
-	Sim *MappingSimData
+	Rep                    *MappingReportData
 }
 
 func createMapping(synch *Synch, link map[string]string, matchMethod map[string]interface{}, do []string, indexes ...int) *Mapping {
@@ -71,12 +69,10 @@ func createMapping(synch *Synch, link map[string]string, matchMethod map[string]
 		}
 	}
 
-	if synch.Simulation != nil {
-		newMapping.Sim = &MappingSimData{
-			MappingIndex: indexes[0],
-			LinkIndex:    indexes[1],
-			Link:         link,
-		}
+	newMapping.Rep = &MappingReportData{
+		MappingIndex: indexes[0],
+		LinkIndex:    indexes[1],
+		Link:         link,
 	}
 
 	return &newMapping

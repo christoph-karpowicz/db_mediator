@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	"github.com/christoph-karpowicz/unifier/internal/server/sim"
+	"github.com/christoph-karpowicz/unifier/internal/server/report"
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 )
 
@@ -54,15 +54,11 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 		panic("Synch '" + synchKey + "' not found.")
 	}
 
-	if simulation {
-		synch.Simulation = sim.CreateSimulation(synch)
-	}
+	synch.Simulation = simulation
+	synch.Rep = report.CreateReport(synch)
 
-	synch.Init(a.dbs.DBMap, simulation)
-
-	if simulation {
-		synch.Simulation.Init()
-	}
+	synch.Init(a.dbs.DBMap)
+	synch.Rep.Init()
 
 	synchRes, synchErr := synch.Synchronize()
 	if synchErr != nil {
