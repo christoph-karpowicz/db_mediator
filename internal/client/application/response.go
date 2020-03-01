@@ -36,21 +36,22 @@ var responsePrinters map[string]func(map[string]interface{}) string = map[string
 
 	// Error printer.
 	"error": func(res map[string]interface{}) string {
-		return res["msg"].(string)
+		return res["payload"].(string)
 	},
 
 	// Simulation printer.
-	"simulation": func(res map[string]interface{}) string {
-		resMsgStr := res["msg"].(string)
-		resMsg := make(map[string]interface{})
+	"one-off": func(res map[string]interface{}) string {
+		resPayloadStr := res["payload"].(string)
+		resPayload := make(map[string]interface{})
 
-		if err := json.Unmarshal([]byte(resMsgStr), &resMsg); err != nil {
+		if err := json.Unmarshal([]byte(resPayloadStr), &resPayload); err != nil {
 			panic(err)
 		}
 
-		synchInfo := resMsg["synchInfo"].(map[string]interface{})
+		synchMsg := resPayload["msg"].(string)
+		synchInfo := resPayload["synchInfo"].(map[string]interface{})
 		mappingsStrArray := synchInfo["Mappings"].([]interface{})
-		mappings := resMsg["mappings"].(map[string]interface{})
+		mappings := resPayload["mappings"].(map[string]interface{})
 
 		// MAPPINGS
 		var allMappingsStr string
@@ -131,10 +132,12 @@ Link command: %s`,
 
 		// WHOLE SIMULATION
 		return fmt.Sprintf(`SYNCH NAME: %s
+SERVER RESPONSE: %s
 MAPPINGS:
 %s
 		`,
 			synchInfo["Name"].(string),
+			synchMsg,
 			allMappingsStr,
 		)
 	},

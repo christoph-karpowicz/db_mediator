@@ -1,8 +1,8 @@
 package application
 
 type response struct {
-	Err bool   `json:"err"`
-	Msg string `json:"msg"`
+	Err     bool   `json:"err"`
+	Payload string `json:"payload"`
 }
 
 func createResponse(appRes interface{}) *response {
@@ -11,13 +11,13 @@ func createResponse(appRes interface{}) *response {
 	switch appRes.(type) {
 	case error:
 		res = &response{
-			Err: true,
-			Msg: appRes.(error).Error(),
+			Err:     true,
+			Payload: appRes.(error).Error(),
 		}
 	case []byte:
 		res = &response{
-			Err: false,
-			Msg: string(appRes.([]byte)),
+			Err:     false,
+			Payload: string(appRes.([]byte)),
 		}
 	}
 

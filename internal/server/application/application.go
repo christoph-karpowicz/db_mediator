@@ -5,7 +5,6 @@ I/O of the app.
 package application
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -36,7 +35,7 @@ func (a *Application) Init() {
 }
 
 func (a *Application) listen() {
-	http.Handle("/init", &startHandler{app: a})
+	http.Handle("/init", &initHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 
@@ -48,24 +47,31 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 		}
 	}()
 
-	fmt.Printf("%s - %s\n", synchType, synchKey)
+	// fmt.Printf("%s - %s\n", synchType, synchKey)
 	synch, synchFound := a.synchs.SynchMap[synchKey]
 	if !synchFound {
-		panic("Synch '" + synchKey + "' not found.")
+		panic("[synchronization search] '" + synchKey + "' not found.")
 	}
 
 	synch.Simulation = simulation
 	synch.Rep = report.CreateReport(synch)
 
+	// Initialize synchronization.
 	synch.Init(a.dbs.DBMap)
+	// Initialize report data structures.
 	synch.Rep.Init()
 
-	synchRes, synchErr := synch.Synchronize()
-	if synchErr != nil {
+	// Carry out all synch actions.
+	synch.Synchronize()
 
+	// Gather and marshal results.
+	synchReport, err := synch.Rep.Finalize()
+	if err != nil {
+		panic("[report JSON marshalling] " + err.Error())
 	}
 
-	resChan <- synchRes
+	// Send the report to the http init handler.
+	resChan <- synchReport
 }
 
 // synchronizeArray carries out aan array of synchronizations requested by the client.

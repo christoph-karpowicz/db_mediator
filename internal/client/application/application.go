@@ -73,14 +73,7 @@ func (a *Application) RequestSynch(synchType string, synchName string, simulatio
 
 	response := a.makeGETRequest("http://localhost:8000/init", paramMap)
 
-	var resType string
-	if simulation {
-		resType = "simulation"
-	} else {
-		resType = synchName
-	}
-
-	printResponse(response, resType)
+	printResponse(response, synchType)
 }
 
 // setCLI configures the app's command line interface.

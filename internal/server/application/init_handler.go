@@ -8,23 +8,11 @@ import (
 	"strconv"
 )
 
-type startHandler struct {
+type initHandler struct {
 	app *Application
 }
 
-func (h *startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		synchInitErr := r.(error)
-	// 		synchInitErrJSON, err := json.Marshal(synchInitErr)
-	// 		if err == nil {
-	// 			fmt.Println(string(synchInitErrJSON))
-	// 			fmt.Fprintf(w, "%s", synchInitErrJSON)
-	// 		}
-	// 	}
-	// }()
-
+func (h *initHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	synchType, ok := r.URL.Query()["type"]
 	if !ok || len(synchType[0]) < 1 {
 		log.Fatalln("[http request] ERROR: URL param 'type' is missing.")

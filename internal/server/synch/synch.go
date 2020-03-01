@@ -188,7 +188,7 @@ func (s *Synch) setTables() {
 }
 
 // Synchronize loops over all pairs in all mappings and invokes their Synchronize function.
-func (s *Synch) Synchronize() ([]byte, error) {
+func (s *Synch) Synchronize() {
 	for j := range s.Mappings {
 		var mpng *Mapping = s.Mappings[j]
 
@@ -200,11 +200,4 @@ func (s *Synch) Synchronize() ([]byte, error) {
 			}
 		}
 	}
-
-	if s.Rep != nil {
-		return s.Rep.ToJSON()
-	}
-
-	// TODO: create JSON synch report
-	return []byte{}, nil
 }

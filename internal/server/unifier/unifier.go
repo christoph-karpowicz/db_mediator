@@ -11,6 +11,6 @@ type Reporter interface {
 	AddIdle(pair Synchronizer) (bool, error)
 	AddInsert(pair Synchronizer) (bool, error)
 	AddUpdate(pair Synchronizer) (bool, error)
+	Finalize() ([]byte, error)
 	Init()
-	ToJSON() ([]byte, error)
 }
