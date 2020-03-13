@@ -40,11 +40,11 @@ func createMapping(synch *Synch, link map[string]string, matchMethod map[string]
 
 	_, sourceNodeFound := link["sourceNode"]
 	if !sourceNodeFound {
-		log.Fatalln("[create mapping] ERROR: source node not found.")
+		panic("[create mapping] ERROR: source node not found.")
 	}
 	_, targetNodeFound := link["targetNode"]
 	if !targetNodeFound {
-		log.Fatalln("[create mapping] ERROR: target node not found.")
+		panic("[create mapping] ERROR: target node not found.")
 	}
 
 	newMapping := Mapping{

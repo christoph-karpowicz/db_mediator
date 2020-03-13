@@ -8,7 +8,7 @@ type Database interface {
 	Init()
 	Select(tableName string, conditions string) []map[string]interface{}
 	TestConnection()
-	Update(table string, key interface{}, column string, val interface{}) (bool, error)
+	Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error)
 }
 
 // DatabaseError is a custom db error.
@@ -18,5 +18,5 @@ type DatabaseError struct {
 }
 
 func (e *DatabaseError) Error() string {
-	return fmt.Sprintf("[database] Database %s %s", e.DBName, e.ErrMsg)
+	return fmt.Sprintf("[database %s] %s", e.DBName, e.ErrMsg)
 }

@@ -56,13 +56,17 @@ func (p Pair) Synchronize() (bool, error) {
 			log.Println(err)
 		} else if !areEqual {
 			if !p.Mapping.synch.Simulation {
+				update, err := (*p.Mapping.target.db).Update(p.Mapping.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Mapping.targetColumn, sourceColumnValue)
+				if err != nil {
+					log.Println(err)
+				}
+				log.Println(update)
+				// log.Println(sourceColumnValue)
+				// log.Println(targetColumnValue)
 			}
 
 			p.Mapping.synch.Rep.AddUpdate(p)
 			// fmt.Println(p.Mapping.synch.Simulation)
-			// (*db2).Update("", p.target.Key, p.Mapping.targetColumn, sourceColumnValue)
-			// log.Println(sourceColumnValue)
-			// log.Println(targetColumnValue)
 		} else {
 			p.Mapping.synch.Rep.AddIdle(p)
 		}

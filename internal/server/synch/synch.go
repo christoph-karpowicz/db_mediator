@@ -69,7 +69,7 @@ func (s *Synch) pairData() {
 func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
 	rawMapping, err := lang.ParseMapping(mpngStr)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	for j, link := range rawMapping["links"].([]map[string]string) {

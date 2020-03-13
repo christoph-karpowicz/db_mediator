@@ -14,3 +14,9 @@ test-client:
 
 test-server:
 	go test -v ./internal/server/...
+
+test-db:
+	go test -v ./internal/server/db/...
+
+test-synch:
+	go test -v ./internal/server/synch/...

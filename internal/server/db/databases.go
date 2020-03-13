@@ -20,7 +20,7 @@ type Databases struct {
 }
 
 // ImportYAML parses and saves YAML config files.
-func (d *Databases) ImportYAML() {
+func (d *Databases) ImportYAML() *configArray {
 	databasesFilePath, _ := filepath.Abs("./config/databases.yaml")
 
 	databasesConfigFile, err := os.Open(databasesFilePath)
@@ -62,6 +62,8 @@ func (d *Databases) ImportYAML() {
 	}
 	// fmt.Println(d.DBMap)
 	fmt.Println("----------------")
+
+	return &dbDataArr
 }
 
 // ValidateYAML calls validation method on each database data object.

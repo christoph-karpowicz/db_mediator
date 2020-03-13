@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -60,11 +61,11 @@ func (d *mongoDatabase) Init() {
 
 // Select selects data from the database, with or without filters.
 func (d *mongoDatabase) Select(tableName string, conditions string) []map[string]interface{} {
+	d.TestConnection()
+
 	var allDocuments []map[string]interface{}
 
 	// defer d.close()
-
-	d.TestConnection()
 
 	client := d.GetClient()
 	collection := client.Database(d.cfg.Name).Collection(tableName)
@@ -114,20 +115,35 @@ func (d *mongoDatabase) TestConnection() {
 }
 
 // Update updates a document with the provided key.
-func (d *mongoDatabase) Update(table string, key interface{}, column string, val interface{}) (bool, error) {
+func (d *mongoDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
+	d.TestConnection()
+
+	fmt.Println(keyName)
+	fmt.Println(keyVal)
+	fmt.Println(reflect.TypeOf(keyVal))
+
 	client := d.GetClient()
 	collection := client.Database(d.cfg.Name).Collection(table)
-	filter := bson.D{{"name", "Ash"}}
+	filter := bson.D{{keyName, keyVal}}
 	update := bson.D{
-		{"$inc", bson.D{
-			{"age", 1},
+		{"$set", bson.D{
+			{column, val},
 		}},
 	}
 
 	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
+	// log.Println(updateResult.MatchedCount)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
-	log.Println(updateResult)
-	return false, nil
+	if updateResult.MatchedCount == 0 {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "document with given key not found."}
+		return false, dbErr
+	}
+	if updateResult.ModifiedCount == 0 {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no documents modified."}
+		return false, dbErr
+	}
+
+	return true, nil
 }

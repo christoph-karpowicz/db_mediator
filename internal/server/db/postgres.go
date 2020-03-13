@@ -95,6 +95,6 @@ func (d *postgresDatabase) TestConnection() {
 }
 
 // Update updates a record with the provided key.
-func (d *postgresDatabase) Update(table string, key interface{}, column string, val interface{}) (bool, error) {
+func (d *postgresDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
 	return false, nil
 }
