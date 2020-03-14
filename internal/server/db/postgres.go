@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
+	_ "github.com/lib/pq"
 )
 
 // PostgresDatabase implements Database interface for PostgreSQL database.
@@ -25,13 +27,13 @@ func (d *postgresDatabase) Init() {
 
 // Select selects data from the database, with or without a WHERE clause.
 func (d *postgresDatabase) Select(tableName string, conditions string) []map[string]interface{} {
-	var allRecords []map[string]interface{}
-
 	d.TestConnection()
+
+	var allRecords []map[string]interface{}
 
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
-		panic(err)
+		panic(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 	}
 	defer database.Close()
 
@@ -43,7 +45,7 @@ func (d *postgresDatabase) Select(tableName string, conditions string) []map[str
 
 	rows, err := database.Query(query)
 	if err != nil {
-		panic(err)
+		panic(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 	}
 
 	cols, _ := rows.Columns()
@@ -59,7 +61,7 @@ func (d *postgresDatabase) Select(tableName string, conditions string) []map[str
 
 		// Scan the result into the column pointers...
 		if err := rows.Scan(columnPointers...); err != nil {
-			panic(err)
+			panic(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 		}
 
 		// Create our map, and retrieve the value for each column from the pointers slice,
@@ -82,13 +84,13 @@ func (d *postgresDatabase) Select(tableName string, conditions string) []map[str
 func (d *postgresDatabase) TestConnection() {
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
-		panic(err)
+		panic(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 	}
 	defer database.Close()
 
 	err = database.Ping()
 	if err != nil {
-		panic(err)
+		panic(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 	}
 
 	fmt.Println("Successfully connected!")
@@ -96,5 +98,28 @@ func (d *postgresDatabase) TestConnection() {
 
 // Update updates a record with the provided key.
 func (d *postgresDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
-	return false, nil
+	d.TestConnection()
+
+	database, err := sql.Open("postgres", d.connectionString)
+	if err != nil {
+		panic(err)
+	}
+	defer database.Close()
+
+	query := fmt.Sprintf(`UPDATE %s SET %s = $1 WHERE %s = $2`, table, column, keyName)
+
+	result, err := database.Exec(query, val, keyVal)
+	if err != nil {
+		return false, err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	if rowsAffected == 0 {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no rows affected in update", KeyName: keyName, KeyVal: keyVal}
+		return false, dbErr
+	}
+
+	return true, nil
 }

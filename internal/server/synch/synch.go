@@ -129,7 +129,7 @@ func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 		s.dbs[dbName] = DBMap[dbName]
 		(*s.dbs[dbName]).Init()
 	} else {
-		dbErr := &db.DatabaseError{DBName: dbName, ErrMsg: "hasn't been configured"}
+		dbErr := &db.DatabaseError{DBName: dbName, ErrMsg: "database hasn't been configured"}
 		panic(dbErr)
 	}
 }

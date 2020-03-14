@@ -13,10 +13,16 @@ type Database interface {
 
 // DatabaseError is a custom db error.
 type DatabaseError struct {
-	DBName string `json:"dbName"`
-	ErrMsg string `json:"errMsg"`
+	DBName  string      `json:"dbName"`
+	ErrMsg  string      `json:"errMsg"`
+	KeyName string      `json:"keyName"`
+	KeyVal  interface{} `json:"keyVal"`
 }
 
 func (e *DatabaseError) Error() string {
+	if e.KeyName != "" && e.KeyVal != nil {
+		return fmt.Sprintf("[database %s] %s (key: %s, val: %v).", e.DBName, e.ErrMsg, e.KeyName, e.KeyVal)
+	}
+
 	return fmt.Sprintf("[database %s] %s", e.DBName, e.ErrMsg)
 }

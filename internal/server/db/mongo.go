@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -118,10 +117,6 @@ func (d *mongoDatabase) TestConnection() {
 func (d *mongoDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
 	d.TestConnection()
 
-	fmt.Println(keyName)
-	fmt.Println(keyVal)
-	fmt.Println(reflect.TypeOf(keyVal))
-
 	client := d.GetClient()
 	collection := client.Database(d.cfg.Name).Collection(table)
 	filter := bson.D{{keyName, keyVal}}
@@ -132,18 +127,17 @@ func (d *mongoDatabase) Update(table string, keyName string, keyVal interface{},
 	}
 
 	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
-	// log.Println(updateResult.MatchedCount)
 	if err != nil {
 		return false, err
 	}
 	if updateResult.MatchedCount == 0 {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "document with given key not found."}
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "document with given key not found", KeyName: keyName, KeyVal: keyVal}
 		return false, dbErr
 	}
-	if updateResult.ModifiedCount == 0 {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no documents modified."}
-		return false, dbErr
-	}
+	// if updateResult.ModifiedCount == 0 {
+	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no documents modified", KeyName: keyName, KeyVal: keyVal}
+	// 	return false, dbErr
+	// }
 
 	return true, nil
 }
