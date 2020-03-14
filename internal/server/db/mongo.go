@@ -58,6 +58,11 @@ func (d *mongoDatabase) Init() {
 	d.close = cancel
 }
 
+// Insert inserts one row into a given collection.
+func (d *mongoDatabase) Insert(table string, keyName string, keyVal interface{}, values map[string]interface{}) (bool, error) {
+	return false, nil
+}
+
 // Select selects data from the database, with or without filters.
 func (d *mongoDatabase) Select(tableName string, conditions string) []map[string]interface{} {
 	d.TestConnection()

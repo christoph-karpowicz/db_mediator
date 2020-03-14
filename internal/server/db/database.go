@@ -9,6 +9,7 @@ type Database interface {
 	Select(tableName string, conditions string) []map[string]interface{}
 	TestConnection()
 	Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error)
+	Insert(table string, keyName string, keyVal interface{}, values map[string]interface{}) (bool, error)
 }
 
 // DatabaseError is a custom db error.

@@ -33,9 +33,9 @@ func TestMongoCRUD(t *testing.T) {
 		log.Println(len(rows))
 
 		// Update
-		_, err := database.Update("Sakila_films", "_id", 6, "Rating", "test")
-		if err != nil {
-			log.Fatalln(err)
+		_, updateErr := database.Update("Sakila_films", "_id", 6, "Rating", "test")
+		if updateErr != nil {
+			log.Fatalln(updateErr)
 		}
 	}
 }
@@ -57,10 +57,23 @@ func TestPostgresCRUD(t *testing.T) {
 		rows := database.Select("film", "film_id > 10 AND film_id < 22")
 		log.Println(len(rows))
 
+		// Insert
+		row := map[string]interface{}{
+			"title":        "test1",
+			"description":  "testdesc",
+			"release_year": 2010,
+			"length":       90,
+			"language_id":  1,
+		}
+		_, insertErr := database.Insert("film", "film_id", 1, row)
+		if insertErr != nil {
+			log.Fatalln(insertErr)
+		}
+
 		// Update
-		_, err := database.Update("film", "film_id", 1, "description", "test")
-		if err != nil {
-			log.Fatalln(err)
+		_, updateErr := database.Update("film", "film_id", 1, "description", "test")
+		if updateErr != nil {
+			log.Fatalln(updateErr)
 		}
 	}
 }

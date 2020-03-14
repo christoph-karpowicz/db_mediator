@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -23,6 +25,48 @@ func (d *postgresDatabase) Init() {
 	d.connectionString = fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		d.cfg.Host, d.cfg.Port, d.cfg.User, d.cfg.Password, d.cfg.Name)
+}
+
+// Insert inserts one row into a given table.
+func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface{}, values map[string]interface{}) (bool, error) {
+	d.TestConnection()
+
+	database, err := sql.Open("postgres", d.connectionString)
+	if err != nil {
+		panic(err)
+	}
+	defer database.Close()
+
+	var columnList []string = make([]string, 0)
+	var valuesList []interface{} = make([]interface{}, 0)
+	var valuesPlaceholderList []string = make([]string, 0)
+	var valuesCounter int64 = 1
+
+	for key, val := range values {
+		valuesCounterStr := strconv.FormatInt(valuesCounter, 10)
+
+		columnList = append(columnList, key)
+		valuesList = append(valuesList, val)
+		valuesPlaceholderList = append(valuesPlaceholderList, "$"+valuesCounterStr)
+		valuesCounter++
+	}
+
+	query := fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, table, strings.Join(columnList, ", "), strings.Join(valuesPlaceholderList, ", "))
+
+	result, err := database.Exec(query, valuesList...)
+	if err != nil {
+		return false, err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	if rowsAffected == 0 {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "row hasn't been inserted" /* , KeyName: keyName, KeyVal: keyVal */}
+		return false, dbErr
+	}
+
+	return true, nil
 }
 
 // Select selects data from the database, with or without a WHERE clause.
@@ -59,7 +103,7 @@ func (d *postgresDatabase) Select(tableName string, conditions string) []map[str
 			columnPointers[i] = &columns[i]
 		}
 
-		// Scan the result into the column pointers...
+		// Scan the result into the column pointers.
 		if err := rows.Scan(columnPointers...); err != nil {
 			panic(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 		}
@@ -73,7 +117,6 @@ func (d *postgresDatabase) Select(tableName string, conditions string) []map[str
 		}
 
 		// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
-		// fmt.Println(record)
 		allRecords = append(allRecords, record)
 	}
 
