@@ -56,17 +56,30 @@ func (d *mongoDatabase) Init() {
 
 	d.ctx = ctx
 	d.close = cancel
+
+	d.TestConnection()
 }
 
 // Insert inserts one row into a given collection.
 func (d *mongoDatabase) Insert(table string, keyName string, keyVal interface{}, values map[string]interface{}) (bool, error) {
-	return false, nil
+	client := d.GetClient()
+	collection := client.Database(d.cfg.Name).Collection(table)
+
+	insertResult, err := collection.InsertOne(context.TODO(), values)
+	if err != nil {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: keyName, KeyVal: keyVal}
+		return false, dbErr
+	}
+	if insertResult.InsertedID == nil {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "could not insert document", KeyName: keyName, KeyVal: keyVal}
+		return false, dbErr
+	}
+
+	return true, nil
 }
 
 // Select selects data from the database, with or without filters.
 func (d *mongoDatabase) Select(tableName string, conditions string) []map[string]interface{} {
-	d.TestConnection()
-
 	var allDocuments []map[string]interface{}
 
 	// defer d.close()
@@ -78,7 +91,7 @@ func (d *mongoDatabase) Select(tableName string, conditions string) []map[string
 	if conditions != "" && conditions != "*" {
 		err := bson.UnmarshalExtJSON([]byte(conditions), true, &bsonConditions)
 		if err != nil {
-			panic(err)
+			panic(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 		}
 	} else {
 		bsonConditions = bson.M{}
@@ -86,23 +99,19 @@ func (d *mongoDatabase) Select(tableName string, conditions string) []map[string
 
 	cur, err := collection.Find(d.ctx, bsonConditions)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 	}
 
 	for cur.Next(context.TODO()) {
 		var documentMap map[string]interface{} = make(map[string]interface{})
 		err := cur.Decode(documentMap)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(&DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error()})
 		}
 		allDocuments = append(allDocuments, documentMap)
 	}
 
 	defer cur.Close(context.TODO())
-
-	// for _, element := range allDocuments {
-	// 	fmt.Println(element)
-	// }
 
 	return allDocuments
 }
@@ -120,8 +129,6 @@ func (d *mongoDatabase) TestConnection() {
 
 // Update updates a document with the provided key.
 func (d *mongoDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
-	d.TestConnection()
-
 	client := d.GetClient()
 	collection := client.Database(d.cfg.Name).Collection(table)
 	filter := bson.D{{keyName, keyVal}}
@@ -133,7 +140,8 @@ func (d *mongoDatabase) Update(table string, keyName string, keyVal interface{},
 
 	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		return false, err
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: keyName, KeyVal: keyVal}
+		return false, dbErr
 	}
 	if updateResult.MatchedCount == 0 {
 		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "document with given key not found", KeyName: keyName, KeyVal: keyVal}

@@ -25,12 +25,12 @@ func (d *postgresDatabase) Init() {
 	d.connectionString = fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		d.cfg.Host, d.cfg.Port, d.cfg.User, d.cfg.Password, d.cfg.Name)
+
+	d.TestConnection()
 }
 
 // Insert inserts one row into a given table.
 func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface{}, values map[string]interface{}) (bool, error) {
-	d.TestConnection()
-
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
 		panic(err)
@@ -51,7 +51,7 @@ func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface
 		valuesCounter++
 	}
 
-	query := fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, table, strings.Join(columnList, ", "), strings.Join(valuesPlaceholderList, ", "))
+	query := fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", table, strings.Join(columnList, ", "), strings.Join(valuesPlaceholderList, ", "))
 
 	result, err := database.Exec(query, valuesList...)
 	if err != nil {
@@ -71,8 +71,6 @@ func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface
 
 // Select selects data from the database, with or without a WHERE clause.
 func (d *postgresDatabase) Select(tableName string, conditions string) []map[string]interface{} {
-	d.TestConnection()
-
 	var allRecords []map[string]interface{}
 
 	database, err := sql.Open("postgres", d.connectionString)
@@ -82,10 +80,10 @@ func (d *postgresDatabase) Select(tableName string, conditions string) []map[str
 	defer database.Close()
 
 	if conditions != "" && conditions != "*" {
-		conditions = fmt.Sprintf(` WHERE %s`, conditions)
+		conditions = fmt.Sprintf(" WHERE %s", conditions)
 	}
 
-	query := fmt.Sprintf(`SELECT * FROM %s%s`, tableName, conditions)
+	query := fmt.Sprintf("SELECT * FROM %s%s", tableName, conditions)
 
 	rows, err := database.Query(query)
 	if err != nil {
@@ -141,15 +139,13 @@ func (d *postgresDatabase) TestConnection() {
 
 // Update updates a record with the provided key.
 func (d *postgresDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
-	d.TestConnection()
-
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
 		panic(err)
 	}
 	defer database.Close()
 
-	query := fmt.Sprintf(`UPDATE %s SET %s = $1 WHERE %s = $2`, table, column, keyName)
+	query := fmt.Sprintf("UPDATE %s SET %s = $1 WHERE %s = $2", table, column, keyName)
 
 	result, err := database.Exec(query, val, keyVal)
 	if err != nil {
