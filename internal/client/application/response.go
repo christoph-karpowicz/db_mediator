@@ -3,6 +3,7 @@ package application
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -14,6 +15,7 @@ func parseResponse(res []byte) map[string]interface{} {
 	if err := json.Unmarshal(res, &result); err != nil {
 		panic(err)
 	}
+	log.Println(result)
 
 	return result
 }

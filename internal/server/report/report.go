@@ -2,24 +2,17 @@ package report
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
 
-// PairReporter is implemented by the pair struct from the synch package
-// and passed to Add* methods.
-type PairReporter interface {
-	RepIdleString() string
-	RepInsertString() string
-	RepUpdateString() string
-}
-
 type linkRep struct {
 	Cmd     string   `json:"cmd"`
-	Idle    []string `json:"idle"`
-	Inserts []string `json:"inserts"`
-	Updates []string `json:"updates"`
+	Idle    [][]byte `json:"idle"`
+	Inserts [][]byte `json:"inserts"`
+	Updates [][]byte `json:"updates"`
 }
 
 type mappingRep struct {
@@ -34,6 +27,16 @@ type Report struct {
 	mappingsReps map[*synch.Mapping]*mappingRep
 }
 
+// ReportError is a custom report error.
+type ReportError struct {
+	SynchName string `json:"synchName"`
+	ErrMsg    string `json:"errMsg"`
+}
+
+func (e *ReportError) Error() string {
+	return fmt.Sprintf("['%s' synch report] %s", e.SynchName, e.ErrMsg)
+}
+
 // CreateReport creates a Report instance.
 func CreateReport(s *synch.Synch) unifier.Reporter {
 	var newReport Report = Report{
@@ -44,41 +47,30 @@ func CreateReport(s *synch.Synch) unifier.Reporter {
 	return &newReport
 }
 
-// AddIdle adds a single idle to the Report.
-// Idle means two records that have been paired, but no action will be carried out because the relevant data is the same.
-func (r *Report) AddIdle(p unifier.Synchronizer) (bool, error) {
+// AddAction adds a single action to the Report.
+// Action types:
+// 	1.	idle - means two records that have been paired, but no action will be carried out because the relevant data is the same.
+// 	2.	insert
+// 	3. 	update
+func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, error) {
 	var pair synch.Pair = p.(synch.Pair)
-	var str string = pair.RepIdleString()
 	var lnkIdx int = pair.Mapping.Rep.LinkIndex
+	actionJSON, err := pair.ReportJSON(actionType)
+	if err != nil {
+		return false, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+	}
 
-	r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, str)
-	// fmt.Print(str)
+	switch actionType {
+	case "idle":
+		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, actionJSON)
+	case "insert":
+		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Inserts = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, actionJSON)
+	case "update":
+		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Updates = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, actionJSON)
+	}
+	// fmt.Print(actionJSON)
 
-	return false, nil
-}
-
-// AddInsert adds a single insert to the Report.
-func (r *Report) AddInsert(p unifier.Synchronizer) (bool, error) {
-	var pair synch.Pair = p.(synch.Pair)
-	var str string = pair.RepInsertString()
-	var lnkIdx int = pair.Mapping.Rep.LinkIndex
-
-	r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Inserts = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Inserts, str)
-	// fmt.Print(str)
-
-	return false, nil
-}
-
-// AddUpdate adds a single update to the Report.
-func (r *Report) AddUpdate(p unifier.Synchronizer) (bool, error) {
-	var pair synch.Pair = p.(synch.Pair)
-	var str string = pair.RepUpdateString()
-	var lnkIdx int = pair.Mapping.Rep.LinkIndex
-
-	r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Updates = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Updates, str)
-	// fmt.Print(str)
-
-	return false, nil
+	return true, nil
 }
 
 // Init fills the necessary fields after the Synch instance finished its Init execution.
@@ -102,7 +94,12 @@ func (r *Report) Finalize() ([]byte, error) {
 		r.msg = "'" + r.synch.GetConfig().Name + "' synchronization was successful. The report contains changes that have been made to the relevant nodes."
 	}
 
-	return r.ToJSON()
+	toJSON, err := r.ToJSON()
+	if err != nil {
+		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+	}
+
+	return toJSON, nil
 }
 
 // MarshalJSON implements the Marshaler interface for custom JSON creation.
@@ -129,11 +126,21 @@ func (r *Report) MarshalJSON() ([]byte, error) {
 		MappingReps: mappingsMap,
 	}
 
-	return json.Marshal(&customStruct)
+	marshal, err := json.Marshal(&customStruct)
+	if err != nil {
+		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+	}
+
+	return marshal, nil
 }
 
 // ToJSON turns the report into a JSON object.
 func (r *Report) ToJSON() ([]byte, error) {
 	// fmt.Println(s)
-	return json.Marshal(r)
+	marshal, err := json.Marshal(r)
+	if err != nil {
+		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+	}
+
+	return marshal, nil
 }

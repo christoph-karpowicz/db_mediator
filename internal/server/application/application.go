@@ -67,7 +67,7 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	// Gather and marshal results.
 	synchReport, err := synch.Rep.Finalize()
 	if err != nil {
-		panic("[report JSON marshalling] " + err.Error())
+		panic(err)
 	}
 
 	// Send the report to the http init handler.

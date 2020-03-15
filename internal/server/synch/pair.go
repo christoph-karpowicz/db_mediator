@@ -1,8 +1,10 @@
 package synch
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 
 	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
@@ -65,10 +67,10 @@ func (p Pair) Synchronize() (bool, error) {
 				// log.Println(targetColumnValue)
 			}
 
-			p.Mapping.synch.Rep.AddUpdate(p)
+			p.Mapping.synch.Rep.AddAction(p, "update")
 			// fmt.Println(p.Mapping.synch.Simulation)
 		} else {
-			p.Mapping.synch.Rep.AddIdle(p)
+			p.Mapping.synch.Rep.AddAction(p, "idle")
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Mapping.do, "INSERT") {
 		// Inserts
@@ -76,11 +78,61 @@ func (p Pair) Synchronize() (bool, error) {
 		if !p.Mapping.synch.Simulation {
 		}
 
-		p.Mapping.synch.Rep.AddInsert(p)
+		p.Mapping.synch.Rep.AddAction(p, "insert")
 		// fmt.Println(p.Mapping.synch.Simulation)
 	}
 
 	return false, nil
+}
+
+// ReportJSON creates a JSON representation of an action.
+func (p Pair) ReportJSON(actionType string) ([]byte, error) {
+	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
+	if len(sourceColumnData) > 25 {
+		sourceColumnData = sourceColumnData[:22] + "..."
+	}
+
+	var targetKeyName string
+	var targetKeyValue interface{}
+	var targetColumnData interface{}
+
+	if p.target != nil {
+		targetKeyValue = p.target.Data[p.getTargetNodeKey()]
+		targetKeyName = p.getTargetNodeKey()
+
+		targetColumnData = p.target.Data[p.Mapping.targetColumn].(interface{})
+		if reflect.TypeOf(targetColumnData).Name() == "string" && len(targetColumnData.(string)) > 25 {
+			targetColumnData = targetColumnData.(string)[:22] + "..."
+		}
+	} else {
+		targetKeyName = ""
+		targetKeyValue = nil
+		targetColumnData = nil
+	}
+
+	idleStruct := struct {
+		SourceNodeKey    string      `json:"sourceNodeKey"`
+		SourceData       interface{} `json:"sourceData"`
+		SourceColumn     string      `json:"sourceColumn"`
+		SourceColumnData interface{} `json:"sourceColumnData"`
+		TargetKeyName    string      `json:"targetKeyName"`
+		TargetKeyValue   interface{} `json:"targetKeyValue"`
+		TargetColumn     string      `json:"targetColumn"`
+		TargetColumnData interface{} `json:"targetColumnData"`
+		ActionType       string      `json:"actionType"`
+	}{
+		SourceNodeKey:    p.getSourceNodeKey(),
+		SourceData:       p.source.Data[p.getSourceNodeKey()],
+		SourceColumn:     p.Mapping.sourceColumn,
+		SourceColumnData: sourceColumnData,
+		TargetKeyName:    targetKeyName,
+		TargetKeyValue:   targetKeyValue,
+		TargetColumn:     p.Mapping.targetColumn,
+		TargetColumnData: targetColumnData,
+		ActionType:       actionType,
+	}
+
+	return json.Marshal(&idleStruct)
 }
 
 // RepIdleString creates a string representation of two records that
