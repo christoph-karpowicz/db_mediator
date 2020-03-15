@@ -2,7 +2,6 @@ package synch
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"reflect"
 
@@ -67,10 +66,16 @@ func (p Pair) Synchronize() (bool, error) {
 				// log.Println(targetColumnValue)
 			}
 
-			p.Mapping.synch.Rep.AddAction(p, "update")
+			_, err := p.Mapping.synch.Rep.AddAction(p, "update")
+			if err != nil {
+				panic(err)
+			}
 			// fmt.Println(p.Mapping.synch.Simulation)
 		} else {
-			p.Mapping.synch.Rep.AddAction(p, "idle")
+			_, err := p.Mapping.synch.Rep.AddAction(p, "idle")
+			if err != nil {
+				panic(err)
+			}
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Mapping.do, "INSERT") {
 		// Inserts
@@ -78,7 +83,10 @@ func (p Pair) Synchronize() (bool, error) {
 		if !p.Mapping.synch.Simulation {
 		}
 
-		p.Mapping.synch.Rep.AddAction(p, "insert")
+		_, err := p.Mapping.synch.Rep.AddAction(p, "insert")
+		if err != nil {
+			panic(err)
+		}
 		// fmt.Println(p.Mapping.synch.Simulation)
 	}
 
@@ -87,9 +95,9 @@ func (p Pair) Synchronize() (bool, error) {
 
 // ReportJSON creates a JSON representation of an action.
 func (p Pair) ReportJSON(actionType string) ([]byte, error) {
-	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
-	if len(sourceColumnData) > 25 {
-		sourceColumnData = sourceColumnData[:22] + "..."
+	var sourceColumnData interface{} = p.source.Data[p.Mapping.sourceColumn].(interface{})
+	if reflect.TypeOf(sourceColumnData).Name() == "string" && len(sourceColumnData.(string)) > 25 {
+		sourceColumnData = sourceColumnData.(string)[:22] + "..."
 	}
 
 	var targetKeyName string
@@ -110,7 +118,7 @@ func (p Pair) ReportJSON(actionType string) ([]byte, error) {
 		targetColumnData = nil
 	}
 
-	idleStruct := struct {
+	actionStruct := struct {
 		SourceNodeKey    string      `json:"sourceNodeKey"`
 		SourceData       interface{} `json:"sourceData"`
 		SourceColumn     string      `json:"sourceColumn"`
@@ -132,77 +140,5 @@ func (p Pair) ReportJSON(actionType string) ([]byte, error) {
 		ActionType:       actionType,
 	}
 
-	return json.Marshal(&idleStruct)
-}
-
-// RepIdleString creates a string representation of two records that
-// are the same and no action will be carried out.
-func (p Pair) RepIdleString() string {
-	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
-	if len(sourceColumnData) > 25 {
-		sourceColumnData = sourceColumnData[:22] + "..."
-	}
-
-	var targetColumnData string = p.target.Data[p.Mapping.targetColumn].(string)
-	if len(targetColumnData) > 25 {
-		targetColumnData = targetColumnData[:22] + "..."
-	}
-
-	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  ==  |%6v: %6v, %6s: %25v|\n",
-		p.getSourceNodeKey(),
-		p.source.Data[p.getSourceNodeKey()],
-		p.Mapping.sourceColumn,
-		sourceColumnData,
-		p.getTargetNodeKey(),
-		p.target.Data[p.getTargetNodeKey()],
-		p.Mapping.targetColumn,
-		targetColumnData,
-	)
-}
-
-// RepInsertString creates a string representation of an insert
-// that would be carried out due to the pair's incompleteness.
-func (p Pair) RepInsertString() string {
-	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
-	if len(sourceColumnData) > 25 {
-		sourceColumnData = sourceColumnData[:22] + "..."
-	}
-
-	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =>  |%6v: %6v, %6s: %25v|\n",
-		p.getSourceNodeKey(),
-		p.source.Data[p.getSourceNodeKey()],
-		p.Mapping.sourceColumn,
-		sourceColumnData,
-		p.getTargetNodeKey(),
-		"-",
-		p.Mapping.targetColumn,
-		sourceColumnData,
-	)
-}
-
-// RepUpdateString creates a string representation of an update
-// that would be carried out because the data in the pair's records
-// was found to be different.
-func (p Pair) RepUpdateString() string {
-	var sourceColumnData string = p.source.Data[p.Mapping.sourceColumn].(string)
-	if len(sourceColumnData) > 25 {
-		sourceColumnData = sourceColumnData[:22] + "..."
-	}
-
-	var targetColumnData string = p.target.Data[p.Mapping.targetColumn].(string)
-	if len(targetColumnData) > 25 {
-		targetColumnData = targetColumnData[:22] + "..."
-	}
-
-	return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =^  |%6v: %6v, %6s: %25v -> %25v|\n",
-		p.getSourceNodeKey(),
-		p.source.Data[p.getSourceNodeKey()],
-		p.Mapping.sourceColumn,
-		sourceColumnData,
-		p.getTargetNodeKey(),
-		p.target.Data[p.getTargetNodeKey()],
-		p.Mapping.targetColumn,
-		targetColumnData,
-		sourceColumnData,
-	)
+	return json.Marshal(&actionStruct)
 }

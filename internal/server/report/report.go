@@ -10,9 +10,9 @@ import (
 
 type linkRep struct {
 	Cmd     string   `json:"cmd"`
-	Idle    [][]byte `json:"idle"`
-	Inserts [][]byte `json:"inserts"`
-	Updates [][]byte `json:"updates"`
+	Idle    []string `json:"idle"`
+	Inserts []string `json:"inserts"`
+	Updates []string `json:"updates"`
 }
 
 type mappingRep struct {
@@ -62,11 +62,11 @@ func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, err
 
 	switch actionType {
 	case "idle":
-		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, actionJSON)
+		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, string(actionJSON))
 	case "insert":
-		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Inserts = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, actionJSON)
+		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Inserts = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Inserts, string(actionJSON))
 	case "update":
-		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Updates = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Idle, actionJSON)
+		r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Updates = append(r.mappingsReps[pair.Mapping].LinkReps[lnkIdx].Updates, string(actionJSON))
 	}
 	// fmt.Print(actionJSON)
 
@@ -126,21 +126,21 @@ func (r *Report) MarshalJSON() ([]byte, error) {
 		MappingReps: mappingsMap,
 	}
 
-	marshal, err := json.Marshal(&customStruct)
+	marshalled, err := json.Marshal(&customStruct)
 	if err != nil {
 		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
 	}
 
-	return marshal, nil
+	return marshalled, nil
 }
 
 // ToJSON turns the report into a JSON object.
 func (r *Report) ToJSON() ([]byte, error) {
 	// fmt.Println(s)
-	marshal, err := json.Marshal(r)
+	marshalled, err := json.Marshal(r)
 	if err != nil {
 		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
 	}
 
-	return marshal, nil
+	return marshalled, nil
 }

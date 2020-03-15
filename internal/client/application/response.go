@@ -15,7 +15,7 @@ func parseResponse(res []byte) map[string]interface{} {
 	if err := json.Unmarshal(res, &result); err != nil {
 		panic(err)
 	}
-	log.Println(result)
+	// log.Println(result)
 
 	return result
 }
@@ -31,6 +31,65 @@ func printResponse(res map[string]interface{}, resType string) {
 	}
 
 	fmt.Println(resStr)
+}
+
+// printAction converts a JSON action representation into a readable string.
+func printAction(actionString string) string {
+	actionMap := make(map[string]interface{})
+
+	if err := json.Unmarshal([]byte(actionString), &actionMap); err != nil {
+		panic(err)
+	}
+	log.Println(actionMap)
+
+	return actionPrinters[actionMap["actionType"].(string)](actionMap)
+}
+
+var actionPrinters map[string]func(map[string]interface{}) string = map[string]func(map[string]interface{}) string{
+	// Creates a string representation of two records that
+	// are the same and no action will be carried out.
+	"idle": func(action map[string]interface{}) string {
+		return fmt.Sprintf("|%6v: %3v, %6v: %25v|  ==  |%6v: %6v, %6s: %25v|\n",
+			action["sourceNodeKey"],
+			action["sourceData"],
+			action["sourceColumn"],
+			action["sourceColumnData"],
+			action["targetKeyName"],
+			action["targetKeyValue"],
+			action["targetColumn"],
+			action["targetColumnData"],
+		)
+	},
+	// Creates a string representation of an insert
+	// that would be carried out due to the pair's incompleteness.
+	"insert": func(action map[string]interface{}) string {
+		return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =>  |%6v: %6v, %6s: %25v|\n",
+			action["sourceNodeKey"],
+			action["sourceData"],
+			action["sourceColumn"],
+			action["sourceColumnData"],
+			action["targetKeyName"],
+			"-",
+			action["targetColumn"],
+			action["sourceColumnData"],
+		)
+	},
+	// Creates a string representation of an update
+	// that would be carried out because the data in the pair's records
+	// was found to be different.
+	"update": func(action map[string]interface{}) string {
+		return fmt.Sprintf("|%6v: %3v, %6v: %25v|  =^  |%6v: %6v, %6s: %25v -> %25v|\n",
+			action["sourceNodeKey"],
+			action["sourceData"],
+			action["sourceColumn"],
+			action["sourceColumnData"],
+			action["targetKeyName"],
+			action["targetKeyValue"],
+			action["targetColumn"],
+			action["targetColumnData"],
+			action["sourceColumnData"],
+		)
+	},
 }
 
 // responsePrinters is a map of functions that print the JSON responses received from the backend.
@@ -114,7 +173,7 @@ Link command: %s`,
 					if actionStrings != nil {
 						for _, actionString := range actionStrings.([]interface{}) {
 							linkStr += fmt.Sprintf("%s",
-								actionString.(string),
+								printAction(actionString.(string)),
 							)
 
 						}
