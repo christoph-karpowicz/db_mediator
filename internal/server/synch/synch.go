@@ -67,7 +67,7 @@ func (s *Synch) pairData() {
 }
 
 func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
-	rawMapping, err := lang.ParseMapping(mpngStr)
+	rawMapping, err := lang.ParseInstruction(mpngStr)
 	if err != nil {
 		panic(err)
 	}

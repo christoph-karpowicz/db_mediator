@@ -1,43 +1,57 @@
 package lang
 
 import (
-	"fmt"
 	"log"
 	"testing"
 )
 
-var exampleMapping string = `
+var exampleInstruction string = `
 MAP
-	[dvdrental_films.title WHERE title ILIKE 'A%'] TO [msamp_films.Title], 
-	[dvdrental_films.actor] TO [msamp_films.Actor WHERE {actor: "Daniel Day Lewis"}],
-	[dvdrental_films.year] TO [msamp_films.Year]
+	dvdrental_films.film_id TO msamp_films.ext_id,
+	dvdrental_films.title TO msamp_films.Title,
+	dvdrental_films.description TO msamp_films.Title,
+	dvdrental_films.rental_duration TO msamp_films."Rental Duration",
+	dvdrental_films.length TO msamp_films.Length,
+	dvdrental_films.replacement_cost TO msamp_films."Replacement Cost",
+	dvdrental_films.rating TO msamp_films.Rating,
+	dvdrental_films.special_features TO msamp_films."Special Features"
+SYNCH
+	[dvdrental_films.title WHERE film_id <= 3] TO [msamp_films.Title],
+	[dvdrental_films.title WHERE film_id > 30 AND film_id <= 50] TO [msamp_films.Title]
 MATCH BY IDS(dvdrental_films.film_id, msamp_films.ext_id)
 DO UPDATE, INSERT`
 
 func TestParser(t *testing.T) {
-	rawMapping, err := ParseMapping(exampleMapping)
+	rawInstruction, err := ParseInstruction(exampleInstruction)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(rawMapping)
+	// fmt.Println(rawInstruction)
 
-	if rawMapping["command"].(string) != "MAP" {
-		log.Fatal("Command hasn't been read properly.")
+	if rawInstruction["mapCmd"].(string) != "MAP" {
+		log.Fatal("MAP command hasn't been read properly.")
 	}
-	linksLen := len(rawMapping["links"].([]map[string]string))
-	if linksLen != 3 {
-		log.Fatalf("There should be 3 links, are %d.", linksLen)
+	mappingsLen := len(rawInstruction["mappings"].([]map[string]string))
+	if mappingsLen != 8 {
+		log.Fatalf("There should be 8 mappings, are %d.", mappingsLen)
 	}
-	if rawMapping["matchMethod"].(map[string]interface{})["matchCmd"] != "IDS" {
+	if rawInstruction["synchCmd"].(string) != "SYNCH" {
+		log.Fatal("SYNCH command hasn't been read properly.")
+	}
+	linksLen := len(rawInstruction["links"].([]map[string]string))
+	if linksLen != 2 {
+		log.Fatalf("There should be 2 links, are %d.", linksLen)
+	}
+	if rawInstruction["matchMethod"].(map[string]interface{})["matchCmd"] != "IDS" {
 		log.Fatal("matchMethod hasn't been read properly.")
 	}
-	if rawMapping["matchMethod"].(map[string]interface{})["matchArgs"].([]string)[0] != "dvdrental_films.film_id" {
+	if rawInstruction["matchMethod"].(map[string]interface{})["matchArgs"].([]string)[0] != "dvdrental_films.film_id" {
 		log.Fatal("matchArgs haven't been read properly.")
 	}
-	if rawMapping["matchMethod"].(map[string]interface{})["matchArgs"].([]string)[1] != "msamp_films.ext_id" {
+	if rawInstruction["matchMethod"].(map[string]interface{})["matchArgs"].([]string)[1] != "msamp_films.ext_id" {
 		log.Fatal("matchArgs haven't been read properly.")
 	}
-	if len(rawMapping["do"].([]string)) != 2 || (rawMapping["do"].([]string)[0] != "UPDATE" || rawMapping["do"].([]string)[1] != "INSERT") {
+	if len(rawInstruction["do"].([]string)) != 2 || (rawInstruction["do"].([]string)[0] != "UPDATE" || rawInstruction["do"].([]string)[1] != "INSERT") {
 		log.Fatal("'do' action hasn't been read properly.")
 	}
 

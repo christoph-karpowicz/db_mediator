@@ -20,14 +20,16 @@ func (e *mappingParserError) Error() string {
 	return fmt.Sprintf("[mapping parser] %s", e.errMsg)
 }
 
-// ParseMapping uses regexp to split the mapping string into smaller parts.
-func ParseMapping(str string) (map[string]interface{}, error) {
+// ParseInstruction uses regexp to split the instruction string into smaller parts.
+func ParseInstruction(str string) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
-	mappingParseRegexp := regexp.MustCompile(`(?isU)^\s*(?P<command>[a-z]+)\s+(?P<links>\[.*\]\sTO\s\[.*\],?)+\s+MATCH\sBY\s(?P<matchMethod>[a-z]+\(.+\))\s+DO\s(?P<do>[a-z\s,]+)\s*$`)
+	mappingParseRegexp := regexp.MustCompile(`(?ismU)^\s*(?P<mapCmd>[a-z]+)\s+(?P<mappings>^.+\sTO\s.+,?$)+\s+(?P<synchCmd>[a-z]+)\s+(?P<links>\[.+\]\sTO\s\[.+\],?)+\s+MATCH\sBY\s(?P<matchMethod>[a-z]+\(.+\))\s+DO\s(?P<do>[a-z\s,]+)\s*$`)
 	matches := mappingParseRegexp.FindStringSubmatch(str)
 	subNames := mappingParseRegexp.SubexpNames()
 
 	commaSepRegexp := regexp.MustCompile(`(?s)\s*,\s*`)
+
+	// fmt.Println(matches)
 
 	for i, match := range matches {
 		// Skip the first, empty element.
@@ -35,7 +37,13 @@ func ParseMapping(str string) (map[string]interface{}, error) {
 			continue
 		}
 
+		fmt.Println(match)
 		switch sub := subNames[i]; sub {
+		case "mappings":
+			result[sub] = make([]map[string]string, 0)
+			for _, mapping := range commaSepRegexp.Split(match, -1) {
+				result[sub] = append(result[sub].([]map[string]string), parseMapping(mapping))
+			}
 		case "links":
 			result[sub] = make([]map[string]string, 0)
 			for _, link := range commaSepRegexp.Split(match, -1) {
@@ -59,7 +67,7 @@ func ParseMapping(str string) (map[string]interface{}, error) {
 	return result, err
 }
 
-// parseLink splits an individual link into smaller parts.
+// parseMatchMethod splits an match method and its parameters into smaller parts.
 func parseMatchMethod(str string) map[string]interface{} {
 	parsedMatchMethod := make(map[string]interface{})
 	r := regexp.MustCompile(`(?iU)^(?P<matchCmd>[a-z]+)\((?P<matchArgs>.+)\)$`)
@@ -113,11 +121,28 @@ func parseLink(str string) map[string]string {
 	return parsedLink
 }
 
+// parseMapping splits an individual mapping into smaller parts.
+func parseMapping(str string) map[string]string {
+	parsedMapping := make(map[string]string)
+	r := regexp.MustCompile(`(?iU)^(?P<sourceNode>.+)\.(?P<sourceColumn>.+)\sTO\s(?P<targetNode>.+)\.(?P<targetColumn>.+)$`)
+	matches := r.FindStringSubmatch(str)
+	subNames := r.SubexpNames()
+
+	parsedMapping["raw"] = str
+	for i, match := range matches {
+		if subNames[i] != "" {
+			parsedMapping[subNames[i]] = match
+		}
+	}
+
+	return parsedMapping
+}
+
 func validateMapping(result map[string]interface{}) error {
 	errorsArr := make([]string, 0)
 	var err error = nil
 
-	fmt.Println(result)
+	// fmt.Println(result)
 
 	// entire mapping
 	if len(result) == 0 {

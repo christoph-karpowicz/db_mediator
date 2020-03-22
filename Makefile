@@ -15,6 +15,9 @@ test-client:
 test-server:
 	go test -v ./internal/server/...
 
+test-server-lang:
+	go test -v ./internal/server/lang/...
+
 test-db:
 	go test -v ./internal/server/db/...
 
