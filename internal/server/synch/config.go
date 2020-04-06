@@ -12,9 +12,9 @@ var updateOldRows = [3]string{"never", "initially", "always"}
 
 // Config holds raw data from the YAML config file.
 type Config struct {
-	Name     string       `yaml:"name"`
-	Nodes    []nodeConfig `yaml:"nodes"`
-	Mappings []string     `yaml:"instructions"`
+	Name         string       `yaml:"name"`
+	Nodes        []nodeConfig `yaml:"nodes"`
+	Instructions []string     `yaml:"instructions"`
 }
 
 // Validate data from the YAML file.

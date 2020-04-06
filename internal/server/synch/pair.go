@@ -16,48 +16,48 @@ import (
 // When a pair is incomplete, a target record will be created only if the
 // parent mapping is configured to DO INSERTs.
 type Pair struct {
-	Mapping *Mapping
-	source  *record
-	target  *record
+	Link   *Link
+	source *record
+	target *record
 }
 
-func createPair(mpng *Mapping, source *record, target *record) *Pair {
+func createPair(mpng *Link, source *record, target *record) *Pair {
 	var newPair Pair = Pair{
-		Mapping: mpng,
-		source:  source,
-		target:  target,
+		Link:   mpng,
+		source: source,
+		target: target,
 	}
 
 	return &newPair
 }
 
 func (p Pair) getSourceNodeKey() string {
-	return p.Mapping.source.cfg.Key
+	return p.Link.source.cfg.Key
 }
 
 func (p Pair) getTargetNodeKey() string {
-	return p.Mapping.target.cfg.Key
+	return p.Link.target.cfg.Key
 }
 
 // Synchronize carries out the synchronization of the two records.
 func (p Pair) Synchronize() (bool, error) {
-	// db1 := p.Mapping.source.db
-	// db2 := p.Mapping.target.db
+	// db1 := p.Link.source.db
+	// db2 := p.Link.target.db
 
-	if p.target != nil && arrUtil.Contains(p.Mapping.do, "UPDATE") {
+	if p.target != nil && arrUtil.Contains(p.Link.do, "UPDATE") {
 		// Updates
 		// If this pair is complete.
 		// log.Println(p.source)
 		// log.Println(p.target)
 
-		sourceColumnValue := p.source.Data[p.Mapping.sourceColumn]
-		targetColumnValue := p.target.Data[p.Mapping.targetColumn]
+		sourceColumnValue := p.source.Data[p.Link.sourceColumn]
+		targetColumnValue := p.target.Data[p.Link.targetColumn]
 
 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 			log.Println(err)
 		} else if !areEqual {
-			if !p.Mapping.synch.Simulation {
-				update, err := (*p.Mapping.target.db).Update(p.Mapping.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Mapping.targetColumn, sourceColumnValue)
+			if !p.Link.in.synch.Simulation {
+				update, err := (*p.Link.target.db).Update(p.Link.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Link.targetColumn, sourceColumnValue)
 				if err != nil {
 					log.Println(err)
 				}
@@ -66,28 +66,28 @@ func (p Pair) Synchronize() (bool, error) {
 				// log.Println(targetColumnValue)
 			}
 
-			_, err := p.Mapping.synch.Rep.AddAction(p, "update")
+			_, err := p.Link.in.synch.Rep.AddAction(p, "update")
 			if err != nil {
 				panic(err)
 			}
-			// fmt.Println(p.Mapping.synch.Simulation)
+			// fmt.Println(p.Link.in.synch.Simulation)
 		} else {
-			_, err := p.Mapping.synch.Rep.AddAction(p, "idle")
+			_, err := p.Link.in.synch.Rep.AddAction(p, "idle")
 			if err != nil {
 				panic(err)
 			}
 		}
-	} else if p.target == nil && arrUtil.Contains(p.Mapping.do, "INSERT") {
+	} else if p.target == nil && arrUtil.Contains(p.Link.do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
-		if !p.Mapping.synch.Simulation {
+		if !p.Link.in.synch.Simulation {
 		}
 
-		_, err := p.Mapping.synch.Rep.AddAction(p, "insert")
+		_, err := p.Link.in.synch.Rep.AddAction(p, "insert")
 		if err != nil {
 			panic(err)
 		}
-		// fmt.Println(p.Mapping.synch.Simulation)
+		// fmt.Println(p.Link.in.synch.Simulation)
 	}
 
 	return false, nil
@@ -95,7 +95,7 @@ func (p Pair) Synchronize() (bool, error) {
 
 // ReportJSON creates a JSON representation of an action.
 func (p Pair) ReportJSON(actionType string) ([]byte, error) {
-	var sourceColumnData interface{} = p.source.Data[p.Mapping.sourceColumn].(interface{})
+	var sourceColumnData interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
 	if reflect.TypeOf(sourceColumnData).Name() == "string" && len(sourceColumnData.(string)) > 25 {
 		sourceColumnData = sourceColumnData.(string)[:22] + "..."
 	}
@@ -108,7 +108,7 @@ func (p Pair) ReportJSON(actionType string) ([]byte, error) {
 		targetKeyValue = p.target.Data[p.getTargetNodeKey()]
 		targetKeyName = p.getTargetNodeKey()
 
-		targetColumnData = p.target.Data[p.Mapping.targetColumn].(interface{})
+		targetColumnData = p.target.Data[p.Link.targetColumn].(interface{})
 		if reflect.TypeOf(targetColumnData).Name() == "string" && len(targetColumnData.(string)) > 25 {
 			targetColumnData = targetColumnData.(string)[:22] + "..."
 		}
@@ -131,11 +131,11 @@ func (p Pair) ReportJSON(actionType string) ([]byte, error) {
 	}{
 		SourceNodeKey:    p.getSourceNodeKey(),
 		SourceData:       p.source.Data[p.getSourceNodeKey()],
-		SourceColumn:     p.Mapping.sourceColumn,
+		SourceColumn:     p.Link.sourceColumn,
 		SourceColumnData: sourceColumnData,
 		TargetKeyName:    targetKeyName,
 		TargetKeyValue:   targetKeyValue,
-		TargetColumn:     p.Mapping.targetColumn,
+		TargetColumn:     p.Link.targetColumn,
 		TargetColumnData: targetColumnData,
 		ActionType:       actionType,
 	}

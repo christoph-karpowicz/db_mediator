@@ -17,15 +17,15 @@ import (
 // Synch represents an individual synchronzation configration.
 // It holds all configuration from an .yaml file, raw and parsed.
 type Synch struct {
-	Cfg        *Config
-	dbs        map[string]*db.Database
-	tables     map[string]*table
-	nodes      map[string]*node
-	Mappings   []*Mapping
-	running    bool
-	initial    bool
-	Simulation bool
-	Rep        unifier.Reporter
+	Cfg          *Config
+	dbs          map[string]*db.Database
+	tables       map[string]*table
+	nodes        map[string]*node
+	Instructions []*Instruction
+	running      bool
+	initial      bool
+	Simulation   bool
+	Rep          unifier.Reporter
 }
 
 // GetConfig returns the synch config struct.
@@ -44,7 +44,7 @@ func (s *Synch) Init(DBMap map[string]*db.Database) {
 	s.setDatabases(DBMap)
 	s.setTables()
 	s.setNodes()
-	s.parseMappings()
+	s.parseInstructions()
 	s.selectData()
 	s.pairData()
 
@@ -56,70 +56,86 @@ func (s *Synch) Init(DBMap map[string]*db.Database) {
 func (s *Synch) pairData() {
 	var wg sync.WaitGroup
 
-	for i := range s.Mappings {
-		var mpng *Mapping = s.Mappings[i]
+	for i := range s.Instructions {
+		var in *Instruction = s.Instructions[i]
 
-		wg.Add(1)
-		go mpng.createPairs(&wg)
+		for j := range in.links {
+			var lnk *Link = in.links[j]
+			wg.Add(1)
+			go lnk.createPairs(&wg)
+		}
+		wg.Wait()
 	}
 
-	wg.Wait()
 }
 
-func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
-	rawMapping, err := lang.ParseInstruction(mpngStr)
+func (s *Synch) parseInstruction(mpngStr string, i int, c chan bool) {
+	rawIn, err := lang.ParseInstruction(mpngStr)
 	if err != nil {
 		panic(err)
 	}
 
-	for j, link := range rawMapping["links"].([]map[string]string) {
-		mpng := createMapping(s, link, rawMapping["matchMethod"].(map[string]interface{}), rawMapping["do"].([]string), i, j)
-		s.Mappings = append(s.Mappings, mpng)
+	in := createInstruction(s)
+
+	for _, mapping := range rawIn["mapping"].([]map[string]string) {
+		mpng := createMapping(in, mapping)
+		in.mappings = append(in.mappings, mpng)
 	}
+
+	for j, link := range rawIn["links"].([]map[string]string) {
+		lnk := createLink(in, link, rawIn["matchMethod"].(map[string]interface{}), rawIn["do"].([]string), i, j)
+		in.links = append(in.links, lnk)
+	}
+
 	c <- true
 }
 
-func (s *Synch) parseMappings() {
+func (s *Synch) parseInstructions() {
 	var ch chan bool
 	ch = make(chan bool)
 
-	for i, mapping := range s.Cfg.Mappings {
-		go s.parseMapping(mapping, i, ch)
+	for i, mapping := range s.Cfg.Instructions {
+		go s.parseInstruction(mapping, i, ch)
 	}
 
-	for i := 0; i < len(s.Cfg.Mappings); i++ {
+	for i := 0; i < len(s.Cfg.Instructions); i++ {
 		<-ch
 	}
 }
 
 // selectData selects all records from all tables and filters them to get the relevant records.
 func (s *Synch) selectData() {
-	for i := range s.Mappings {
-		var mpng *Mapping = s.Mappings[i]
-		sourceRawActiveRecords := (*mpng.source.db).Select(mpng.source.tbl.name, mpng.sourceWhere)
-		targetRawActiveRecords := (*mpng.target.db).Select(mpng.target.tbl.name, mpng.targetWhere)
+	for i := range s.Instructions {
+		var in *Instruction = s.Instructions[i]
 
-		// for _, v := range sourceRawActiveRecords {
-		// 	fmt.Println(v["film_id"])
-		// }
+		for j := range in.links {
+			var lnk *Link = in.links[j]
+			sourceRawActiveRecords := (*lnk.source.db).Select(lnk.source.tbl.name, lnk.sourceWhere)
+			targetRawActiveRecords := (*lnk.target.db).Select(lnk.target.tbl.name, lnk.targetWhere)
 
-		if !s.initial {
-			mpng.sourceOldActiveRecords = mpng.sourceActiveRecords
-			mpng.targetOldActiveRecords = mpng.targetActiveRecords
+			// for _, v := range sourceRawActiveRecords {
+			// 	fmt.Println(v["film_id"])
+			// }
+
+			if !s.initial {
+				lnk.sourceOldActiveRecords = lnk.sourceActiveRecords
+				lnk.targetOldActiveRecords = lnk.targetActiveRecords
+			}
+
+			for _, sourceRecord := range sourceRawActiveRecords {
+				sourceRecordPointer := lnk.source.tbl.records.FindRecordPointer(sourceRecord)
+				lnk.sourceActiveRecords = append(lnk.sourceActiveRecords, sourceRecordPointer)
+				sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, lnk)
+			}
+			for _, targetRecord := range targetRawActiveRecords {
+				targetRecordPointer := lnk.target.tbl.records.FindRecordPointer(targetRecord)
+				lnk.targetActiveRecords = append(lnk.targetActiveRecords, targetRecordPointer)
+				targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, lnk)
+			}
+			// log.Println(lnk.sourceActiveRecords)
+			// log.Println(lnk.targetActiveRecords)
 		}
 
-		for _, sourceRecord := range sourceRawActiveRecords {
-			sourceRecordPointer := mpng.source.tbl.records.FindRecordPointer(sourceRecord)
-			mpng.sourceActiveRecords = append(mpng.sourceActiveRecords, sourceRecordPointer)
-			sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, mpng)
-		}
-		for _, targetRecord := range targetRawActiveRecords {
-			targetRecordPointer := mpng.target.tbl.records.FindRecordPointer(targetRecord)
-			mpng.targetActiveRecords = append(mpng.targetActiveRecords, targetRecordPointer)
-			targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, mpng)
-		}
-		// log.Println(mpng.sourceActiveRecords)
-		// log.Println(mpng.targetActiveRecords)
 	}
 }
 
@@ -189,15 +205,21 @@ func (s *Synch) setTables() {
 
 // Synchronize loops over all pairs in all mappings and invokes their Synchronize function.
 func (s *Synch) Synchronize() {
-	for j := range s.Mappings {
-		var mpng *Mapping = s.Mappings[j]
+	for i := range s.Instructions {
+		var in *Instruction = s.Instructions[i]
 
-		for k := range mpng.pairs {
-			var pair *Pair = mpng.pairs[k]
-			_, err := pair.Synchronize()
-			if err != nil {
-				log.Println(err)
+		for j := range in.links {
+			var lnk *Link = in.links[j]
+
+			for k := range lnk.pairs {
+				var pair *Pair = lnk.pairs[k]
+				_, err := pair.Synchronize()
+				if err != nil {
+					log.Println(err)
+				}
 			}
+
 		}
+
 	}
 }
