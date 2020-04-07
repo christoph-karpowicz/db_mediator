@@ -3,7 +3,7 @@ package synch
 // Mapping represents a single mapping in the config file like:
 // example_node1.example_column1 TO example_node2.example_column2
 type Mapping struct {
-	in           *Instruction
+	In           *Instruction
 	source       *node
 	target       *node
 	sourceColumn string
@@ -22,7 +22,7 @@ func createMapping(in *Instruction, mapping map[string]string) *Mapping {
 	}
 
 	newMapping := Mapping{
-		in:           in,
+		In:           in,
 		source:       in.synch.nodes[mapping["sourceNode"]],
 		target:       in.synch.nodes[mapping["targetNode"]],
 		sourceColumn: mapping["sourceColumn"],

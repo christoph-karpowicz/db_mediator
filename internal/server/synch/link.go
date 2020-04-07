@@ -7,15 +7,15 @@ import (
 
 // LinkReportData link data for simulation purposes.
 type LinkReportData struct {
-	MappingIndex int
-	LinkIndex    int
-	Link         map[string]string
+	InstructionIndex int
+	LinkIndex        int
+	Link             map[string]string
 }
 
 // Link represents a single link in the config file like:
 // [example_node1.example_column1 WHERE ...] TO [example_node2.example_column2 WHERE ...]
 type Link struct {
-	in                     *Instruction
+	In                     *Instruction
 	source                 *node
 	target                 *node
 	sourceWhere            string
@@ -46,7 +46,7 @@ func createLink(in *Instruction, link map[string]string, matchMethod map[string]
 	}
 
 	newMapping := Link{
-		in:           in,
+		In:           in,
 		source:       in.synch.nodes[link["sourceNode"]],
 		target:       in.synch.nodes[link["targetNode"]],
 		sourceWhere:  link["sourceWhere"],
@@ -68,9 +68,9 @@ func createLink(in *Instruction, link map[string]string, matchMethod map[string]
 	}
 
 	newMapping.Rep = &LinkReportData{
-		MappingIndex: indexes[0],
-		LinkIndex:    indexes[1],
-		Link:         link,
+		InstructionIndex: indexes[0],
+		LinkIndex:        indexes[1],
+		Link:             link,
 	}
 
 	return &newMapping

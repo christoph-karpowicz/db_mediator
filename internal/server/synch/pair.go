@@ -41,8 +41,6 @@ func (p Pair) getTargetNodeKey() string {
 
 // Synchronize carries out the synchronization of the two records.
 func (p Pair) Synchronize() (bool, error) {
-	// db1 := p.Link.source.db
-	// db2 := p.Link.target.db
 
 	if p.target != nil && arrUtil.Contains(p.Link.do, "UPDATE") {
 		// Updates
@@ -56,7 +54,7 @@ func (p Pair) Synchronize() (bool, error) {
 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 			log.Println(err)
 		} else if !areEqual {
-			if !p.Link.in.synch.Simulation {
+			if !p.Link.In.synch.Simulation {
 				update, err := (*p.Link.target.db).Update(p.Link.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Link.targetColumn, sourceColumnValue)
 				if err != nil {
 					log.Println(err)
@@ -66,13 +64,13 @@ func (p Pair) Synchronize() (bool, error) {
 				// log.Println(targetColumnValue)
 			}
 
-			_, err := p.Link.in.synch.Rep.AddAction(p, "update")
+			_, err := p.Link.In.synch.Rep.AddAction(p, "update")
 			if err != nil {
 				panic(err)
 			}
-			// fmt.Println(p.Link.in.synch.Simulation)
+			// fmt.Println(p.Link.In.synch.Simulation)
 		} else {
-			_, err := p.Link.in.synch.Rep.AddAction(p, "idle")
+			_, err := p.Link.In.synch.Rep.AddAction(p, "idle")
 			if err != nil {
 				panic(err)
 			}
@@ -80,14 +78,14 @@ func (p Pair) Synchronize() (bool, error) {
 	} else if p.target == nil && arrUtil.Contains(p.Link.do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
-		if !p.Link.in.synch.Simulation {
+		if !p.Link.In.synch.Simulation {
 		}
 
-		_, err := p.Link.in.synch.Rep.AddAction(p, "insert")
+		_, err := p.Link.In.synch.Rep.AddAction(p, "insert")
 		if err != nil {
 			panic(err)
 		}
-		// fmt.Println(p.Link.in.synch.Simulation)
+		// fmt.Println(p.Link.In.synch.Simulation)
 	}
 
 	return false, nil
