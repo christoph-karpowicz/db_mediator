@@ -4,16 +4,16 @@ package synch
 type Instruction struct {
 	synch    *Synch
 	mappings []*Mapping
-	links    []*Link
+	Links    []*Link
 }
 
 func createInstruction(synch *Synch) *Instruction {
 	mpngs := make([]*Mapping, 0)
-	links := make([]*Link, 0)
+	Links := make([]*Link, 0)
 
 	newInstruction := Instruction{
 		mappings: mpngs,
-		links:    links,
+		Links:    Links,
 		synch:    synch,
 	}
 

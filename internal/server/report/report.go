@@ -82,7 +82,10 @@ func (r *Report) Init() {
 			r.inReports[in].LnkReports = make(map[int]*linkRep)
 		}
 
-		r.inReports[in].LnkReports[in.Rep.LinkIndex] = &linkRep{Cmd: in.Rep.Link["raw"]}
+		for _, lnk := range in.Links {
+			r.inReports[in].LnkReports[lnk.Rep.LinkIndex] = &linkRep{Cmd: lnk.Rep.Link["raw"]}
+		}
+
 	}
 }
 
@@ -103,36 +106,36 @@ func (r *Report) Finalize() ([]byte, error) {
 }
 
 // MarshalJSON implements the Marshaler interface for custom JSON creation.
-func (r *Report) MarshalJSON() ([]byte, error) {
-	mappingsMap := make(map[int]*instructionRep)
-	for _, instructionRep := range r.inReports {
-		_, mpngRepExists := mappingsMap[instructionRep.inPtr.Rep.LinkIndex]
-		if !mpngRepExists {
-			mappingsMap[instructionRep.inPtr.Rep.LinkIndex] = instructionRep
-		} else {
-			for k, v := range instructionRep.LnkReports {
-				mappingsMap[instructionRep.inPtr.Rep.LinkIndex].LnkReports[k] = v
-			}
-		}
-	}
+// func (r *Report) MarshalJSON() ([]byte, error) {
+// 	instructionsMap := make(map[int]*instructionRep)
+// 	for _, instructionRep := range r.inReports {
+// 		_, inRepExists := instructionsMap[instructionRep.inPtr.Rep.LinkIndex]
+// 		if !inRepExists {
+// 			instructionsMap[instructionRep.inPtr.Rep.LinkIndex] = instructionRep
+// 		} else {
+// 			for k, v := range instructionRep.LnkReports {
+// 				instructionsMap[instructionRep.inPtr.Rep.LinkIndex].LnkReports[k] = v
+// 			}
+// 		}
+// 	}
 
-	customStruct := struct {
-		Msg         string                  `json:"msg"`
-		SynchInfo   *synch.Config           `json:"synchInfo"`
-		MappingReps map[int]*instructionRep `json:"mappings"`
-	}{
-		Msg:         r.msg,
-		SynchInfo:   r.synch.Cfg,
-		MappingReps: mappingsMap,
-	}
+// 	customStruct := struct {
+// 		Msg       string                  `json:"msg"`
+// 		SynchInfo *synch.Config           `json:"synchInfo"`
+// 		InReps    map[int]*instructionRep `json:"instructions"`
+// 	}{
+// 		Msg:       r.msg,
+// 		SynchInfo: r.synch.Cfg,
+// 		InReps:    instructionsMap,
+// 	}
 
-	marshalled, err := json.Marshal(&customStruct)
-	if err != nil {
-		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
-	}
+// 	marshalled, err := json.Marshal(&customStruct)
+// 	if err != nil {
+// 		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+// 	}
 
-	return marshalled, nil
-}
+// 	return marshalled, nil
+// }
 
 // ToJSON turns the report into a JSON object.
 func (r *Report) ToJSON() ([]byte, error) {

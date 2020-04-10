@@ -21,6 +21,7 @@ type Synch struct {
 	dbs          map[string]*db.Database
 	tables       map[string]*table
 	nodes        map[string]*node
+	mappings     []*Mapping
 	Instructions []*Instruction
 	running      bool
 	initial      bool
@@ -59,8 +60,8 @@ func (s *Synch) pairData() {
 	for i := range s.Instructions {
 		var in *Instruction = s.Instructions[i]
 
-		for j := range in.links {
-			var lnk *Link = in.links[j]
+		for j := range in.Links {
+			var lnk *Link = in.Links[j]
 			wg.Add(1)
 			go lnk.createPairs(&wg)
 		}
@@ -84,7 +85,7 @@ func (s *Synch) parseInstruction(mpngStr string, i int, c chan bool) {
 
 	for j, link := range rawIn["links"].([]map[string]string) {
 		lnk := createLink(in, link, rawIn["matchMethod"].(map[string]interface{}), rawIn["do"].([]string), i, j)
-		in.links = append(in.links, lnk)
+		in.Links = append(in.Links, lnk)
 	}
 
 	c <- true
@@ -108,8 +109,8 @@ func (s *Synch) selectData() {
 	for i := range s.Instructions {
 		var in *Instruction = s.Instructions[i]
 
-		for j := range in.links {
-			var lnk *Link = in.links[j]
+		for j := range in.Links {
+			var lnk *Link = in.Links[j]
 			sourceRawActiveRecords := (*lnk.source.db).Select(lnk.source.tbl.name, lnk.sourceWhere)
 			targetRawActiveRecords := (*lnk.target.db).Select(lnk.target.tbl.name, lnk.targetWhere)
 
@@ -208,8 +209,8 @@ func (s *Synch) Synchronize() {
 	for i := range s.Instructions {
 		var in *Instruction = s.Instructions[i]
 
-		for j := range in.links {
-			var lnk *Link = in.links[j]
+		for j := range in.Links {
+			var lnk *Link = in.Links[j]
 
 			for k := range lnk.pairs {
 				var pair *Pair = lnk.pairs[k]
