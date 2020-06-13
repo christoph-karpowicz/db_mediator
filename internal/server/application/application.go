@@ -61,7 +61,7 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	// synch.Rep.Init()
 
 	// Carry out all synch actions.
-	// synch.Synchronize()
+	synch.Synchronize()
 
 	// Gather and marshal results.
 	// synchReport, err := synch.Rep.Finalize()

@@ -15,7 +15,7 @@ type Config struct {
 	Name    string       `yaml:"name"`
 	Nodes   []nodeConfig `yaml:"nodes"`
 	Map     []string     `yaml:"map"`
-	Synch   []string     `yaml:"synch"`
+	Link    []string     `yaml:"link"`
 	MatchBy matchBy      `yaml:"match_by"`
 	Do      []string     `yaml:"do"`
 }

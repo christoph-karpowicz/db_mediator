@@ -2,6 +2,7 @@ package synch
 
 import (
 	"log"
+	"strings"
 	"sync"
 )
 
@@ -15,17 +16,15 @@ type LinkReportData struct {
 // Link represents a single link in the config file like:
 // [example_node1.example_column1 WHERE ...] TO [example_node2.example_column2 WHERE ...]
 type Link struct {
-	In                     *Instruction
+	synch                  *Synch
 	source                 *node
 	target                 *node
-	sourceWhere            string
-	targetWhere            string
 	sourceColumn           string
 	targetColumn           string
-	matchMethod            string
+	sourceWhere            string
+	targetWhere            string
 	sourceExID             string
 	targetExID             string
-	do                     []string
 	sourceOldActiveRecords []*record
 	sourceActiveRecords    []*record
 	targetOldActiveRecords []*record
@@ -34,46 +33,47 @@ type Link struct {
 	Rep                    *LinkReportData
 }
 
-func createLink(in *Instruction, link map[string]string, matchMethod map[string]interface{}, do []string, indexes ...int) *Link {
+func createLink(synch *Synch, link map[string]string) *Link {
 
-	_, sourceNodeFound := link["sourceNode"]
+	_, sourceNodeFound := synch.nodes[link["sourceNode"]]
 	if !sourceNodeFound {
 		panic("[create link] ERROR: source node not found.")
 	}
-	_, targetNodeFound := link["targetNode"]
+	_, targetNodeFound := synch.nodes[link["targetNode"]]
 	if !targetNodeFound {
 		panic("[create link] ERROR: target node not found.")
 	}
 
-	newMapping := Link{
-		In:           in,
-		source:       in.synch.nodes[link["sourceNode"]],
-		target:       in.synch.nodes[link["targetNode"]],
-		sourceWhere:  link["sourceWhere"],
-		targetWhere:  link["targetWhere"],
+	newLink := Link{
+		synch:        synch,
+		source:       synch.nodes[link["sourceNode"]],
+		target:       synch.nodes[link["targetNode"]],
 		sourceColumn: link["sourceColumn"],
 		targetColumn: link["targetColumn"],
-		matchMethod:  matchMethod["matchCmd"].(string),
-		do:           do,
+		sourceWhere:  link["sourceWhere"],
+		targetWhere:  link["targetWhere"],
 	}
 
-	if newMapping.matchMethod == "IDS" {
-		for _, marg := range matchMethod["parsedMatchArgs"].([]map[string]string) {
-			if marg["node"] == newMapping.source.cfg.Name {
-				newMapping.sourceExID = marg["extIDColumn"]
-			} else {
-				newMapping.targetExID = marg["extIDColumn"]
+	if synch.Cfg.MatchBy.Method == "ids" {
+		for _, marg := range synch.Cfg.MatchBy.Args {
+			margSplt := strings.Split(marg, ".")
+			margNode := margSplt[0]
+			margColumn := margSplt[1]
+			if margNode == newLink.source.cfg.Name {
+				newLink.sourceExID = margColumn
+			} else if margNode == newLink.target.cfg.Name {
+				newLink.targetExID = margColumn
 			}
 		}
 	}
 
-	newMapping.Rep = &LinkReportData{
-		InstructionIndex: indexes[0],
-		LinkIndex:        indexes[1],
-		Link:             link,
+	newLink.Rep = &LinkReportData{
+		// InstructionIndex: indexes[0],
+		// LinkIndex:        indexes[1],
+		Link: link,
 	}
 
-	return &newMapping
+	return &newLink
 }
 
 func (l *Link) comparePair(src *record, c chan bool) {
@@ -82,13 +82,15 @@ func (l *Link) comparePair(src *record, c chan bool) {
 	for j := range l.targetActiveRecords {
 		target := l.targetActiveRecords[j]
 
-		if l.matchMethod == "IDS" {
+		if l.synch.Cfg.MatchBy.Method == "ids" {
 			sourceExternalID, sourceOk := src.Data[l.sourceExID]
 			targetExternalID, targetOk := target.Data[l.targetExID]
 
 			if !sourceOk || !targetOk {
 				continue
 			}
+
+			// fmt.Printf("%s - %s\n", sourceExternalID, targetExternalID)
 
 			if areEqual, err := areEqual(sourceExternalID, targetExternalID); err != nil {
 				log.Println(err)
@@ -121,7 +123,7 @@ func (l *Link) createPairs(wg *sync.WaitGroup) {
 	wg.Done()
 	// for _, pair := range l.pairs {
 	// 	fmt.Printf("rec1: %s\n", pair.source.Data)
-	// 	if pair.IsComplete {
+	// 	if pair.target != nil {
 	// 		fmt.Printf("rec2: %s\n", pair.target.Data)
 	// 	}
 	// 	fmt.Println("======")

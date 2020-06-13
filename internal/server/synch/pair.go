@@ -42,7 +42,7 @@ func (p Pair) getTargetNodeKey() string {
 // Synchronize carries out the synchronization of the two records.
 func (p Pair) Synchronize() (bool, error) {
 
-	if p.target != nil && arrUtil.Contains(p.Link.do, "UPDATE") {
+	if p.target != nil && arrUtil.Contains(p.Link.synch.Cfg.Do, "UPDATE") {
 		// Updates
 		// If this pair is complete.
 		// log.Println(p.source)
@@ -54,37 +54,43 @@ func (p Pair) Synchronize() (bool, error) {
 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 			log.Println(err)
 		} else if !areEqual {
-			if !p.Link.In.synch.Simulation {
-				update, err := (*p.Link.target.db).Update(p.Link.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Link.targetColumn, sourceColumnValue)
-				if err != nil {
-					log.Println(err)
-				}
-				log.Println(update)
-				// log.Println(sourceColumnValue)
-				// log.Println(targetColumnValue)
-			}
+			// fmt.Println(sourceColumnValue)
+			// fmt.Println(targetColumnValue)
 
-			_, err := p.Link.In.synch.Rep.AddAction(p, "update")
-			if err != nil {
-				panic(err)
-			}
+			// if !p.Link.In.synch.Simulation {
+			// 	update, err := (*p.Link.target.db).Update(p.Link.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Link.targetColumn, sourceColumnValue)
+			// 	if err != nil {
+			// 		log.Println(err)
+			// 	}
+			// 	log.Println(update)
+			// 	// log.Println(sourceColumnValue)
+			// 	// log.Println(targetColumnValue)
+			// }
+
+			// _, err := p.Link.In.synch.Rep.AddAction(p, "update")
+			// if err != nil {
+			// 	panic(err)
+			// }
 			// fmt.Println(p.Link.In.synch.Simulation)
 		} else {
-			_, err := p.Link.In.synch.Rep.AddAction(p, "idle")
-			if err != nil {
-				panic(err)
-			}
+			// _, err := p.Link.In.synch.Rep.AddAction(p, "idle")
+			// if err != nil {
+			// 	panic(err)
+			// }
 		}
-	} else if p.target == nil && arrUtil.Contains(p.Link.do, "INSERT") {
+	} else if p.target == nil && arrUtil.Contains(p.Link.synch.Cfg.Do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
-		if !p.Link.In.synch.Simulation {
-		}
+		// log.Println(p.source)
+		// log.Println(p.target)
 
-		_, err := p.Link.In.synch.Rep.AddAction(p, "insert")
-		if err != nil {
-			panic(err)
-		}
+		// if !p.Link.In.synch.Simulation {
+		// }
+
+		// _, err := p.Link.In.synch.Rep.AddAction(p, "insert")
+		// if err != nil {
+		// 	panic(err)
+		// }
 		// fmt.Println(p.Link.In.synch.Simulation)
 	}
 

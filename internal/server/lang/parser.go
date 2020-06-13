@@ -22,8 +22,8 @@ func (e *mappingParserError) Error() string {
 	return fmt.Sprintf("[mapping parser] %s", e.errMsg)
 }
 
-// ParseInstruction uses regexp to split the instruction string into smaller parts.
-func ParseInstruction(str string) (map[string]string, error) {
+// ParseLink uses regexp to split the link string into smaller parts.
+func ParseLink(str string) (map[string]string, error) {
 	result := make(map[string]string)
 	regexpString := `(?ismU)^\s*\[(?P<sourceNode>[^\.,]+)\.(?P<sourceColumn>[^\.,]+)(?P<sourceWhere>\s+WHERE\s+.+)?\]\s+TO\s+\[(?P<targetNode>[^\.,]+)\.(?P<targetColumn>[^\.,]+)(?P<targetWhere>\s+WHERE\s+.+)?\]\s*$`
 	parseRegexp := regexp.MustCompile(regexpString)
@@ -41,7 +41,7 @@ func ParseInstruction(str string) (map[string]string, error) {
 		fmt.Println(match)
 
 		if arrUtil.Contains([]string{"sourceWhere", "targetWhere"}, subNames[i]) {
-			parsedWhere := ParseInstructionWhere(match)
+			parsedWhere := ParseLinkWhere(match)
 			result[subNames[i]] = parsedWhere
 		} else {
 			result[subNames[i]] = match
@@ -54,8 +54,8 @@ func ParseInstruction(str string) (map[string]string, error) {
 	return result, nil
 }
 
-// ParseInstructionWhere uses regexp to split the instruction's where clause into smaller parts.
-func ParseInstructionWhere(str string) string {
+// ParseLinkWhere uses regexp to split the link's where clause into smaller parts.
+func ParseLinkWhere(str string) string {
 	regexpString := `(?ismU)^\s+WHERE\s+`
 	parseRegexp := regexp.MustCompile(regexpString)
 	result := parseRegexp.ReplaceAll([]byte(str), []byte(""))
