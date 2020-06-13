@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
 
 /*
@@ -21,13 +23,54 @@ func (e *mappingParserError) Error() string {
 }
 
 // ParseInstruction uses regexp to split the instruction string into smaller parts.
-func ParseInstruction(str string) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
-	mappingParseRegexp := regexp.MustCompile(`(?ismU)^\s*(?P<mapCmd>[a-z]+)\s+(?P<mappings>^.+\sTO\s.+,?$)+\s+(?P<synchCmd>[a-z]+)\s+(?P<links>\[.+\]\sTO\s\[.+\],?)+\s+MATCH\sBY\s(?P<matchMethod>[a-z]+\(.+\))\s+DO\s(?P<do>[a-z\s,]+)\s*$`)
-	matches := mappingParseRegexp.FindStringSubmatch(str)
-	subNames := mappingParseRegexp.SubexpNames()
+func ParseInstruction(str string) (map[string]string, error) {
+	result := make(map[string]string)
+	regexpString := `(?ismU)^\s*\[(?P<sourceNode>[^\.,]+)\.(?P<sourceColumn>[^\.,]+)(?P<sourceWhere>\s+WHERE\s+.+)?\]\s+TO\s+\[(?P<targetNode>[^\.,]+)\.(?P<targetColumn>[^\.,]+)(?P<targetWhere>\s+WHERE\s+.+)?\]\s*$`
+	parseRegexp := regexp.MustCompile(regexpString)
+	matches := parseRegexp.FindStringSubmatch(str)
+	subNames := parseRegexp.SubexpNames()
 
-	commaSepRegexp := regexp.MustCompile(`(?s)\s*,\s*`)
+	fmt.Println(matches)
+
+	for i, match := range matches {
+		// Skip the first, empty element.
+		if i == 0 {
+			continue
+		}
+
+		fmt.Println(match)
+
+		if arrUtil.Contains([]string{"sourceWhere", "targetWhere"}, subNames[i]) {
+			parsedWhere := ParseInstructionWhere(match)
+			result[subNames[i]] = parsedWhere
+		} else {
+			result[subNames[i]] = match
+		}
+	}
+
+	// err := validateMapping(result)
+
+	// return result, err
+	return result, nil
+}
+
+// ParseInstructionWhere uses regexp to split the instruction's where clause into smaller parts.
+func ParseInstructionWhere(str string) string {
+	regexpString := `(?ismU)^\s+WHERE\s+`
+	parseRegexp := regexp.MustCompile(regexpString)
+	result := parseRegexp.ReplaceAll([]byte(str), []byte(""))
+	resultAsString := string(result)
+
+	return resultAsString
+}
+
+// ParseMapping uses regexp to split the mapping string into smaller parts.
+func ParseMapping(str string) (map[string]string, error) {
+	result := make(map[string]string)
+	regexpString := `(?ismU)^\s*(?P<sourceNode>[^\.,]+)\.(?P<sourceColumn>[^\.,]+)\s+TO\s+(?P<targetNode>[^\.,]+)\.(?P<targetColumn>[^\.,]+)\s*$`
+	parseRegexp := regexp.MustCompile(regexpString)
+	matches := parseRegexp.FindStringSubmatch(str)
+	subNames := parseRegexp.SubexpNames()
 
 	// fmt.Println(matches)
 
@@ -37,105 +80,15 @@ func ParseInstruction(str string) (map[string]interface{}, error) {
 			continue
 		}
 
-		fmt.Println(match)
-		switch sub := subNames[i]; sub {
-		case "mappings":
-			result[sub] = make([]map[string]string, 0)
-			for _, mapping := range commaSepRegexp.Split(match, -1) {
-				result[sub] = append(result[sub].([]map[string]string), parseMapping(mapping))
-			}
-		case "links":
-			result[sub] = make([]map[string]string, 0)
-			for _, link := range commaSepRegexp.Split(match, -1) {
-				result[sub] = append(result[sub].([]map[string]string), parseLink(link))
-			}
-		case "matchMethod":
-			result[sub] = parseMatchMethod(match)
-		case "do":
-			result[sub] = make([]string, 0)
-			for _, doCmd := range commaSepRegexp.Split(match, -1) {
-				result[sub] = append(result[sub].([]string), doCmd)
-			}
-			result[sub] = commaSepRegexp.Split(match, -1)
-		default:
-			result[sub] = match
-		}
+		// fmt.Println(match)
+
+		result[subNames[i]] = match
 	}
 
-	err := validateMapping(result)
+	// err := validateMapping(result)
 
-	return result, err
-}
-
-// parseMatchMethod splits an match method and its parameters into smaller parts.
-func parseMatchMethod(str string) map[string]interface{} {
-	parsedMatchMethod := make(map[string]interface{})
-	r := regexp.MustCompile(`(?iU)^(?P<matchCmd>[a-z]+)\((?P<matchArgs>.+)\)$`)
-	matches := r.FindStringSubmatch(str)
-	subNames := r.SubexpNames()
-
-	commaSepRegexp := regexp.MustCompile(`(?s)\s*,\s*`)
-	dotSepRegexp := regexp.MustCompile(`(?s)\.`)
-
-	for i, match := range matches {
-		if subNames[i] == "matchArgs" {
-			parsedMatchMethod[subNames[i]] = make([]string, 0)
-			for _, matchArg := range commaSepRegexp.Split(match, -1) {
-				parsedMatchMethod[subNames[i]] = append(parsedMatchMethod[subNames[i]].([]string), matchArg)
-			}
-		} else if subNames[i] != "" {
-			parsedMatchMethod[subNames[i]] = match
-		}
-	}
-
-	// Extract the node names and external ID column names from match method.
-	if parsedMatchMethod["matchCmd"].(string) == "IDS" {
-		parsedMatchMethod["parsedMatchArgs"] = make([]map[string]string, 0)
-
-		for _, matchArg := range parsedMatchMethod["matchArgs"].([]string) {
-			parsedArg := make(map[string]string)
-			splitArg := dotSepRegexp.Split(matchArg, -1)
-			parsedArg["node"] = splitArg[0]
-			parsedArg["extIDColumn"] = splitArg[1]
-			parsedMatchMethod["parsedMatchArgs"] = append(parsedMatchMethod["parsedMatchArgs"].([]map[string]string), parsedArg)
-		}
-	}
-
-	return parsedMatchMethod
-}
-
-// parseLink splits an individual link into smaller parts.
-func parseLink(str string) map[string]string {
-	parsedLink := make(map[string]string)
-	r := regexp.MustCompile(`(?iU)^\[(?P<sourceNode>.+)\.(?P<sourceColumn>.+)(\s+WHERE\s+(?P<sourceWhere>.+))?\]\sTO\s\[(?P<targetNode>.+)\.(?P<targetColumn>.+)(\s+WHERE\s+(?P<targetWhere>.+))?\]$`)
-	matches := r.FindStringSubmatch(str)
-	subNames := r.SubexpNames()
-
-	parsedLink["raw"] = str
-	for i, match := range matches {
-		if subNames[i] != "" {
-			parsedLink[subNames[i]] = match
-		}
-	}
-
-	return parsedLink
-}
-
-// parseMapping splits an individual mapping into smaller parts.
-func parseMapping(str string) map[string]string {
-	parsedMapping := make(map[string]string)
-	r := regexp.MustCompile(`(?iU)^(?P<sourceNode>.+)\.(?P<sourceColumn>.+)\sTO\s(?P<targetNode>.+)\.(?P<targetColumn>.+)$`)
-	matches := r.FindStringSubmatch(str)
-	subNames := r.SubexpNames()
-
-	parsedMapping["raw"] = str
-	for i, match := range matches {
-		if subNames[i] != "" {
-			parsedMapping[subNames[i]] = match
-		}
-	}
-
-	return parsedMapping
+	// return result, err
+	return result, nil
 }
 
 func validateMapping(result map[string]interface{}) error {

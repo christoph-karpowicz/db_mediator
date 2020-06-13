@@ -6,7 +6,6 @@ package synch
 import (
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -46,29 +45,30 @@ func (s *Synch) Init(DBMap map[string]*db.Database) {
 	s.setTables()
 	s.setNodes()
 	s.parseInstructions()
-	s.selectData()
-	s.pairData()
+	s.parseMappings()
+	// s.selectData()
+	// s.pairData()
 
 	// fmt.Println(runtime.NumCPU())
 	fmt.Println("Synch init finished in: ", time.Since(tStart).String())
 }
 
 // pairData pairs together records that are going to be synchronized.
-func (s *Synch) pairData() {
-	var wg sync.WaitGroup
+// func (s *Synch) pairData() {
+// 	var wg sync.WaitGroup
 
-	for i := range s.Instructions {
-		var in *Instruction = s.Instructions[i]
+// 	for i := range s.Instructions {
+// 		var in *Instruction = s.Instructions[i]
 
-		for j := range in.Links {
-			var lnk *Link = in.Links[j]
-			wg.Add(1)
-			go lnk.createPairs(&wg)
-		}
-		wg.Wait()
-	}
+// 		for j := range in.Links {
+// 			var lnk *Link = in.Links[j]
+// 			wg.Add(1)
+// 			go lnk.createPairs(&wg)
+// 		}
+// 		wg.Wait()
+// 	}
 
-}
+// }
 
 func (s *Synch) parseInstruction(mpngStr string, i int, c chan bool) {
 	rawIn, err := lang.ParseInstruction(mpngStr)
@@ -76,17 +76,9 @@ func (s *Synch) parseInstruction(mpngStr string, i int, c chan bool) {
 		panic(err)
 	}
 
-	in := createInstruction(s)
-
-	for _, mapping := range rawIn["mapping"].([]map[string]string) {
-		mpng := createMapping(in, mapping)
-		in.mappings = append(in.mappings, mpng)
-	}
-
-	for j, link := range rawIn["links"].([]map[string]string) {
-		lnk := createLink(in, link, rawIn["matchMethod"].(map[string]interface{}), rawIn["do"].([]string), i, j)
-		in.Links = append(in.Links, lnk)
-	}
+	fmt.Println(rawIn)
+	in := createInstruction(s, rawIn)
+	s.Instructions = append(s.Instructions, in)
 
 	c <- true
 }
@@ -95,50 +87,75 @@ func (s *Synch) parseInstructions() {
 	var ch chan bool
 	ch = make(chan bool)
 
-	for i, mapping := range s.Cfg.Instructions {
+	for i, mapping := range s.Cfg.Synch {
 		go s.parseInstruction(mapping, i, ch)
 	}
 
-	for i := 0; i < len(s.Cfg.Instructions); i++ {
+	for i := 0; i < len(s.Cfg.Synch); i++ {
+		<-ch
+	}
+}
+
+func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
+	rawMpng, err := lang.ParseMapping(mpngStr)
+	if err != nil {
+		panic(err)
+	}
+
+	mpng := createMapping(s, rawMpng)
+	s.mappings = append(s.mappings, mpng)
+
+	c <- true
+}
+
+func (s *Synch) parseMappings() {
+	var ch chan bool
+	ch = make(chan bool)
+
+	for i, mapping := range s.Cfg.Map {
+		go s.parseMapping(mapping, i, ch)
+	}
+
+	for i := 0; i < len(s.Cfg.Map); i++ {
 		<-ch
 	}
 }
 
 // selectData selects all records from all tables and filters them to get the relevant records.
-func (s *Synch) selectData() {
-	for i := range s.Instructions {
-		var in *Instruction = s.Instructions[i]
+// func (s *Synch) selectData() {
+// 	for i := range s.Instructions {
+// 		var in *Instruction = s.Instructions[i]
 
-		for j := range in.Links {
-			var lnk *Link = in.Links[j]
-			sourceRawActiveRecords := (*lnk.source.db).Select(lnk.source.tbl.name, lnk.sourceWhere)
-			targetRawActiveRecords := (*lnk.target.db).Select(lnk.target.tbl.name, lnk.targetWhere)
+// 		for j := range in.Links {
+// 			var lnk *Link = in.Links[j]
+// 			sourceRawActiveRecords := (*lnk.source.db).Select(lnk.source.tbl.name, lnk.sourceWhere)
+// 			targetRawActiveRecords := (*lnk.target.db).Select(lnk.target.tbl.name, lnk.targetWhere)
 
-			// for _, v := range sourceRawActiveRecords {
-			// 	fmt.Println(v["film_id"])
-			// }
+// 			// for _, v := range sourceRawActiveRecords {
+// 			// 	fmt.Println(v["film_id"])
+// 			// }
 
-			if !s.initial {
-				lnk.sourceOldActiveRecords = lnk.sourceActiveRecords
-				lnk.targetOldActiveRecords = lnk.targetActiveRecords
-			}
+// 			if !s.initial {
+// 				lnk.sourceOldActiveRecords = lnk.sourceActiveRecords
+// 				lnk.targetOldActiveRecords = lnk.targetActiveRecords
+// 			}
 
-			for _, sourceRecord := range sourceRawActiveRecords {
-				sourceRecordPointer := lnk.source.tbl.records.FindRecordPointer(sourceRecord)
-				lnk.sourceActiveRecords = append(lnk.sourceActiveRecords, sourceRecordPointer)
-				sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, lnk)
-			}
-			for _, targetRecord := range targetRawActiveRecords {
-				targetRecordPointer := lnk.target.tbl.records.FindRecordPointer(targetRecord)
-				lnk.targetActiveRecords = append(lnk.targetActiveRecords, targetRecordPointer)
-				targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, lnk)
-			}
-			// log.Println(lnk.sourceActiveRecords)
-			// log.Println(lnk.targetActiveRecords)
-		}
+// 			for _, sourceRecord := range sourceRawActiveRecords {
+// 				sourceRecordPointer := lnk.source.tbl.records.FindRecordPointer(sourceRecord)
+// 				lnk.sourceActiveRecords = append(lnk.sourceActiveRecords, sourceRecordPointer)
+// 				sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, lnk)
+// 			}
+// 			for _, targetRecord := range targetRawActiveRecords {
+// 				targetRecordPointer := lnk.target.tbl.records.FindRecordPointer(targetRecord)
+// 				lnk.targetActiveRecords = append(lnk.targetActiveRecords, targetRecordPointer)
+// 				targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, lnk)
+// 			}
+// 			// log.Println(lnk.sourceActiveRecords)
+// 			// log.Println(lnk.targetActiveRecords)
+// 		}
 
-	}
-}
+// 	}
+// }
 
 func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 	_, dbExists := DBMap[dbName]
@@ -205,22 +222,22 @@ func (s *Synch) setTables() {
 }
 
 // Synchronize loops over all pairs in all mappings and invokes their Synchronize function.
-func (s *Synch) Synchronize() {
-	for i := range s.Instructions {
-		var in *Instruction = s.Instructions[i]
+// func (s *Synch) Synchronize() {
+// 	for i := range s.Instructions {
+// 		var in *Instruction = s.Instructions[i]
 
-		for j := range in.Links {
-			var lnk *Link = in.Links[j]
+// 		for j := range in.Links {
+// 			var lnk *Link = in.Links[j]
 
-			for k := range lnk.pairs {
-				var pair *Pair = lnk.pairs[k]
-				_, err := pair.Synchronize()
-				if err != nil {
-					log.Println(err)
-				}
-			}
+// 			for k := range lnk.pairs {
+// 				var pair *Pair = lnk.pairs[k]
+// 				_, err := pair.Synchronize()
+// 				if err != nil {
+// 					log.Println(err)
+// 				}
+// 			}
 
-		}
+// 		}
 
-	}
-}
+// 	}
+// }

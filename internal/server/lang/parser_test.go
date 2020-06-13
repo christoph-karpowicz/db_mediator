@@ -5,22 +5,6 @@ import (
 	"testing"
 )
 
-var exampleInstruction string = `
-MAP
-	dvdrental_films.film_id TO msamp_films.ext_id,
-	dvdrental_films.title TO msamp_films.Title,
-	dvdrental_films.description TO msamp_films.Title,
-	dvdrental_films.rental_duration TO msamp_films."Rental Duration",
-	dvdrental_films.length TO msamp_films.Length,
-	dvdrental_films.replacement_cost TO msamp_films."Replacement Cost",
-	dvdrental_films.rating TO msamp_films.Rating,
-	dvdrental_films.special_features TO msamp_films."Special Features"
-SYNCH
-	[dvdrental_films.title WHERE film_id <= 3] TO [msamp_films.Title],
-	[dvdrental_films.title WHERE film_id > 30 AND film_id <= 50] TO [msamp_films.Title]
-MATCH BY IDS(dvdrental_films.film_id, msamp_films.ext_id)
-DO UPDATE, INSERT`
-
 func TestParser(t *testing.T) {
 	rawInstruction, err := ParseInstruction(exampleInstruction)
 	if err != nil {
