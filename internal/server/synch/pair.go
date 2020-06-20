@@ -57,26 +57,26 @@ func (p Pair) Synchronize() (bool, error) {
 			// fmt.Println(sourceColumnValue)
 			// fmt.Println(targetColumnValue)
 
-			// if !p.Link.In.synch.Simulation {
-			// 	update, err := (*p.Link.target.db).Update(p.Link.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Link.targetColumn, sourceColumnValue)
-			// 	if err != nil {
-			// 		log.Println(err)
-			// 	}
-			// 	log.Println(update)
-			// 	// log.Println(sourceColumnValue)
-			// 	// log.Println(targetColumnValue)
-			// }
+			if !p.Link.synch.Simulation {
+				update, err := (*p.Link.target.db).Update(p.Link.target.tbl.name, p.getTargetNodeKey(), p.target.Data[p.getTargetNodeKey()], p.Link.targetColumn, sourceColumnValue)
+				if err != nil {
+					log.Println(err)
+				}
+				log.Println(update)
+				// log.Println(sourceColumnValue)
+				// log.Println(targetColumnValue)
+			}
 
-			// _, err := p.Link.In.synch.Rep.AddAction(p, "update")
-			// if err != nil {
-			// 	panic(err)
-			// }
-			// fmt.Println(p.Link.In.synch.Simulation)
+			_, err := p.Link.synch.Rep.AddAction(p, "update")
+			if err != nil {
+				panic(err)
+			}
+			// fmt.Println(p.Link.synch.Simulation)
 		} else {
-			// _, err := p.Link.In.synch.Rep.AddAction(p, "idle")
-			// if err != nil {
-			// 	panic(err)
-			// }
+			_, err := p.Link.synch.Rep.AddAction(p, "idle")
+			if err != nil {
+				panic(err)
+			}
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Link.synch.Cfg.Do, "INSERT") {
 		// Inserts
@@ -84,14 +84,13 @@ func (p Pair) Synchronize() (bool, error) {
 		// log.Println(p.source)
 		// log.Println(p.target)
 
-		// if !p.Link.In.synch.Simulation {
-		// }
+		if !p.Link.synch.Simulation {
+		}
 
-		// _, err := p.Link.In.synch.Rep.AddAction(p, "insert")
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// fmt.Println(p.Link.In.synch.Simulation)
+		_, err := p.Link.synch.Rep.AddAction(p, "insert")
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return false, nil

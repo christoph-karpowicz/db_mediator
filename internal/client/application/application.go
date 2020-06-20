@@ -1,7 +1,6 @@
 package application
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -59,7 +58,7 @@ func (a *Application) makeGETRequest(url string, params map[string]string) map[s
 		log.Fatalln(err)
 	}
 
-	fmt.Println(string(resBody))
+	// fmt.Println(string(resBody))
 
 	return parseResponse(resBody)
 }

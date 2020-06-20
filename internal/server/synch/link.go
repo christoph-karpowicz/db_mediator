@@ -17,6 +17,7 @@ type LinkReportData struct {
 // [example_node1.example_column1 WHERE ...] TO [example_node2.example_column2 WHERE ...]
 type Link struct {
 	synch                  *Synch
+	Cmd                    string
 	source                 *node
 	target                 *node
 	sourceColumn           string
@@ -46,6 +47,7 @@ func createLink(synch *Synch, link map[string]string) *Link {
 
 	newLink := Link{
 		synch:        synch,
+		Cmd:          link["cmd"],
 		source:       synch.nodes[link["sourceNode"]],
 		target:       synch.nodes[link["targetNode"]],
 		sourceColumn: link["sourceColumn"],

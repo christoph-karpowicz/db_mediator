@@ -30,7 +30,7 @@ func ParseLink(str string) (map[string]string, error) {
 	matches := parseRegexp.FindStringSubmatch(str)
 	subNames := parseRegexp.SubexpNames()
 
-	fmt.Println(matches)
+	// fmt.Println(matches)
 
 	for i, match := range matches {
 		// Skip the first, empty element.
@@ -38,7 +38,7 @@ func ParseLink(str string) (map[string]string, error) {
 			continue
 		}
 
-		fmt.Println(match)
+		// fmt.Println(match)
 
 		if arrUtil.Contains([]string{"sourceWhere", "targetWhere"}, subNames[i]) {
 			parsedWhere := ParseLinkWhere(match)
@@ -47,6 +47,8 @@ func ParseLink(str string) (map[string]string, error) {
 			result[subNames[i]] = match
 		}
 	}
+
+	result["cmd"] = str
 
 	// err := validateMapping(result)
 

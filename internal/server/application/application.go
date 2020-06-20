@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
+	"github.com/christoph-karpowicz/unifier/internal/server/report"
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 )
 
@@ -53,25 +54,25 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	}
 
 	synch.Simulation = simulation
-	// synch.Rep = report.CreateReport(synch)
+	synch.Rep = report.CreateReport(synch)
 
 	// Initialize synchronization.
 	synch.Init(a.dbs.DBMap)
 	// Initialize report data structures.
-	// synch.Rep.Init()
+	synch.Rep.Init()
 
 	// Carry out all synch actions.
 	synch.Synchronize()
 
 	// Gather and marshal results.
-	// synchReport, err := synch.Rep.Finalize()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	synchReport, err := synch.Rep.Finalize()
+	if err != nil {
+		panic(err)
+	}
 
 	// Send the report to the http init handler.
-	// resChan <- synchReport
-	resChan <- "synchReport"
+	resChan <- synchReport
+	// resChan <- "synchReport"
 }
 
 // synchronizeArray carries out aan array of synchronizations requested by the client.

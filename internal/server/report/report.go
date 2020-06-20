@@ -8,23 +8,18 @@ import (
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
 
-type linkRep struct {
+type link struct {
 	Cmd     string   `json:"cmd"`
 	Idle    []string `json:"idle"`
 	Inserts []string `json:"inserts"`
 	Updates []string `json:"updates"`
 }
 
-type instructionRep struct {
-	inPtr      *synch.Instruction
-	LnkReports map[int]*linkRep `json:"links"`
-}
-
 // Report is basically a report about what will happen after an actual synchronization is launched.
 type Report struct {
-	msg       string
-	synch     *synch.Synch
-	inReports map[*synch.Instruction]*instructionRep
+	msg   string
+	synch *synch.Synch
+	links map[*synch.Link]*link
 }
 
 // ReportError is a custom report error.
@@ -40,8 +35,8 @@ func (e *ReportError) Error() string {
 // CreateReport creates a Report instance.
 func CreateReport(s *synch.Synch) unifier.Reporter {
 	var newReport Report = Report{
-		synch:     s,
-		inReports: make(map[*synch.Instruction]*instructionRep),
+		synch: s,
+		links: make(map[*synch.Link]*link),
 	}
 
 	return &newReport
@@ -54,7 +49,7 @@ func CreateReport(s *synch.Synch) unifier.Reporter {
 // 	3. 	update
 func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, error) {
 	var pair synch.Pair = p.(synch.Pair)
-	var lnkIdx int = pair.Link.Rep.LinkIndex
+	// var lnkIdx int = pair.Link.Rep.LinkIndex
 	actionJSON, err := pair.ReportJSON(actionType)
 	if err != nil {
 		return false, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
@@ -62,30 +57,24 @@ func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, err
 
 	switch actionType {
 	case "idle":
-		r.inReports[pair.Link.In].LnkReports[lnkIdx].Idle = append(r.inReports[pair.Link.In].LnkReports[lnkIdx].Idle, string(actionJSON))
+		r.links[pair.Link].Idle = append(r.links[pair.Link].Idle, string(actionJSON))
 	case "insert":
-		r.inReports[pair.Link.In].LnkReports[lnkIdx].Inserts = append(r.inReports[pair.Link.In].LnkReports[lnkIdx].Inserts, string(actionJSON))
+		r.links[pair.Link].Inserts = append(r.links[pair.Link].Inserts, string(actionJSON))
 	case "update":
-		r.inReports[pair.Link.In].LnkReports[lnkIdx].Updates = append(r.inReports[pair.Link.In].LnkReports[lnkIdx].Updates, string(actionJSON))
+		r.links[pair.Link].Updates = append(r.links[pair.Link].Updates, string(actionJSON))
 	}
-	// fmt.Print(actionJSON)
+	// fmt.Print(string(actionJSON))
 
 	return true, nil
 }
 
 // Init fills the necessary fields after the Synch instance finished its Init execution.
 func (r *Report) Init() {
-	for _, in := range r.synch.Instructions {
-		_, inRepExists := r.inReports[in]
-		if !inRepExists {
-			r.inReports[in] = &instructionRep{inPtr: in}
-			r.inReports[in].LnkReports = make(map[int]*linkRep)
+	for _, lnk := range r.synch.Links {
+		_, lnkExists := r.links[lnk]
+		if !lnkExists {
+			r.links[lnk] = &link{Cmd: lnk.Cmd}
 		}
-
-		for _, lnk := range in.Links {
-			r.inReports[in].LnkReports[lnk.Rep.LinkIndex] = &linkRep{Cmd: lnk.Rep.Link["raw"]}
-		}
-
 	}
 }
 
@@ -106,36 +95,31 @@ func (r *Report) Finalize() ([]byte, error) {
 }
 
 // MarshalJSON implements the Marshaler interface for custom JSON creation.
-// func (r *Report) MarshalJSON() ([]byte, error) {
-// 	instructionsMap := make(map[int]*instructionRep)
-// 	for _, instructionRep := range r.inReports {
-// 		_, inRepExists := instructionsMap[instructionRep.inPtr.Rep.LinkIndex]
-// 		if !inRepExists {
-// 			instructionsMap[instructionRep.inPtr.Rep.LinkIndex] = instructionRep
-// 		} else {
-// 			for k, v := range instructionRep.LnkReports {
-// 				instructionsMap[instructionRep.inPtr.Rep.LinkIndex].LnkReports[k] = v
-// 			}
-// 		}
-// 	}
+func (r *Report) MarshalJSON() ([]byte, error) {
+	linkMap := make(map[int]*link)
+	linkCounter := 1
+	for _, link := range r.links {
+		linkMap[linkCounter] = link
+		linkCounter++
+	}
 
-// 	customStruct := struct {
-// 		Msg       string                  `json:"msg"`
-// 		SynchInfo *synch.Config           `json:"synchInfo"`
-// 		InReps    map[int]*instructionRep `json:"instructions"`
-// 	}{
-// 		Msg:       r.msg,
-// 		SynchInfo: r.synch.Cfg,
-// 		InReps:    instructionsMap,
-// 	}
+	customStruct := struct {
+		Msg       string        `json:"msg"`
+		SynchInfo *synch.Config `json:"synchInfo"`
+		Links     map[int]*link `json:"links"`
+	}{
+		Msg:       r.msg,
+		SynchInfo: r.synch.Cfg,
+		Links:     linkMap,
+	}
 
-// 	marshalled, err := json.Marshal(&customStruct)
-// 	if err != nil {
-// 		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
-// 	}
+	marshalled, err := json.Marshal(&customStruct)
+	if err != nil {
+		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+	}
 
-// 	return marshalled, nil
-// }
+	return marshalled, nil
+}
 
 // ToJSON turns the report into a JSON object.
 func (r *Report) ToJSON() ([]byte, error) {
@@ -144,6 +128,7 @@ func (r *Report) ToJSON() ([]byte, error) {
 	if err != nil {
 		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
 	}
+	// fmt.Print(string(marshalled))
 
 	return marshalled, nil
 }

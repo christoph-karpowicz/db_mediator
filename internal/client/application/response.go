@@ -3,8 +3,6 @@ package application
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"strconv"
 	"strings"
 )
 
@@ -40,7 +38,7 @@ func printAction(actionString string) string {
 	if err := json.Unmarshal([]byte(actionString), &actionMap); err != nil {
 		panic(err)
 	}
-	log.Println(actionMap)
+	// log.Println(actionMap)
 
 	return actionPrinters[actionMap["actionType"].(string)](actionMap)
 }
@@ -111,95 +109,73 @@ var responsePrinters map[string]func(map[string]interface{}) string = map[string
 
 		synchMsg := resPayload["msg"].(string)
 		synchInfo := resPayload["synchInfo"].(map[string]interface{})
-		mappingsStrArray := synchInfo["Mappings"].([]interface{})
-		mappings := resPayload["mappings"].(map[string]interface{})
+		links := resPayload["links"].(map[string]interface{})
 
-		// MAPPINGS
-		var allMappingsStr string
-		for key, mapping := range mappings {
-			mappingLinks := mapping.(map[string]interface{})["links"].(map[string]interface{})
-			keyInt, err := strconv.Atoi(key)
-			if err != nil {
-				panic(err)
-			}
-
-			mappingStr := fmt.Sprintf(`
-==================================
-Mapping index: %s
-command: %s
-links:
-			`,
-				key,
-				mappingsStrArray[keyInt],
-			)
-
-			// LINKS
-			for linkKey, link := range mappingLinks {
-				linkStr := fmt.Sprintf(`
+		// LINKS
+		linksStr := ""
+		for linkIndex, link := range links {
+			linkStr := fmt.Sprintf(`
 =================
 Link index: %s
 Link command: %s`,
-					linkKey,
-					link.(map[string]interface{})["cmd"].(string),
-				)
+				linkIndex,
+				link.(map[string]interface{})["cmd"].(string),
+			)
 
-				// ACTIONS
-				for action, actionStrings := range link.(map[string]interface{}) {
-					if action == "cmd" {
-						continue
-					}
-
-					var horizontalBorder string
-					switch action {
-					case "updates":
-						horizontalBorder = strings.Repeat("-", 64*2+7)
-					default:
-						horizontalBorder = strings.Repeat("-", 50*2+6)
-					}
-
-					linkStr += fmt.Sprintf(`
-%s:`,
-						strings.ToUpper(action),
-					)
-
-					if actionStrings == nil {
-						linkStr += fmt.Sprintf("\nno %s actions", action)
-						continue
-					} else {
-						linkStr += fmt.Sprintf("\n%s\n", horizontalBorder)
-					}
-
-					// ACTUAL MODIFICATIONS OF RECORDS
-					if actionStrings != nil {
-						for _, actionString := range actionStrings.([]interface{}) {
-							linkStr += fmt.Sprintf("%s",
-								printAction(actionString.(string)),
-							)
-
-						}
-					}
-
-					linkStr += fmt.Sprintf("%s",
-						horizontalBorder,
-					)
-
+			// ACTIONS
+			for action, actionStrings := range link.(map[string]interface{}) {
+				if action == "cmd" {
+					continue
 				}
 
-				mappingStr += linkStr
+				var horizontalBorder string
+				switch action {
+				case "updates":
+					horizontalBorder = strings.Repeat("-", 64*2+7)
+				default:
+					horizontalBorder = strings.Repeat("-", 50*2+6)
+				}
+
+				linkStr += fmt.Sprintf(`
+%s:`,
+					strings.ToUpper(action),
+				)
+
+				if actionStrings == nil {
+					linkStr += fmt.Sprintf("\nno %s actions", action)
+					continue
+				} else {
+					linkStr += fmt.Sprintf("\n%s\n", horizontalBorder)
+				}
+
+				// ACTUAL MODIFICATIONS OF RECORDS
+				if actionStrings != nil {
+					for _, actionString := range actionStrings.([]interface{}) {
+						linkStr += fmt.Sprintf("%s",
+							printAction(actionString.(string)),
+						)
+
+					}
+				}
+
+				linkStr += fmt.Sprintf("%s",
+					horizontalBorder,
+				)
+
 			}
 
-			allMappingsStr += mappingStr
+			linksStr += linkStr
 		}
 
 		// WHOLE SIMULATION
 		return fmt.Sprintf(`SYNCH NAME: %s
 SERVER RESPONSE: %s
-MAPPINGS:
+LINKS:
 %s
 		`,
 			synchInfo["Name"].(string),
 			synchMsg,
-			allMappingsStr,
+			linksStr,
 		)
 	},
 }
