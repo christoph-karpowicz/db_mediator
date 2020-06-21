@@ -170,8 +170,8 @@ Link command: %s`,
 		// WHOLE SIMULATION
 		return fmt.Sprintf(`SYNCH NAME: %s
 SERVER RESPONSE: %s
-LINKS:
-%s
+
+LINKS:%s
 		`,
 			synchInfo["Name"].(string),
 			synchMsg,

@@ -30,7 +30,7 @@ func (d *postgresDatabase) Init() {
 }
 
 // Insert inserts one row into a given table.
-func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface{}, values map[string]interface{}) (bool, error) {
+func (d *postgresDatabase) Insert(inDto InsertDto) (bool, error) {
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
 		panic(err)
@@ -42,7 +42,7 @@ func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface
 	var valuesPlaceholderList []string = make([]string, 0)
 	var valuesCounter int64 = 1
 
-	for key, val := range values {
+	for key, val := range inDto.Values {
 		valuesCounterStr := strconv.FormatInt(valuesCounter, 10)
 
 		columnList = append(columnList, key)
@@ -51,7 +51,7 @@ func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface
 		valuesCounter++
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", table, strings.Join(columnList, ", "), strings.Join(valuesPlaceholderList, ", "))
+	query := fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", inDto.TableName, strings.Join(columnList, ", "), strings.Join(valuesPlaceholderList, ", "))
 
 	result, err := database.Exec(query, valuesList...)
 	if err != nil {
@@ -62,7 +62,7 @@ func (d *postgresDatabase) Insert(table string, keyName string, keyVal interface
 		return false, err
 	}
 	if rowsAffected == 0 {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "row hasn't been inserted" /* , KeyName: keyName, KeyVal: keyVal */}
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "row hasn't been inserted" /* , KeyName: keyName, KeyValue: keyVal */}
 		return false, dbErr
 	}
 
@@ -138,16 +138,16 @@ func (d *postgresDatabase) TestConnection() {
 }
 
 // Update updates a record with the provided key.
-func (d *postgresDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
+func (d *postgresDatabase) Update(upDto UpdateDto) (bool, error) {
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
 		panic(err)
 	}
 	defer database.Close()
 
-	query := fmt.Sprintf("UPDATE %s SET %s = $1 WHERE %s = $2", table, column, keyName)
+	query := fmt.Sprintf("UPDATE %s SET %s = $1 WHERE %s = $2", upDto.TableName, upDto.UpdatedColumnName, upDto.KeyName)
 
-	result, err := database.Exec(query, val, keyVal)
+	result, err := database.Exec(query, upDto.NewValue, upDto.KeyValue)
 	if err != nil {
 		return false, err
 	}
@@ -156,7 +156,7 @@ func (d *postgresDatabase) Update(table string, keyName string, keyVal interface
 		return false, err
 	}
 	if rowsAffected == 0 {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no rows affected in update", KeyName: keyName, KeyVal: keyVal}
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no rows affected in update", KeyName: upDto.KeyName, KeyValue: upDto.KeyValue}
 		return false, dbErr
 	}
 

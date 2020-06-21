@@ -61,17 +61,17 @@ func (d *mongoDatabase) Init() {
 }
 
 // Insert inserts one row into a given collection.
-func (d *mongoDatabase) Insert(table string, keyName string, keyVal interface{}, values map[string]interface{}) (bool, error) {
+func (d *mongoDatabase) Insert(inDto InsertDto) (bool, error) {
 	client := d.GetClient()
-	collection := client.Database(d.cfg.Name).Collection(table)
+	collection := client.Database(d.cfg.Name).Collection(inDto.TableName)
 
-	insertResult, err := collection.InsertOne(context.TODO(), values)
+	insertResult, err := collection.InsertOne(context.TODO(), inDto.Values)
 	if err != nil {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: keyName, KeyVal: keyVal}
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
 		return false, dbErr
 	}
 	if insertResult.InsertedID == nil {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "could not insert document", KeyName: keyName, KeyVal: keyVal}
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "could not insert document", KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
 		return false, dbErr
 	}
 
@@ -128,27 +128,27 @@ func (d *mongoDatabase) TestConnection() {
 }
 
 // Update updates a document with the provided key.
-func (d *mongoDatabase) Update(table string, keyName string, keyVal interface{}, column string, val interface{}) (bool, error) {
+func (d *mongoDatabase) Update(upDto UpdateDto) (bool, error) {
 	client := d.GetClient()
-	collection := client.Database(d.cfg.Name).Collection(table)
-	filter := bson.D{{keyName, keyVal}}
+	collection := client.Database(d.cfg.Name).Collection(upDto.TableName)
+	filter := bson.D{{upDto.KeyName, upDto.KeyValue}}
 	update := bson.D{
 		{"$set", bson.D{
-			{column, val},
+			{upDto.UpdatedColumnName, upDto.NewValue},
 		}},
 	}
 
 	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: keyName, KeyVal: keyVal}
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: upDto.KeyName, KeyValue: upDto.KeyValue}
 		return false, dbErr
 	}
 	if updateResult.MatchedCount == 0 {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "document with given key not found", KeyName: keyName, KeyVal: keyVal}
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "document with given key not found", KeyName: upDto.KeyName, KeyValue: upDto.KeyValue}
 		return false, dbErr
 	}
 	// if updateResult.ModifiedCount == 0 {
-	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no documents modified", KeyName: keyName, KeyVal: keyVal}
+	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no documents modified", KeyName: keyName, KeyValue: keyVal}
 	// 	return false, dbErr
 	// }
 
