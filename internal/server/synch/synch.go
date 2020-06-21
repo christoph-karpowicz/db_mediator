@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	"github.com/christoph-karpowicz/unifier/internal/server/lang"
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
 
@@ -69,7 +69,7 @@ func (s *Synch) pairData() {
 }
 
 func (s *Synch) parseLink(mpngStr string, i int, c chan bool) {
-	rawLink, err := lang.ParseLink(mpngStr)
+	rawLink, err := cfg.ParseLink(mpngStr)
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +95,7 @@ func (s *Synch) parseLinks() {
 }
 
 func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
-	rawMpng, err := lang.ParseMapping(mpngStr)
+	rawMpng, err := cfg.ParseMapping(mpngStr)
 	if err != nil {
 		panic(err)
 	}

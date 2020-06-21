@@ -40,13 +40,26 @@ func TestMongoCRUD(t *testing.T) {
 			"Length":      90,
 			"ext_id":      1001,
 		}
-		_, insertErr := database.Insert("Sakila_films", "film_id", 1, row)
+		inDto := InsertDto{
+			"Sakila_films",
+			"_id",
+			1,
+			row,
+		}
+		_, insertErr := database.Insert(inDto)
 		if insertErr != nil {
 			log.Fatalln(insertErr)
 		}
 
 		// Update
-		_, updateErr := database.Update("Sakila_films", "_id", 6, "Rating", "test")
+		upDto := UpdateDto{
+			"Sakila_films",
+			"_id",
+			6,
+			"Rating",
+			"test",
+		}
+		_, updateErr := database.Update(upDto)
 		if updateErr != nil {
 			log.Fatalln(updateErr)
 		}
@@ -78,13 +91,26 @@ func TestPostgresCRUD(t *testing.T) {
 			"length":       90,
 			"language_id":  2,
 		}
-		_, insertErr := database.Insert("film", "_id", 1, row)
+		inDto := InsertDto{
+			"Sakila_films",
+			"_id",
+			1,
+			row,
+		}
+		_, insertErr := database.Insert(inDto)
 		if insertErr != nil {
 			log.Fatalln(insertErr)
 		}
 
 		// Update
-		_, updateErr := database.Update("film", "film_id", 1, "description", "test")
+		upDto := UpdateDto{
+			"Sakila_films",
+			"_id",
+			6,
+			"Rating",
+			"test",
+		}
+		_, updateErr := database.Update(upDto)
 		if updateErr != nil {
 			log.Fatalln(updateErr)
 		}
