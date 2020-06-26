@@ -2,73 +2,37 @@ package synch
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
 
-	"gopkg.in/yaml.v3"
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 )
 
 // Synchs is a collection of all synchronizations.
 type Synchs struct {
-	SynchMap map[string]*Synch
+	synchCfgs []*cfg.SynchConfig
+	SynchMap  map[string]*Synch
 }
 
-// ImportYAMLDir invokes the import function on all .yaml files from
-// a directory.
-func (s *Synchs) ImportYAMLDir() {
-	configFiles, err := ioutil.ReadDir("./config/synchs")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("----------------")
-	fmt.Println("Synchs:")
-	for _, configFile := range configFiles {
-		synchData := s.ImportYAMLFile(configFile.Name())
-
-		// Don't load inactive synchs.
-		// if !synchData.Settings.Active {
-		// 	continue
-		// }
-
-		s.SynchMap[synchData.Name] = &Synch{Cfg: &synchData, initial: true}
-		fmt.Println("Config file name: " + configFile.Name())
-		// fmt.Println(synchData)
-	}
-	fmt.Println("----------------")
-
+func (s *Synchs) Init() {
+	s.getConfigs()
+	s.validateConfigs()
+	s.assignConfigs()
 }
 
-// ImportYAMLFile imports a configuration file into a Config struct.
-func (s *Synchs) ImportYAMLFile(fileName string) Config {
-	synchFilePath, _ := filepath.Abs("./config/synchs/" + fileName)
-
-	synchFile, err := os.Open(synchFilePath)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Parsing %s...\n", synchFilePath)
-	defer synchFile.Close()
-
-	byteArray, err := ioutil.ReadAll(synchFile)
-	if err != nil {
-		panic(err)
-	}
-
-	var synch Config = Config{}
-
-	marshalErr := yaml.Unmarshal(byteArray, &synch)
-	if marshalErr != nil {
-		log.Fatalf("error: %v", marshalErr)
-	}
-
-	return synch
+func (s *Synchs) getConfigs() {
+	var synchConfigArray []*cfg.SynchConfig = cfg.GetSynchConfigs()
+	s.synchCfgs = synchConfigArray
 }
 
-// ValidateYAML validates data imported from a config file.
-func (s *Synchs) ValidateYAML() {
+func (s *Synchs) assignConfigs() {
+	for i := 0; i < len(s.synchCfgs); i++ {
+		synchCfg := s.synchCfgs[i]
+		s.SynchMap[s.synchCfgs[i].Name] = &Synch{Cfg: synchCfg, initial: true}
+		// fmt.Printf("val: %s\n", dbDataArr.Databases[i].Name)
+	}
+}
+
+// validateConfigs validates data imported from a config file.
+func (s *Synchs) validateConfigs() {
 	fmt.Println("Synch YAML file validation...")
 	for _, synch := range s.SynchMap {
 		(*synch).GetConfig().Validate()

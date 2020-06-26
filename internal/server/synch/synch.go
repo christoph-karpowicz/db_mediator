@@ -17,7 +17,7 @@ import (
 // Synch represents an individual synchronzation configration.
 // It holds all configuration from an .yaml file, raw and parsed.
 type Synch struct {
-	Cfg        *Config
+	Cfg        *cfg.SynchConfig
 	dbs        map[string]*db.Database
 	tables     map[string]*table
 	nodes      map[string]*node
@@ -30,7 +30,7 @@ type Synch struct {
 }
 
 // GetConfig returns the synch config struct.
-func (s *Synch) GetConfig() *Config {
+func (s *Synch) GetConfig() *cfg.SynchConfig {
 	return s.Cfg
 }
 
@@ -166,7 +166,7 @@ func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 // setDatabases opens the chosen database connections.
 func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
 	for j := range s.Cfg.Nodes {
-		var nodeConfig *nodeConfig = &s.Cfg.Nodes[j]
+		var nodeConfig *cfg.NodeConfig = &s.Cfg.Nodes[j]
 		s.setDatabase(DBMap, nodeConfig.Database)
 	}
 }
@@ -174,7 +174,7 @@ func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
 // setNodes creates node structs and adds them to the relevant synch struct field.
 func (s *Synch) setNodes() {
 	for i := range s.Cfg.Nodes {
-		var nodeConfig *nodeConfig = &s.Cfg.Nodes[i]
+		var nodeConfig *cfg.NodeConfig = &s.Cfg.Nodes[i]
 
 		var tableName string = nodeConfig.Database + "." + nodeConfig.Table
 		_, tableFound := s.tables[tableName]
@@ -211,7 +211,7 @@ func (s *Synch) setTable(tableName string, database *db.Database) {
 // setTables creates table structs based on node yaml data.
 func (s *Synch) setTables() {
 	for j := range s.Cfg.Nodes {
-		var nodeConfig *nodeConfig = &s.Cfg.Nodes[j]
+		var nodeConfig *cfg.NodeConfig = &s.Cfg.Nodes[j]
 		s.setTable(nodeConfig.Table, s.dbs[nodeConfig.Database])
 	}
 }

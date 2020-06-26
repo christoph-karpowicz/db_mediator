@@ -6,71 +6,50 @@ package db
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
 
-	yaml "gopkg.in/yaml.v3"
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 )
 
 // Databases imports, validates and holds information about databases from JSON config files.
 type Databases struct {
-	DBMap map[string]*Database
+	dbCfgs *cfg.DbConfigArray
+	DBMap  map[string]*Database
 }
 
-// ImportYAML parses and saves YAML config files.
-func (d *Databases) ImportYAML() *configArray {
-	databasesFilePath, _ := filepath.Abs("./config/databases.yaml")
+func (d *Databases) Init() {
+	d.getConfigs()
+	d.validateConfigs()
+	d.assignConfigs()
+}
 
-	databasesConfigFile, err := os.Open(databasesFilePath)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Parsing %s...\n", databasesFilePath)
-	defer databasesConfigFile.Close()
+func (d *Databases) getConfigs() {
+	var dbConfigArray *cfg.DbConfigArray = cfg.GetDbConfig()
+	d.dbCfgs = dbConfigArray
+}
 
-	byteArray, err := ioutil.ReadAll(databasesConfigFile)
-	if err != nil {
-		panic(err)
-	}
-
-	var dbDataArr configArray = configArray{}
-	marshalErr := yaml.Unmarshal(byteArray, &dbDataArr)
-	if marshalErr != nil {
-		log.Fatalf("error: %v", marshalErr)
-	}
-
-	fmt.Println("----------------")
-	fmt.Println("Databases:")
-	for i := 0; i < len(dbDataArr.Databases); i++ {
+func (d *Databases) assignConfigs() {
+	for i := 0; i < len(d.dbCfgs.Databases); i++ {
 		var database Database
 
-		fmt.Println(dbDataArr.Databases[i].Type)
-		switch dbType := dbDataArr.Databases[i].Type; dbType {
+		fmt.Println(d.dbCfgs.Databases[i].Type)
+		switch dbType := d.dbCfgs.Databases[i].Type; dbType {
 		case "mongo":
-			database = &mongoDatabase{cfg: &dbDataArr.Databases[i]}
+			database = &mongoDatabase{cfg: &d.dbCfgs.Databases[i]}
 		case "postgres":
-			database = &postgresDatabase{cfg: &dbDataArr.Databases[i]}
+			database = &postgresDatabase{cfg: &d.dbCfgs.Databases[i]}
 		default:
 			database = nil
 		}
 
-		d.DBMap[dbDataArr.Databases[i].GetName()] = &database
+		d.DBMap[d.dbCfgs.Databases[i].GetName()] = &database
 
 		// fmt.Printf("val: %s\n", dbDataArr.Databases[i].Name)
 	}
-	// fmt.Println(d.DBMap)
-	fmt.Println("----------------")
-
-	return &dbDataArr
 }
 
-// ValidateYAML calls validation method on each database data object.
-func (d *Databases) ValidateYAML() {
+// validateConfigs calls validation method on each database data object.
+func (d *Databases) validateConfigs() {
 	fmt.Println("Database YAML file validation...")
-	for _, database := range d.DBMap {
-		(*database).GetConfig().Validate()
-	}
+	d.dbCfgs.Validate()
 	fmt.Println("...passed.")
 }

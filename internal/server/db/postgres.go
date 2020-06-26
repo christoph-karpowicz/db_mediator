@@ -6,17 +6,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	_ "github.com/lib/pq"
 )
 
 // PostgresDatabase implements Database interface for PostgreSQL database.
 type postgresDatabase struct {
-	cfg              *config
+	cfg              *cfg.DbConfig
 	connectionString string
 }
 
 // GetConfig returns information about the database, which was parsed from JSON.
-func (d *postgresDatabase) GetConfig() *config {
+func (d *postgresDatabase) GetConfig() *cfg.DbConfig {
 	return d.cfg
 }
 

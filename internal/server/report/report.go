@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
@@ -104,9 +105,9 @@ func (r *Report) MarshalJSON() ([]byte, error) {
 	}
 
 	customStruct := struct {
-		Msg       string        `json:"msg"`
-		SynchInfo *synch.Config `json:"synchInfo"`
-		Links     map[int]*link `json:"links"`
+		Msg       string           `json:"msg"`
+		SynchInfo *cfg.SynchConfig `json:"synchInfo"`
+		Links     map[int]*link    `json:"links"`
 	}{
 		Msg:       r.msg,
 		SynchInfo: r.synch.Cfg,

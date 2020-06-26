@@ -1,10 +1,14 @@
 package db
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
+)
 
 // Database interface is the blueprint for all structs for specific databases.
 type Database interface {
-	GetConfig() *config
+	GetConfig() *cfg.DbConfig
 	Init()
 	Select(tableName string, conditions string) []map[string]interface{}
 	TestConnection()

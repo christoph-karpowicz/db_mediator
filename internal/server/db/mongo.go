@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -14,7 +15,7 @@ import (
 
 // MongoDatabase implements Database interface for MongoDB database.
 type mongoDatabase struct {
-	cfg              *config
+	cfg              *cfg.DbConfig
 	connectionString string
 	ctx              context.Context
 	close            context.CancelFunc
@@ -41,7 +42,7 @@ func (d *mongoDatabase) GetClient() *mongo.Client {
 }
 
 // GetConfig returns information about the database, which was parsed from JSON.
-func (d *mongoDatabase) GetConfig() *config {
+func (d *mongoDatabase) GetConfig() *cfg.DbConfig {
 	return d.cfg
 }
 

@@ -25,11 +25,9 @@ type Application struct {
 // Init starts the application.
 func (a *Application) Init() {
 	a.dbs = &db.Databases{DBMap: make(map[string]*db.Database)}
-	a.dbs.ImportYAML()
-	a.dbs.ValidateYAML()
+	a.dbs.Init()
 	a.synchs = synch.CreateSynchs()
-	a.synchs.ImportYAMLDir()
-	a.synchs.ValidateYAML()
+	a.synchs.Init()
 
 	a.listen()
 }

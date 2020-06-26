@@ -1,18 +1,18 @@
-package db
+package cfg
 
 import (
 	validationUtil "github.com/christoph-karpowicz/unifier/internal/util/validation"
 )
 
-var nullableFields = []string{"alias"}
+var dbNullableFields = []string{"alias"}
 
 // configArray is an array of YAML database configs.
-type configArray struct {
-	Databases []config
+type DbConfigArray struct {
+	Databases []DbConfig
 }
 
 // config represents an individual YAML database config.
-type config struct {
+type DbConfig struct {
 	Name     string `yaml:"name"`
 	Alias    string `yaml:"alias"`
 	Type     string `yaml:"type"`
@@ -23,7 +23,7 @@ type config struct {
 }
 
 // GetName returns the DB's name if an alias hasn't been provided.
-func (d *config) GetName() string {
+func (d *DbConfig) GetName() string {
 	if d.Alias != "" {
 		return d.Alias
 	}
@@ -31,6 +31,14 @@ func (d *config) GetName() string {
 }
 
 // Validate calls a validation function on itself.
-func (d *config) Validate() {
-	validationUtil.YAMLStruct(*d, nullableFields)
+func (d *DbConfigArray) Validate() {
+	for _, dbCfg := range d.Databases {
+		validationUtil.YAMLStruct(dbCfg, dbNullableFields)
+	}
+}
+
+func GetDbConfig() *DbConfigArray {
+	var dbDataArr DbConfigArray = DbConfigArray{}
+	ImportYAMLFile(&dbDataArr, "./config/databases.yaml")
+	return &dbDataArr
 }
