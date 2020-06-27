@@ -6,12 +6,12 @@ import (
 
 var dbNullableFields = []string{"alias"}
 
-// configArray is an array of YAML database configs.
+// DbConfigArray is an array of YAML database configs.
 type DbConfigArray struct {
 	Databases []DbConfig
 }
 
-// config represents an individual YAML database config.
+// DbConfig represents an individual YAML database config.
 type DbConfig struct {
 	Name     string `yaml:"name"`
 	Alias    string `yaml:"alias"`

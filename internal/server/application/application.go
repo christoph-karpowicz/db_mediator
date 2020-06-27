@@ -18,13 +18,13 @@ Contains all synchronization and database objects.
 Starts a web server and handles all requests.
 */
 type Application struct {
-	dbs    *db.Databases
-	synchs *synch.Synchs
+	dbs    db.Databases
+	synchs synch.Synchs
 }
 
 // Init starts the application.
 func (a *Application) Init() {
-	a.dbs = &db.Databases{DBMap: make(map[string]*db.Database)}
+	a.dbs = make(db.Databases)
 	a.dbs.Init()
 	a.synchs = synch.CreateSynchs()
 	a.synchs.Init()
@@ -46,7 +46,7 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	}()
 
 	// fmt.Printf("%s - %s\n", synchType, synchKey)
-	synch, synchFound := a.synchs.SynchMap[synchKey]
+	synch, synchFound := a.synchs[synchKey]
 	if !synchFound {
 		panic("[synchronization search] '" + synchKey + "' not found.")
 	}
@@ -55,7 +55,7 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	synch.Rep = report.CreateReport(synch)
 
 	// Initialize synchronization.
-	synch.Init(a.dbs.DBMap)
+	synch.Init(a.dbs)
 	// Initialize report data structures.
 	synch.Rep.Init()
 
