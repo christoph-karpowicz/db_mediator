@@ -6,23 +6,22 @@ import (
 	"testing"
 )
 
-var configs *configArray
+var dbs Databases
 
-func TestYAML(t *testing.T) {
+func TestDbs(t *testing.T) {
 	os.Chdir("../../..")
-	dbs := Databases{DBMap: make(map[string]*Database)}
-	configs = dbs.ImportYAML()
-	dbs.ValidateYAML()
+	dbs = make(Databases)
+	dbs.Init()
 }
 
 func TestMongoCRUD(t *testing.T) {
 	var database Database
-	for i := 0; i < len(configs.Databases); i++ {
-		// fmt.Printf("val: %s\n", configs.Databases[i].Name)
-		if dbType := configs.Databases[i].Type; dbType == "mongo" {
-			database = &mongoDatabase{cfg: &configs.Databases[i]}
+	for _, db := range dbs {
+		if dbType := (*db).GetConfig().Type; dbType == "mongo" {
+			database = &mongoDatabase{cfg: (*db).GetConfig()}
 			break
 		}
+		// fmt.Printf("val: %s\n", (*db).GetConfig().Name)
 	}
 
 	if database != nil {
@@ -68,10 +67,10 @@ func TestMongoCRUD(t *testing.T) {
 
 func TestPostgresCRUD(t *testing.T) {
 	var database Database
-	for i := 0; i < len(configs.Databases); i++ {
-		// fmt.Printf("val: %s\n", configs.Databases[i].Name)
-		if dbType := configs.Databases[i].Type; dbType == "postgres" {
-			database = &postgresDatabase{cfg: &configs.Databases[i]}
+	for _, db := range dbs {
+		// fmt.Printf("val: %s\n", (*db).GetConfig().Name)
+		if dbType := (*db).GetConfig().Type; dbType == "postgres" {
+			database = &postgresDatabase{cfg: (*db).GetConfig()}
 			break
 		}
 	}

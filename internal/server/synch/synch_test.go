@@ -7,13 +7,12 @@ import (
 	"testing"
 )
 
+var synchs Synchs
+
 func TestYAML(t *testing.T) {
 	os.Chdir("../../..")
-	synchs := Synchs{SynchMap: make(map[string]*Synch)}
-	synchs.ImportYAMLDir()
-	synchs.ValidateYAML()
-	// synchs.SynchMap["films"].Init()
-	// synchs.SynchMap["films"].Synchronize()
+	synchs = CreateSynchs()
+	synchs.Init()
 }
 
 func TestDir(t *testing.T) {

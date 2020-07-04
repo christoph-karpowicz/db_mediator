@@ -5,8 +5,6 @@ methods for querying.
 package db
 
 import (
-	"fmt"
-
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 )
 
@@ -24,7 +22,7 @@ func (d *Databases) getConfigs() *cfg.DbConfigArray {
 	for i := 0; i < len(dbCfgs.Databases); i++ {
 		var database Database
 
-		fmt.Println(dbCfgs.Databases[i].Type)
+		// fmt.Println(dbCfgs.Databases[i].Type)
 		switch dbType := dbCfgs.Databases[i].Type; dbType {
 		case "mongo":
 			database = &mongoDatabase{cfg: &dbCfgs.Databases[i]}

@@ -74,7 +74,7 @@ func (s *Synch) parseLink(mpngStr string, i int, c chan bool) {
 		panic(err)
 	}
 
-	fmt.Println(rawLink)
+	// fmt.Println(rawLink)
 	in := createLink(s, rawLink)
 	s.Links = append(s.Links, in)
 
