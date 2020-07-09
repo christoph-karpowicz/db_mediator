@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"log"
 	"os"
 	"testing"
 )
@@ -14,10 +15,16 @@ func TestParser(t *testing.T) {
 			config.Validate()
 
 			for _, mapping := range config.Map {
-				ParseMapping(mapping)
+				_, err := ParseMapping(mapping)
+				if err != nil {
+					log.Fatalln(err)
+				}
 			}
 			for _, link := range config.Link {
-				ParseLink(link)
+				_, err := ParseLink(link)
+				if err != nil {
+					log.Fatalln(err)
+				}
 			}
 		}
 	}
