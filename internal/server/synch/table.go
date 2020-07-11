@@ -6,6 +6,6 @@ type table struct {
 	id         string
 	db         *db.Database
 	name       string
-	oldRecords *tableRecords
-	records    *tableRecords
+	oldRecords records
+	records    records
 }

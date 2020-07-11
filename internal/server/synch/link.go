@@ -8,9 +8,7 @@ import (
 
 // LinkReportData link data for simulation purposes.
 type LinkReportData struct {
-	InstructionIndex int
-	LinkIndex        int
-	Link             map[string]string
+	Link map[string]string
 }
 
 // Link represents a single link in the config file like:
@@ -26,10 +24,10 @@ type Link struct {
 	targetWhere            string
 	sourceExID             string
 	targetExID             string
-	sourceOldActiveRecords []*record
-	sourceActiveRecords    []*record
-	targetOldActiveRecords []*record
-	targetActiveRecords    []*record
+	sourceOldActiveRecords records
+	sourceActiveRecords    records
+	targetOldActiveRecords records
+	targetActiveRecords    records
 	pairs                  []*Pair
 	Rep                    *LinkReportData
 }
@@ -56,8 +54,8 @@ func createLink(synch *Synch, link map[string]string) *Link {
 		targetWhere:  link["targetWhere"],
 	}
 
-	if synch.GetConfig().MatchBy.Method == "ids" {
-		for _, marg := range synch.GetConfig().MatchBy.Args {
+	if synch.GetConfig().Match.Method == "ids" {
+		for _, marg := range synch.GetConfig().Match.Args {
 			margSplt := strings.Split(marg, ".")
 			margNode := margSplt[0]
 			margColumn := margSplt[1]
@@ -69,11 +67,7 @@ func createLink(synch *Synch, link map[string]string) *Link {
 		}
 	}
 
-	newLink.Rep = &LinkReportData{
-		// InstructionIndex: indexes[0],
-		// LinkIndex:        indexes[1],
-		Link: link,
-	}
+	newLink.Rep = &LinkReportData{link}
 
 	return &newLink
 }
@@ -84,7 +78,7 @@ func (l *Link) comparePair(src *record, c chan bool) {
 	for j := range l.targetActiveRecords {
 		target := l.targetActiveRecords[j]
 
-		if l.synch.GetConfig().MatchBy.Method == "ids" {
+		if l.synch.GetConfig().Match.Method == "ids" {
 			sourceExternalID, sourceOk := src.Data[l.sourceExID]
 			targetExternalID, targetOk := target.Data[l.targetExID]
 
@@ -130,4 +124,13 @@ func (l *Link) createPairs(wg *sync.WaitGroup) {
 	// 	}
 	// 	fmt.Println("======")
 	// }
+}
+
+func (l *Link) reset() {
+	l.sourceOldActiveRecords = nil
+	l.sourceActiveRecords = nil
+	l.targetOldActiveRecords = nil
+	l.targetActiveRecords = nil
+	l.pairs = nil
+	l.Rep = nil
 }

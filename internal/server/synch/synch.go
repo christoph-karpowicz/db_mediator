@@ -24,6 +24,7 @@ type Synch struct {
 	nodes      map[string]*node
 	mappings   []*Mapping
 	Links      []*Link
+	counters   *counters
 	running    bool
 	initial    bool
 	Simulation bool
@@ -43,16 +44,18 @@ func (s *Synch) Init(DBMap map[string]*db.Database) {
 	s.tables = make(map[string]*table)
 	s.nodes = make(map[string]*node)
 
-	s.setDatabases(DBMap)
-	s.setTables()
-	s.setNodes()
-	s.parseCfgLinks()
-	s.parseCfgMappings()
-	s.parseCfgMatcher()
+	if s.counters == nil {
+		s.counters = newCounters()
+		s.setDatabases(DBMap)
+		s.setTables()
+		s.setNodes()
+		s.parseCfgLinks()
+		s.parseCfgMappings()
+		s.parseCfgMatcher()
+	}
 	s.selectData()
 	s.pairData()
 
-	// fmt.Println(runtime.NumCPU())
 	fmt.Println("Synch init finished in: ", time.Since(tStart).String())
 }
 
@@ -120,8 +123,11 @@ func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
 }
 
 func (s *Synch) parseCfgMatcher() {
-	if s.GetConfig().MatchBy.Method == "ids" {
-		parsedMatcher, err := cfg.ParseIdsMatcherMethod(s.GetConfig().MatchBy.Args)
+	matcherMethod := s.GetConfig().Match.Method
+
+	switch matcherMethod {
+	case "ids":
+		parsedMatcher, err := cfg.ParseIdsMatcherMethod(s.GetConfig().Match.Args)
 		if err != nil {
 			panic(err)
 		}
@@ -134,6 +140,8 @@ func (s *Synch) parseCfgMatcher() {
 
 			node.setMatchColumn(arg[1])
 		}
+	default:
+		panic(errors.New("unknown match method"))
 	}
 }
 
@@ -144,10 +152,6 @@ func (s *Synch) selectData() {
 
 		sourceRawActiveRecords := (*lnk.source.db).Select(lnk.source.tbl.name, lnk.sourceWhere)
 		targetRawActiveRecords := (*lnk.target.db).Select(lnk.target.tbl.name, lnk.targetWhere)
-
-		// for _, v := range sourceRawActiveRecords {
-		// 	fmt.Println(v["film_id"])
-		// }
 
 		if !s.initial {
 			lnk.sourceOldActiveRecords = lnk.sourceActiveRecords
@@ -164,10 +168,9 @@ func (s *Synch) selectData() {
 			lnk.targetActiveRecords = append(lnk.targetActiveRecords, targetRecordPointer)
 			targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, lnk)
 		}
-		// log.Println(lnk.sourceActiveRecords)
-		// log.Println(lnk.targetActiveRecords)
-
 	}
+
+	s.counters.fullSelects++
 }
 
 func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
@@ -221,7 +224,7 @@ func (s *Synch) setTable(tableName string, database *db.Database) {
 			tbl.oldRecords = tbl.records
 		}
 
-		tbl.records = &tableRecords{records: mapToRecords(rawRecords)}
+		tbl.records = mapToRecords(rawRecords)
 		s.tables[tbl.id] = tbl
 	}
 }
@@ -246,5 +249,12 @@ func (s *Synch) Synchronize() {
 				log.Println(err)
 			}
 		}
+	}
+}
+
+// Reset clears data preparing the Synch for the next run.
+func (s *Synch) Reset() {
+	for _, lnk := range s.Links {
+		lnk.reset()
 	}
 }

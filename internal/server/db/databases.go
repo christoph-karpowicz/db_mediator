@@ -17,7 +17,7 @@ func (d *Databases) Init() {
 }
 
 func (d *Databases) getConfigs() *cfg.DbConfigArray {
-	var dbCfgs *cfg.DbConfigArray = cfg.GetDbConfig()
+	var dbCfgs *cfg.DbConfigArray = cfg.GetDbConfigs()
 
 	for i := 0; i < len(dbCfgs.Databases); i++ {
 		var database Database

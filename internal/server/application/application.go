@@ -5,6 +5,7 @@ I/O of the app.
 package application
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -28,7 +29,6 @@ func (a *Application) Init() {
 	a.dbs.Init()
 	a.synchs = synch.CreateSynchs()
 	a.synchs.Init()
-
 	a.listen()
 }
 
@@ -46,6 +46,7 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	}()
 
 	// fmt.Printf("%s - %s\n", synchType, synchKey)
+	fmt.Println(a.synchs)
 	synch, synchFound := a.synchs[synchKey]
 	if !synchFound {
 		panic("[synchronization search] '" + synchKey + "' not found.")
@@ -70,7 +71,8 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 
 	// Send the report to the http init handler.
 	resChan <- synchReport
-	// resChan <- "synchReport"
+
+	synch.Reset()
 }
 
 // synchronizeArray carries out aan array of synchronizations requested by the client.

@@ -39,7 +39,7 @@ func createPair(link *Link, source *record, target *record) *Pair {
 		link.source.cfg.Key,
 		source.Data[link.source.cfg.Key],
 		link.target.cfg.Key,
-		link.synch.GetConfig().MatchBy.Args[1],
+		link.target.matchColumn,
 	}
 
 	var newPair Pair = Pair{

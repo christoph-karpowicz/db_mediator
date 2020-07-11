@@ -37,7 +37,8 @@ func (d *DbConfigArray) Validate() {
 	}
 }
 
-func GetDbConfig() *DbConfigArray {
+// GetDbConfigs loads the database configs from databases.yaml file.
+func GetDbConfigs() *DbConfigArray {
 	var dbDataArr DbConfigArray = DbConfigArray{}
 	ImportYAMLFile(&dbDataArr, "./config/databases.yaml")
 	return &dbDataArr
