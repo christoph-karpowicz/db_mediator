@@ -53,7 +53,7 @@ func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, err
 	// var lnkIdx int = pair.Link.Rep.LinkIndex
 	actionJSON, err := pair.ReportJSON(actionType)
 	if err != nil {
-		return false, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+		return false, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
 
 	switch actionType {
@@ -89,7 +89,7 @@ func (r *Report) Finalize() ([]byte, error) {
 
 	toJSON, err := r.ToJSON()
 	if err != nil {
-		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+		return nil, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
 
 	return toJSON, nil
@@ -110,13 +110,13 @@ func (r *Report) MarshalJSON() ([]byte, error) {
 		Links     map[int]*link    `json:"links"`
 	}{
 		Msg:       r.msg,
-		SynchInfo: r.synch.Cfg,
+		SynchInfo: r.synch.GetConfig(),
 		Links:     linkMap,
 	}
 
 	marshalled, err := json.Marshal(&customStruct)
 	if err != nil {
-		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+		return nil, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
 
 	return marshalled, nil
@@ -127,7 +127,7 @@ func (r *Report) ToJSON() ([]byte, error) {
 	// fmt.Println(s)
 	marshalled, err := json.Marshal(r)
 	if err != nil {
-		return nil, &ReportError{SynchName: r.synch.Cfg.Name, ErrMsg: err.Error()}
+		return nil, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
 	// fmt.Print(string(marshalled))
 

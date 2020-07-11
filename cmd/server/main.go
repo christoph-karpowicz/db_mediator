@@ -11,7 +11,7 @@ import (
 func main() {
 
 	args := os.Args
-	if len(args) > 2 && args[1] == "debug" {
+	if len(args) > 1 && args[1] == "debug" {
 		os.Chdir("../..")
 	}
 

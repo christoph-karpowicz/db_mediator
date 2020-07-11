@@ -4,6 +4,7 @@ Package synch handles all data sychronization.
 package synch
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -17,7 +18,7 @@ import (
 // Synch represents an individual synchronzation configration.
 // It holds all configuration from an .yaml file, raw and parsed.
 type Synch struct {
-	Cfg        *cfg.SynchConfig
+	cfg        *cfg.SynchConfig
 	dbs        map[string]*db.Database
 	tables     map[string]*table
 	nodes      map[string]*node
@@ -31,7 +32,7 @@ type Synch struct {
 
 // GetConfig returns the synch config struct.
 func (s *Synch) GetConfig() *cfg.SynchConfig {
-	return s.Cfg
+	return s.cfg
 }
 
 // Init prepares the synchronization by fetching all necessary data
@@ -45,8 +46,9 @@ func (s *Synch) Init(DBMap map[string]*db.Database) {
 	s.setDatabases(DBMap)
 	s.setTables()
 	s.setNodes()
-	s.parseLinks()
-	s.parseMappings()
+	s.parseCfgLinks()
+	s.parseCfgMappings()
+	s.parseCfgMatcher()
 	s.selectData()
 	s.pairData()
 
@@ -65,7 +67,19 @@ func (s *Synch) pairData() {
 		go lnk.createPairs(&wg)
 		wg.Wait()
 	}
+}
 
+func (s *Synch) parseCfgLinks() {
+	var ch chan bool
+	ch = make(chan bool)
+
+	for i, mapping := range s.cfg.Link {
+		go s.parseLink(mapping, i, ch)
+	}
+
+	for i := 0; i < len(s.cfg.Link); i++ {
+		<-ch
+	}
 }
 
 func (s *Synch) parseLink(mpngStr string, i int, c chan bool) {
@@ -74,22 +88,21 @@ func (s *Synch) parseLink(mpngStr string, i int, c chan bool) {
 		panic(err)
 	}
 
-	// fmt.Println(rawLink)
 	in := createLink(s, rawLink)
 	s.Links = append(s.Links, in)
 
 	c <- true
 }
 
-func (s *Synch) parseLinks() {
+func (s *Synch) parseCfgMappings() {
 	var ch chan bool
 	ch = make(chan bool)
 
-	for i, mapping := range s.Cfg.Link {
-		go s.parseLink(mapping, i, ch)
+	for i, mapping := range s.cfg.Map {
+		go s.parseMapping(mapping, i, ch)
 	}
 
-	for i := 0; i < len(s.Cfg.Link); i++ {
+	for i := 0; i < len(s.cfg.Map); i++ {
 		<-ch
 	}
 }
@@ -106,16 +119,21 @@ func (s *Synch) parseMapping(mpngStr string, i int, c chan bool) {
 	c <- true
 }
 
-func (s *Synch) parseMappings() {
-	var ch chan bool
-	ch = make(chan bool)
+func (s *Synch) parseCfgMatcher() {
+	if s.GetConfig().MatchBy.Method == "ids" {
+		parsedMatcher, err := cfg.ParseIdsMatcherMethod(s.GetConfig().MatchBy.Args)
+		if err != nil {
+			panic(err)
+		}
 
-	for i, mapping := range s.Cfg.Map {
-		go s.parseMapping(mapping, i, ch)
-	}
+		for _, arg := range parsedMatcher {
+			node, found := s.nodes[arg[0]]
+			if !found {
+				panic(errors.New("node name not found"))
+			}
 
-	for i := 0; i < len(s.Cfg.Map); i++ {
-		<-ch
+			node.setMatchColumn(arg[1])
+		}
 	}
 }
 
@@ -165,16 +183,16 @@ func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
 
 // setDatabases opens the chosen database connections.
 func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
-	for j := range s.Cfg.Nodes {
-		var nodeConfig *cfg.NodeConfig = &s.Cfg.Nodes[j]
+	for j := range s.cfg.Nodes {
+		var nodeConfig *cfg.NodeConfig = &s.cfg.Nodes[j]
 		s.setDatabase(DBMap, nodeConfig.Database)
 	}
 }
 
 // setNodes creates node structs and adds them to the relevant synch struct field.
 func (s *Synch) setNodes() {
-	for i := range s.Cfg.Nodes {
-		var nodeConfig *cfg.NodeConfig = &s.Cfg.Nodes[i]
+	for i := range s.cfg.Nodes {
+		var nodeConfig *cfg.NodeConfig = &s.cfg.Nodes[i]
 
 		var tableName string = nodeConfig.Database + "." + nodeConfig.Table
 		_, tableFound := s.tables[tableName]
@@ -210,8 +228,8 @@ func (s *Synch) setTable(tableName string, database *db.Database) {
 
 // setTables creates table structs based on node yaml data.
 func (s *Synch) setTables() {
-	for j := range s.Cfg.Nodes {
-		var nodeConfig *cfg.NodeConfig = &s.Cfg.Nodes[j]
+	for j := range s.cfg.Nodes {
+		var nodeConfig *cfg.NodeConfig = &s.cfg.Nodes[j]
 		s.setTable(nodeConfig.Table, s.dbs[nodeConfig.Database])
 	}
 }

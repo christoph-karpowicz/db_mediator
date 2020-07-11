@@ -24,6 +24,14 @@ func (e *mappingParserError) Error() string {
 	return fmt.Sprintf("[mapping parser] %s", e.errMsg)
 }
 
+type matcherParserError struct {
+	errMsg string
+}
+
+func (e *matcherParserError) Error() string {
+	return fmt.Sprintf("['match by' parser] %s", e.errMsg)
+}
+
 // ParseLink uses regexp to split the link string into smaller parts.
 func ParseLink(link string) (map[string]string, error) {
 	result := make(map[string]string)
@@ -115,7 +123,7 @@ func validateLink(link string) error {
 
 // ParseLinkWhere uses regexp to split the link's where clause into smaller parts.
 func ParseLinkWhere(where string) string {
-	ptrn := `(?iU)^\s+WHERE\s+`
+	ptrn := `(?iU)^\s*WHERE\s+`
 	compiledPtrn := regexp.MustCompile(ptrn)
 	result := compiledPtrn.ReplaceAll([]byte(where), []byte(""))
 	resultAsString := string(result)
@@ -184,6 +192,46 @@ func validateMapping(mapping string) error {
 	if len(errorsArr) > 1 {
 		errorsArrJoined := strings.Join(errorsArr, "\n")
 		err = &mappingParserError{errMsg: errorsArrJoined}
+	}
+	return err
+}
+
+// ParseIdsMatcherMethod prepares "ids" method's arguments.
+func ParseIdsMatcherMethod(args []string) ([][]string, error) {
+	argsSplt := make([][]string, 0)
+	for _, arg := range args {
+		argSplt := strings.Split(arg, ".")
+		argsSplt = append(argsSplt, argSplt)
+	}
+
+	validationErr := validateIdsMatcherMethod(args, argsSplt)
+	if validationErr != nil {
+		return nil, validationErr
+	}
+
+	return argsSplt, nil
+}
+
+func validateIdsMatcherMethod(args []string, argsSplt [][]string) error {
+	errorsArr := make([]string, 0)
+	var err error = nil
+
+	if len(args) > 2 {
+		errorsArr = append(errorsArr, "too many arguments given for this match method")
+	}
+	if len(args) < 2 {
+		errorsArr = append(errorsArr, "too few arguments given for this match method")
+	}
+	if len(args) == 2 && (len(argsSplt[0]) != 2 || len(argsSplt[1]) != 2) {
+		errorsArr = append(errorsArr, "each argument has to consist of node name and ID column name separated by a dot")
+	}
+	if len(errorsArr) == 0 && argsSplt[0][0] == argsSplt[1][0] {
+		errorsArr = append(errorsArr, "\"ids\" match method accepts only external ID column names from different nodes")
+	}
+
+	if len(errorsArr) > 0 {
+		errorsArrJoined := strings.Join(errorsArr, "\n")
+		err = &matcherParserError{errMsg: errorsArrJoined}
 	}
 	return err
 }

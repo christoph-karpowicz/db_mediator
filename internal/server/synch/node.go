@@ -6,9 +6,10 @@ import (
 )
 
 type node struct {
-	cfg *cfg.NodeConfig
-	db  *db.Database
-	tbl *table
+	cfg         *cfg.NodeConfig
+	db          *db.Database
+	tbl         *table
+	matchColumn string
 }
 
 func createNode(cfg *cfg.NodeConfig, db *db.Database, tbl *table) *node {
@@ -18,4 +19,8 @@ func createNode(cfg *cfg.NodeConfig, db *db.Database, tbl *table) *node {
 		tbl: tbl,
 	}
 	return &newNode
+}
+
+func (n *node) setMatchColumn(col string) {
+	n.matchColumn = col
 }

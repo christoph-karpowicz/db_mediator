@@ -10,11 +10,12 @@ import (
 )
 
 type pairSynchData struct {
-	targetDb       db.Database
-	tableName      string
-	sourceKeyName  string
-	sourceKeyValue interface{}
-	targetKeyName  string
+	targetDb        db.Database
+	tableName       string
+	sourceKeyName   string
+	sourceKeyValue  interface{}
+	targetKeyName   string
+	targetExtIDName string
 }
 
 // Pair represents a connection between two records, that are going
@@ -38,6 +39,7 @@ func createPair(link *Link, source *record, target *record) *Pair {
 		link.source.cfg.Key,
 		source.Data[link.source.cfg.Key],
 		link.target.cfg.Key,
+		link.synch.GetConfig().MatchBy.Args[1],
 	}
 
 	var newPair Pair = Pair{
@@ -52,7 +54,7 @@ func createPair(link *Link, source *record, target *record) *Pair {
 
 // Synchronize carries out the synchronization of the two records.
 func (p Pair) Synchronize() (bool, error) {
-	if p.target != nil && arrUtil.Contains(p.Link.synch.Cfg.Do, "UPDATE") {
+	if p.target != nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "UPDATE") {
 		// Updates
 		// If this pair is complete.
 		// log.Println(p.source)
@@ -82,7 +84,7 @@ func (p Pair) Synchronize() (bool, error) {
 				panic(err)
 			}
 		}
-	} else if p.target == nil && arrUtil.Contains(p.Link.synch.Cfg.Do, "INSERT") {
+	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
 		// log.Println(p.source)
@@ -104,7 +106,7 @@ func (p Pair) Synchronize() (bool, error) {
 func (p Pair) doUpdate(sourceColumnValue interface{}) {
 	upDto := db.UpdateDto{
 		p.synchData.tableName,
-		p.synchData.sourceKeyName,
+		p.synchData.targetExtIDName,
 		p.synchData.sourceKeyValue,
 		p.Link.targetColumn,
 		sourceColumnValue,
@@ -122,7 +124,7 @@ func (p Pair) doUpdate(sourceColumnValue interface{}) {
 func (p Pair) doInsert() {
 	inDto := db.InsertDto{
 		p.synchData.tableName,
-		p.synchData.sourceKeyName,
+		p.synchData.targetExtIDName,
 		p.synchData.sourceKeyValue,
 		p.source.Data,
 	}

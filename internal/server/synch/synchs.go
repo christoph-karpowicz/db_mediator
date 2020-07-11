@@ -7,6 +7,7 @@ import (
 // Synchs is a collection of all synchronizations.
 type Synchs map[string]*Synch
 
+// Init loads configs from files and validates them.
 func (s *Synchs) Init() {
 	s.getConfigs()
 	s.validateConfigs()
@@ -17,7 +18,7 @@ func (s *Synchs) getConfigs() {
 
 	for i := 0; i < len(synchCfgs); i++ {
 		synchCfg := synchCfgs[i]
-		(*s)[synchCfgs[i].Name] = &Synch{Cfg: synchCfg, initial: true}
+		(*s)[synchCfgs[i].Name] = &Synch{cfg: synchCfg, initial: true}
 		// fmt.Printf("val: %s\n", dbDataArr.Databases[i].Name)
 	}
 }

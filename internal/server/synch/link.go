@@ -56,8 +56,8 @@ func createLink(synch *Synch, link map[string]string) *Link {
 		targetWhere:  link["targetWhere"],
 	}
 
-	if synch.Cfg.MatchBy.Method == "ids" {
-		for _, marg := range synch.Cfg.MatchBy.Args {
+	if synch.GetConfig().MatchBy.Method == "ids" {
+		for _, marg := range synch.GetConfig().MatchBy.Args {
 			margSplt := strings.Split(marg, ".")
 			margNode := margSplt[0]
 			margColumn := margSplt[1]
@@ -84,7 +84,7 @@ func (l *Link) comparePair(src *record, c chan bool) {
 	for j := range l.targetActiveRecords {
 		target := l.targetActiveRecords[j]
 
-		if l.synch.Cfg.MatchBy.Method == "ids" {
+		if l.synch.GetConfig().MatchBy.Method == "ids" {
 			sourceExternalID, sourceOk := src.Data[l.sourceExID]
 			targetExternalID, targetOk := target.Data[l.targetExID]
 
