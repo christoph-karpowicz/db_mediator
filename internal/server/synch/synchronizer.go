@@ -11,5 +11,5 @@ type Synchronizer interface {
 	GetReporter() unifier.Reporter
 	GetNodes() map[string]*node
 	IsSimulation() bool
-	Synchronize()
+	Run()
 }

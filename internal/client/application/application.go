@@ -31,6 +31,96 @@ func (a *Application) Init() {
 	}
 }
 
+// setCLI configures the app's command line interface.
+func (a *Application) setCLI() {
+	a.CLI = cli.NewApp()
+	a.CLI.UseShortOptionHandling = true
+
+	a.CLI.Name = "Unifier cli"
+	a.CLI.Usage = "Database synchronization app."
+	author := &cli.Author{Name: "Krzysztof Karpowicz", Email: "christoph.karpowicz@gmail.com"}
+	a.CLI.Authors = append(a.CLI.Authors, author)
+	a.CLI.Version = "1.0.0"
+
+	a.CLI.Commands = []*cli.Command{
+		{
+			Name:  "run",
+			Usage: "Start specified synchronization.",
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "simulate",
+					Aliases: []string{"s"},
+					Usage:   "Simulate a synchronization and show what changes would be made.",
+				},
+				&cli.StringFlag{
+					Name:    "type",
+					Aliases: []string{"t"},
+					Usage:   "Specify the type of synchronization.",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				var synchType string
+				synchTypeFlag := c.String("t")
+				simulateFlag := c.Bool("simulate")
+
+				switch true {
+				case synchTypeFlag == "" || synchTypeFlag == "oo" || synchTypeFlag == "one-off":
+					synchType = "one-off"
+				case synchTypeFlag == "ng" || synchTypeFlag == "ongoing":
+					synchType = "ongoing"
+				default:
+					log.Fatalln("ERROR: unknown synchronization type: " + synchTypeFlag + ".")
+				}
+
+				a.runSynch(synchType, c.Args().Get(0), simulateFlag)
+
+				return nil
+			},
+		},
+		{
+			Name:  "stop",
+			Usage: "Stop specified synchronization.",
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "all",
+					Aliases: []string{"a"},
+					Usage:   "Stop all synchronizations.",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				allFlag := c.Bool("all")
+
+				a.stopSynch(c.Args().Get(0), allFlag)
+
+				return nil
+			},
+		},
+	}
+}
+
+// runSynch prepares the parameters for a synchronization run request and invokes a GET function.
+func (a *Application) runSynch(synchType string, synchName string, simulation bool) {
+	paramMap := make(map[string]string)
+	paramMap["type"] = synchType
+	paramMap["run"] = synchName
+	paramMap["simulation"] = strconv.FormatBool(simulation)
+
+	response := a.makeGETRequest("http://localhost:8000/run", paramMap)
+
+	printRunResponse(response, synchType)
+}
+
+// stopSynch prepares the parameters for a synchronization stop request and invokes a GET function.
+func (a *Application) stopSynch(synchName string, all bool) {
+	paramMap := make(map[string]string)
+	paramMap["stop"] = synchName
+	paramMap["all"] = strconv.FormatBool(all)
+
+	response := a.makeGETRequest("http://localhost:8000/stop", paramMap)
+
+	printStopResponse(response)
+}
+
 func (a *Application) makeGETRequest(url string, params map[string]string) map[string]interface{} {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -61,65 +151,4 @@ func (a *Application) makeGETRequest(url string, params map[string]string) map[s
 	// fmt.Println(string(resBody))
 
 	return parseResponse(resBody)
-}
-
-// RequestSynch prepares the parameters for a synchronization request and invokes a GET function.
-func (a *Application) RequestSynch(synchType string, synchName string, simulation bool) {
-	paramMap := make(map[string]string)
-	paramMap["type"] = synchType
-	paramMap["synch"] = synchName
-	paramMap["simulation"] = strconv.FormatBool(simulation)
-
-	response := a.makeGETRequest("http://localhost:8000/init", paramMap)
-
-	printResponse(response, synchType)
-}
-
-// setCLI configures the app's command line interface.
-func (a *Application) setCLI() {
-	a.CLI = cli.NewApp()
-	a.CLI.UseShortOptionHandling = true
-
-	a.CLI.Name = "Unifier cli"
-	a.CLI.Usage = "Database synchronization app."
-	author := &cli.Author{Name: "Krzysztof Karpowicz", Email: "christoph.karpowicz@gmail.com"}
-	a.CLI.Authors = append(a.CLI.Authors, author)
-	a.CLI.Version = "1.0.0"
-
-	a.CLI.Commands = []*cli.Command{
-		{
-			Name:  "synch",
-			Usage: "Start synchronization.",
-			Flags: []cli.Flag{
-				&cli.BoolFlag{
-					Name:    "simulate",
-					Aliases: []string{"s"},
-					Usage:   "Simulate a synchronization and show what changes would be made.",
-				},
-				&cli.StringFlag{
-					Name:    "type",
-					Aliases: []string{"t"},
-					Usage:   "Specify the type of synchronization.",
-				},
-			},
-			Action: func(c *cli.Context) error {
-				var synchType string
-				synchTypeFlag := c.String("t")
-				simulateFlag := c.Bool("simulate")
-
-				switch true {
-				case synchTypeFlag == "" || synchTypeFlag == "oo" || synchTypeFlag == "one-off":
-					synchType = "one-off"
-				case synchTypeFlag == "ng" || synchTypeFlag == "ongoing":
-					synchType = "ongoing"
-				default:
-					log.Fatalln("ERROR: unknown synchronization type: " + synchTypeFlag + ".")
-				}
-
-				a.RequestSynch(synchType, c.Args().Get(0), simulateFlag)
-
-				return nil
-			},
-		},
-	}
 }

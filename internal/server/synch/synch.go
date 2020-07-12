@@ -52,6 +52,10 @@ func (s *Synch) GetNodes() map[string]*node {
 	return s.nodes
 }
 
+func (s *Synch) IsRunning() bool {
+	return s.running
+}
+
 func (s *Synch) IsSimulation() bool {
 	return s.simulation
 }
@@ -78,8 +82,6 @@ func (s *Synch) Init(DBMap map[string]*db.Database) {
 		s.parseCfgMappings()
 		s.parseCfgMatcher()
 	}
-	s.selectData()
-	s.pairData()
 
 	fmt.Println("Synch init finished in: ", time.Since(tStart).String())
 }
@@ -262,8 +264,22 @@ func (s *Synch) setTables() {
 	}
 }
 
-// Synchronize loops over all pairs in all mappings and invokes their Synchronize function.
-func (s *Synch) Synchronize() {
+// Run executes a single run of the synchronization.
+func (s *Synch) Run() {
+	s.running = true
+
+	s.selectData()
+	s.pairData()
+	s.synchronize()
+}
+
+// Stop stops the synch.
+func (s *Synch) Stop() {
+	s.running = false
+}
+
+// synchronize loops over all pairs in all mappings and invokes their synchronize function.
+func (s *Synch) synchronize() {
 	for i := range s.Links {
 		var lnk *Link = s.Links[i]
 
@@ -277,6 +293,8 @@ func (s *Synch) Synchronize() {
 	}
 }
 
+// SetInitial sets the initial struct field indicating whether
+// it's the first run of the synch.
 func (s *Synch) SetInitial(ini bool) {
 	s.initial = ini
 }

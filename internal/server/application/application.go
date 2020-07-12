@@ -5,7 +5,9 @@ I/O of the app.
 package application
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	"github.com/christoph-karpowicz/unifier/internal/server/report"
@@ -32,7 +34,8 @@ func (a *Application) Init() {
 }
 
 func (a *Application) listen() {
-	http.Handle("/init", &initHandler{app: a})
+	http.Handle("/run", &runHandler{app: a})
+	http.Handle("/stop", &stopHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 
@@ -58,8 +61,16 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	synch.GetReporter().Init()
 
 	// Carry out all synch actions.
-	synch.Synchronize()
+	synch.Run()
 	synch.SetInitial(false)
+
+	if synchType == "ongoing" {
+		for synch.IsRunning() {
+			fmt.Println("run")
+			synch.Run()
+			time.Sleep(5 * time.Second)
+		}
+	}
 
 	// Gather and marshal results.
 	synchReport, err := synch.GetReporter().Finalize()
@@ -71,6 +82,40 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	resChan <- synchReport
 
 	synch.Reset()
+}
+
+// synchronize carries out a synchronization requested by the client.
+func (a *Application) stop(resChan chan interface{}, synchKey string, all bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			resChan <- r.(error)
+		}
+	}()
+
+	if !all {
+		for _, synch := range a.synchs {
+			synch.Stop()
+			synch.Reset()
+		}
+	} else {
+		synch, synchFound := a.synchs[synchKey]
+		if !synchFound {
+			panic("[synchronization search] '" + synchKey + "' not found.")
+		}
+
+		synch.Stop()
+		synch.Reset()
+	}
+
+	// Gather and marshal results.
+	// synchReport, err := synch.GetReporter().Finalize()
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// Send the report to the http init handler.
+	// resChan <- synchReport
+	resChan <- "stopped"
 }
 
 // synchronizeArray carries out aan array of synchronizations requested by the client.

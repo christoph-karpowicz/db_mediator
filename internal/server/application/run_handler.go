@@ -8,19 +8,19 @@ import (
 	"strconv"
 )
 
-type initHandler struct {
+type runHandler struct {
 	app *Application
 }
 
-func (h *initHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *runHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	synchType, ok := r.URL.Query()["type"]
 	if !ok || len(synchType[0]) < 1 {
 		log.Fatalln("[http request] ERROR: URL param 'type' is missing.")
 	}
 
-	synch, ok := r.URL.Query()["synch"]
-	if !ok || len(synch[0]) < 1 {
-		log.Fatalln("[http request] ERROR: URL param 'synch' is missing.")
+	run, ok := r.URL.Query()["run"]
+	if !ok || len(run[0]) < 1 {
+		log.Fatalln("[http request] ERROR: URL param 'run' is missing.")
 	}
 
 	simulationStr, ok := r.URL.Query()["simulation"]
@@ -32,9 +32,9 @@ func (h *initHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln("[http request] ERROR: Wrong 'simulation' URL param value.")
 	}
 
-	// A reponse channel can receive data of type 'error' or []byte.
+	// A response channel can receive data of type 'error' or []byte.
 	resChan := make(chan interface{})
-	go h.app.synchronize(resChan, synchType[0], synch[0], simulation)
+	go h.app.synchronize(resChan, synchType[0], run[0], simulation)
 
 	response := createResponse(<-resChan)
 	responseJSON, err := json.Marshal(response)

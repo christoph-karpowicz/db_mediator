@@ -23,13 +23,13 @@ type Report struct {
 	links map[string]*link
 }
 
-// ReportError is a custom report error.
-type ReportError struct {
+// SynchReportError is a custom report error.
+type SynchReportError struct {
 	SynchName string `json:"synchName"`
 	ErrMsg    string `json:"errMsg"`
 }
 
-func (e *ReportError) Error() string {
+func (e *SynchReportError) Error() string {
 	return fmt.Sprintf("['%s' synch report] %s", e.SynchName, e.ErrMsg)
 }
 
@@ -49,22 +49,19 @@ func CreateReport(s *synch.Synch) unifier.Reporter {
 // 	2.	insert
 // 	3. 	update
 func (r *Report) AddAction(p unifier.Pairable, actionType string) (bool, error) {
-	var pair unifier.Pairable = p.(unifier.Pairable)
-	// var lnkIdx int = pair.Link.Rep.LinkIndex
-	actionJSON, err := pair.ReportJSON(actionType)
+	actionJSON, err := p.ReportJSON(actionType)
 	if err != nil {
-		return false, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
+		return false, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
 
 	switch actionType {
 	case "idle":
-		r.links[pair.GetLinkID()].Idle = append(r.links[pair.GetLinkID()].Idle, string(actionJSON))
+		r.links[p.GetLinkID()].Idle = append(r.links[p.GetLinkID()].Idle, string(actionJSON))
 	case "insert":
-		r.links[pair.GetLinkID()].Inserts = append(r.links[pair.GetLinkID()].Inserts, string(actionJSON))
+		r.links[p.GetLinkID()].Inserts = append(r.links[p.GetLinkID()].Inserts, string(actionJSON))
 	case "update":
-		r.links[pair.GetLinkID()].Updates = append(r.links[pair.GetLinkID()].Updates, string(actionJSON))
+		r.links[p.GetLinkID()].Updates = append(r.links[p.GetLinkID()].Updates, string(actionJSON))
 	}
-	// fmt.Print(string(actionJSON))
 
 	return true, nil
 }
@@ -89,7 +86,7 @@ func (r *Report) Finalize() ([]byte, error) {
 
 	toJSON, err := r.ToJSON()
 	if err != nil {
-		return nil, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
+		return nil, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
 
 	return toJSON, nil
@@ -116,7 +113,7 @@ func (r *Report) MarshalJSON() ([]byte, error) {
 
 	marshalled, err := json.Marshal(&customStruct)
 	if err != nil {
-		return nil, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
+		return nil, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
 
 	return marshalled, nil
@@ -124,12 +121,10 @@ func (r *Report) MarshalJSON() ([]byte, error) {
 
 // ToJSON turns the report into a JSON object.
 func (r *Report) ToJSON() ([]byte, error) {
-	// fmt.Println(s)
 	marshalled, err := json.Marshal(r)
 	if err != nil {
-		return nil, &ReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
+		return nil, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 	}
-	// fmt.Print(string(marshalled))
 
 	return marshalled, nil
 }
