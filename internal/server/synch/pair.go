@@ -69,17 +69,17 @@ func (p Pair) Synchronize() (bool, error) {
 			// fmt.Println(sourceColumnValue)
 			// fmt.Println(targetColumnValue)
 
-			if !p.Link.synch.Simulation {
+			if !p.Link.synch.IsSimulation() {
 				p.doUpdate(sourceColumnValue)
 			}
 
-			_, err := p.Link.synch.Rep.AddAction(p, "update")
+			_, err := p.Link.synch.GetReporter().AddAction(p, "update")
 			if err != nil {
 				panic(err)
 			}
-			// fmt.Println(p.Link.synch.Simulation)
+			// fmt.Println(p.Link.synch.IsSimulation())
 		} else {
-			_, err := p.Link.synch.Rep.AddAction(p, "idle")
+			_, err := p.Link.synch.GetReporter().AddAction(p, "idle")
 			if err != nil {
 				panic(err)
 			}
@@ -90,11 +90,11 @@ func (p Pair) Synchronize() (bool, error) {
 		// log.Println(p.source)
 		// log.Println(p.target)
 
-		if !p.Link.synch.Simulation {
+		if !p.Link.synch.IsSimulation() {
 			p.doInsert()
 		}
 
-		_, err := p.Link.synch.Rep.AddAction(p, "insert")
+		_, err := p.Link.synch.GetReporter().AddAction(p, "insert")
 		if err != nil {
 			panic(err)
 		}
@@ -184,4 +184,8 @@ func (p Pair) ReportJSON(actionType string) ([]byte, error) {
 	}
 
 	return json.Marshal(&actionStruct)
+}
+
+func (p Pair) GetLinkID() string {
+	return p.Link.GetID()
 }

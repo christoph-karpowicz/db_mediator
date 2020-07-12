@@ -4,6 +4,8 @@ import (
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 // LinkReportData link data for simulation purposes.
@@ -14,7 +16,8 @@ type LinkReportData struct {
 // Link represents a single link in the config file like:
 // [example_node1.example_column1 WHERE ...] TO [example_node2.example_column2 WHERE ...]
 type Link struct {
-	synch                  *Synch
+	id                     string
+	synch                  Synchronizer
 	Cmd                    string
 	source                 *node
 	target                 *node
@@ -32,22 +35,23 @@ type Link struct {
 	Rep                    *LinkReportData
 }
 
-func createLink(synch *Synch, link map[string]string) *Link {
+func createLink(synch Synchronizer, link map[string]string) *Link {
 
-	_, sourceNodeFound := synch.nodes[link["sourceNode"]]
+	_, sourceNodeFound := synch.GetNodes()[link["sourceNode"]]
 	if !sourceNodeFound {
 		panic("[create link] ERROR: source node not found.")
 	}
-	_, targetNodeFound := synch.nodes[link["targetNode"]]
+	_, targetNodeFound := synch.GetNodes()[link["targetNode"]]
 	if !targetNodeFound {
 		panic("[create link] ERROR: target node not found.")
 	}
 
 	newLink := Link{
+		id:           uuid.New().String(),
 		synch:        synch,
 		Cmd:          link["cmd"],
-		source:       synch.nodes[link["sourceNode"]],
-		target:       synch.nodes[link["targetNode"]],
+		source:       synch.GetNodes()[link["sourceNode"]],
+		target:       synch.GetNodes()[link["targetNode"]],
 		sourceColumn: link["sourceColumn"],
 		targetColumn: link["targetColumn"],
 		sourceWhere:  link["sourceWhere"],
@@ -72,6 +76,10 @@ func createLink(synch *Synch, link map[string]string) *Link {
 	return &newLink
 }
 
+func (l Link) GetID() string {
+	return l.id
+}
+
 func (l *Link) comparePair(src *record, c chan bool) {
 	var pairFound bool = false
 
@@ -85,8 +93,6 @@ func (l *Link) comparePair(src *record, c chan bool) {
 			if !sourceOk || !targetOk {
 				continue
 			}
-
-			// fmt.Printf("%s - %s\n", sourceExternalID, targetExternalID)
 
 			if areEqual, err := areEqual(sourceExternalID, targetExternalID); err != nil {
 				log.Println(err)

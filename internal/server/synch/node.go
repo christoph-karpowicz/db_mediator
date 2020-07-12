@@ -5,6 +5,8 @@ import (
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 )
 
+// node holds all the data necessary for
+// data exchange.
 type node struct {
 	cfg         *cfg.NodeConfig
 	db          *db.Database

@@ -5,7 +5,6 @@ I/O of the app.
 package application
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -45,26 +44,25 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 		}
 	}()
 
-	// fmt.Printf("%s - %s\n", synchType, synchKey)
-	fmt.Println(a.synchs)
 	synch, synchFound := a.synchs[synchKey]
 	if !synchFound {
 		panic("[synchronization search] '" + synchKey + "' not found.")
 	}
 
-	synch.Simulation = simulation
-	synch.Rep = report.CreateReport(synch)
+	synch.SetSimulation()
+	synch.SetReporter(report.CreateReport(synch))
 
 	// Initialize synchronization.
 	synch.Init(a.dbs)
 	// Initialize report data structures.
-	synch.Rep.Init()
+	synch.GetReporter().Init()
 
 	// Carry out all synch actions.
 	synch.Synchronize()
+	synch.SetInitial(false)
 
 	// Gather and marshal results.
-	synchReport, err := synch.Rep.Finalize()
+	synchReport, err := synch.GetReporter().Finalize()
 	if err != nil {
 		panic(err)
 	}

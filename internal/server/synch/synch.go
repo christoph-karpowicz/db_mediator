@@ -27,13 +27,38 @@ type Synch struct {
 	counters   *counters
 	running    bool
 	initial    bool
-	Simulation bool
-	Rep        unifier.Reporter
+	simulation bool
+	rep        unifier.Reporter
 }
 
 // GetConfig returns the synch config struct.
 func (s *Synch) GetConfig() *cfg.SynchConfig {
 	return s.cfg
+}
+
+// GetReporter returns the reporter struct.
+func (s *Synch) GetReporter() unifier.Reporter {
+	return s.rep
+}
+
+// SetReporter inects a Reporter to the struct.
+func (s *Synch) SetReporter(rep unifier.Reporter) {
+	s.rep = rep
+}
+
+// GetNodes returns all nodes between which
+// synchronization takes place.
+func (s *Synch) GetNodes() map[string]*node {
+	return s.nodes
+}
+
+func (s *Synch) IsSimulation() bool {
+	return s.simulation
+}
+
+// SetSimulation sets the synch as a simulation.
+func (s *Synch) SetSimulation() {
+	s.simulation = true
 }
 
 // Init prepares the synchronization by fetching all necessary data
@@ -250,6 +275,10 @@ func (s *Synch) Synchronize() {
 			}
 		}
 	}
+}
+
+func (s *Synch) SetInitial(ini bool) {
+	s.initial = ini
 }
 
 // Reset clears data preparing the Synch for the next run.

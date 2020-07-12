@@ -20,7 +20,7 @@ type link struct {
 type Report struct {
 	msg   string
 	synch *synch.Synch
-	links map[*synch.Link]*link
+	links map[string]*link
 }
 
 // ReportError is a custom report error.
@@ -37,7 +37,7 @@ func (e *ReportError) Error() string {
 func CreateReport(s *synch.Synch) unifier.Reporter {
 	var newReport Report = Report{
 		synch: s,
-		links: make(map[*synch.Link]*link),
+		links: make(map[string]*link),
 	}
 
 	return &newReport
@@ -48,8 +48,8 @@ func CreateReport(s *synch.Synch) unifier.Reporter {
 // 	1.	idle - means two records that have been paired, but no action will be carried out because the relevant data is the same.
 // 	2.	insert
 // 	3. 	update
-func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, error) {
-	var pair synch.Pair = p.(synch.Pair)
+func (r *Report) AddAction(p unifier.Pairable, actionType string) (bool, error) {
+	var pair unifier.Pairable = p.(unifier.Pairable)
 	// var lnkIdx int = pair.Link.Rep.LinkIndex
 	actionJSON, err := pair.ReportJSON(actionType)
 	if err != nil {
@@ -58,11 +58,11 @@ func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, err
 
 	switch actionType {
 	case "idle":
-		r.links[pair.Link].Idle = append(r.links[pair.Link].Idle, string(actionJSON))
+		r.links[pair.GetLinkID()].Idle = append(r.links[pair.GetLinkID()].Idle, string(actionJSON))
 	case "insert":
-		r.links[pair.Link].Inserts = append(r.links[pair.Link].Inserts, string(actionJSON))
+		r.links[pair.GetLinkID()].Inserts = append(r.links[pair.GetLinkID()].Inserts, string(actionJSON))
 	case "update":
-		r.links[pair.Link].Updates = append(r.links[pair.Link].Updates, string(actionJSON))
+		r.links[pair.GetLinkID()].Updates = append(r.links[pair.GetLinkID()].Updates, string(actionJSON))
 	}
 	// fmt.Print(string(actionJSON))
 
@@ -72,16 +72,16 @@ func (r *Report) AddAction(p unifier.Synchronizer, actionType string) (bool, err
 // Init fills the necessary fields after the Synch instance finished its Init execution.
 func (r *Report) Init() {
 	for _, lnk := range r.synch.Links {
-		_, lnkExists := r.links[lnk]
+		_, lnkExists := r.links[lnk.GetID()]
 		if !lnkExists {
-			r.links[lnk] = &link{Cmd: lnk.Cmd}
+			r.links[lnk.GetID()] = &link{Cmd: lnk.Cmd}
 		}
 	}
 }
 
 // Finalize wraps up the report creation process.
 func (r *Report) Finalize() ([]byte, error) {
-	if r.synch.Simulation {
+	if r.synch.IsSimulation() {
 		r.msg = "'" + r.synch.GetConfig().Name + "' simulation was successful. The report contains changes that would be made if you requested an actual synchronization."
 	} else {
 		r.msg = "'" + r.synch.GetConfig().Name + "' synchronization was successful. The report contains changes that have been made to the relevant nodes."
