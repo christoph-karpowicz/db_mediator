@@ -32,11 +32,14 @@ func (h *runHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln("[http request] ERROR: Wrong 'simulation' URL param value.")
 	}
 
-	// A response channel can receive data of type 'error' or []byte.
-	resChan := make(chan interface{})
-	go h.app.synchronize(resChan, synchType[0], run[0], simulation)
+	if simulation && synchType[0] == "ongoing" {
+		log.Fatalln("[http request] ERROR: Cannot start an ongoing synchronization simulation.")
+	}
 
-	response := createResponse(<-resChan)
+	// A response channel can receive data of type 'error' or []byte.
+	runResponse := h.app.run(synchType[0], run[0], simulation)
+
+	response := createResponse(runResponse)
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
 		panic("Error while marshalling response.")

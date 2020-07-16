@@ -11,9 +11,9 @@ func printRunResponse(res map[string]interface{}, resType string) {
 	var resStr string
 
 	if res["err"].(bool) {
-		resStr = responsePrinters["error"](res)
+		resStr = runResponsePrinters["error"](res)
 	} else {
-		resStr = responsePrinters[resType](res)
+		resStr = runResponsePrinters[resType](res)
 	}
 
 	fmt.Println(resStr)
@@ -78,15 +78,15 @@ var actionPrinters map[string]func(map[string]interface{}) string = map[string]f
 	},
 }
 
-// responsePrinters is a map of functions that print the JSON responses received from the backend.
-var responsePrinters map[string]func(map[string]interface{}) string = map[string]func(map[string]interface{}) string{
+// runResponsePrinters is a map of functions that print the JSON responses received from the backend.
+var runResponsePrinters map[string]func(map[string]interface{}) string = map[string]func(map[string]interface{}) string{
 
 	// Error printer.
 	"error": func(res map[string]interface{}) string {
 		return res["payload"].(string)
 	},
 
-	// Simulation printer.
+	// one-off synch printer.
 	"one-off": func(res map[string]interface{}) string {
 		resPayloadStr := res["payload"].(string)
 		resPayload := make(map[string]interface{})
@@ -165,5 +165,10 @@ LINKS:%s
 			synchMsg,
 			linksStr,
 		)
+	},
+
+	// ongoing synch printer.
+	"ongoing": func(res map[string]interface{}) string {
+		return res["payload"].(string)
 	},
 }

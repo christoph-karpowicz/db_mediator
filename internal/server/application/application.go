@@ -7,6 +7,7 @@ package application
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -39,7 +40,16 @@ func (a *Application) listen() {
 	http.ListenAndServe(":8000", nil)
 }
 
-// synchronize carries out a synchronization requested by the client.
+// run carries out a synchronization run requested by the client.
+func (a *Application) run(synchType string, synchKey string, simulation bool) interface{} {
+	resChan := make(chan interface{})
+
+	go a.synchronize(resChan, synchType, synchKey, simulation)
+
+	// Return the report to the http init handler.
+	return <-resChan
+}
+
 func (a *Application) synchronize(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -52,7 +62,7 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 		panic("[synchronization search] '" + synchKey + "' not found.")
 	}
 
-	synch.SetSimulation()
+	synch.SetSimulation(simulation)
 	synch.SetReporter(report.CreateReport(synch))
 
 	// Initialize synchronization.
@@ -64,24 +74,24 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	synch.Run()
 	synch.SetInitial(false)
 
-	if synchType == "ongoing" {
+	if !simulation && synchType == "ongoing" {
+		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
 		for synch.IsRunning() {
 			fmt.Println("run")
 			synch.Run()
 			time.Sleep(5 * time.Second)
 		}
+	} else {
+		// Gather and marshal results.
+		synchReport, err := synch.GetReporter().Finalize()
+		if err != nil {
+			panic(err)
+		}
+
+		synch.Reset()
+
+		resChan <- synchReport
 	}
-
-	// Gather and marshal results.
-	synchReport, err := synch.GetReporter().Finalize()
-	if err != nil {
-		panic(err)
-	}
-
-	// Send the report to the http init handler.
-	resChan <- synchReport
-
-	synch.Reset()
 }
 
 // synchronize carries out a synchronization requested by the client.
@@ -92,10 +102,15 @@ func (a *Application) stop(resChan chan interface{}, synchKey string, all bool) 
 		}
 	}()
 
+	var response string
+	synchsStopped := make([]string, 0)
 	if !all {
-		for _, synch := range a.synchs {
-			synch.Stop()
-			synch.Reset()
+		for skey, synch := range a.synchs {
+			if synch.IsRunning() {
+				synch.Stop()
+				synch.Reset()
+				synchsStopped = append(synchsStopped, skey)
+			}
 		}
 	} else {
 		synch, synchFound := a.synchs[synchKey]
@@ -103,8 +118,23 @@ func (a *Application) stop(resChan chan interface{}, synchKey string, all bool) 
 			panic("[synchronization search] '" + synchKey + "' not found.")
 		}
 
-		synch.Stop()
-		synch.Reset()
+		if synch.IsRunning() {
+			synch.Stop()
+			synch.Reset()
+			synchsStopped = append(synchsStopped, synchKey)
+		}
+	}
+
+	if len(synchsStopped) > 0 {
+		synchWord := "Synch"
+		if len(synchsStopped) > 1 {
+			synchWord += "s"
+		}
+		response = fmt.Sprintf("%s %s stopped.", synchWord, strings.Join(synchsStopped, ", "))
+	} else if all && len(synchsStopped) == 0 {
+		response = "No running synchs found."
+	} else {
+		response = fmt.Sprintf("Synch %s is not running.", synchKey)
 	}
 
 	// Gather and marshal results.
@@ -113,9 +143,8 @@ func (a *Application) stop(resChan chan interface{}, synchKey string, all bool) 
 	// 	panic(err)
 	// }
 
-	// Send the report to the http init handler.
-	// resChan <- synchReport
-	resChan <- "stopped"
+	// Send the reponse to the http init handler.
+	resChan <- response
 }
 
 // synchronizeArray carries out aan array of synchronizations requested by the client.

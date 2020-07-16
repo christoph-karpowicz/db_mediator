@@ -14,6 +14,11 @@ func createResponse(appRes interface{}) *response {
 			Err:     true,
 			Payload: appRes.(error).Error(),
 		}
+	case string:
+		res = &response{
+			Err:     false,
+			Payload: appRes.(string),
+		}
 	case []byte:
 		res = &response{
 			Err:     false,

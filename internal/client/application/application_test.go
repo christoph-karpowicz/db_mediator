@@ -39,5 +39,5 @@ func printDebug(res map[string]interface{}) {
 
 func TestSimulationRequest(t *testing.T) {
 	os.Chdir("../../..")
-	app.RequestSynch("one-off", "films", true)
+	app.runSynch("one-off", "films", true)
 }

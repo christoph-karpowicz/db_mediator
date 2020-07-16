@@ -60,9 +60,8 @@ func (s *Synch) IsSimulation() bool {
 	return s.simulation
 }
 
-// SetSimulation sets the synch as a simulation.
-func (s *Synch) SetSimulation() {
-	s.simulation = true
+func (s *Synch) SetSimulation(sim bool) {
+	s.simulation = sim
 }
 
 // Init prepares the synchronization by fetching all necessary data
