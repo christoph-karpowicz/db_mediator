@@ -7,3 +7,7 @@ type counters struct {
 func newCounters() *counters {
 	return &counters{0}
 }
+
+func (c *counters) reset() {
+	c.fullSelects = 0
+}

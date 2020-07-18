@@ -1,14 +1,17 @@
 package synch
 
-import "reflect"
+import (
+	"errors"
+	"reflect"
+)
 
 type records []*record
 
-func (tr records) FindRecordPointer(searchedRecord map[string]interface{}) *record {
+func (tr records) FindRecordPointer(searchedRecord map[string]interface{}) (*record, error) {
 	for i := range tr {
 		if reflect.DeepEqual(tr[i].Data, searchedRecord) {
-			return tr[i]
+			return tr[i], nil
 		}
 	}
-	return nil
+	return nil, errors.New("[data selection] Record hasn't been found")
 }

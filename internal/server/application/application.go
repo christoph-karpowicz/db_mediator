@@ -41,16 +41,7 @@ func (a *Application) listen() {
 }
 
 // run carries out a synchronization run requested by the client.
-func (a *Application) run(synchType string, synchKey string, simulation bool) interface{} {
-	resChan := make(chan interface{})
-
-	go a.synchronize(resChan, synchType, synchKey, simulation)
-
-	// Return the report to the http init handler.
-	return <-resChan
-}
-
-func (a *Application) synchronize(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
+func (a *Application) run(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			resChan <- r.(error)
@@ -71,17 +62,12 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 	synch.GetReporter().Init()
 
 	// Carry out all synch actions.
-	synch.Run()
-	synch.SetInitial(false)
-
 	if !simulation && synchType == "ongoing" {
+		go a.runOngoing(synch)
 		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
-		for synch.IsRunning() {
-			fmt.Println("run")
-			synch.Run()
-			time.Sleep(5 * time.Second)
-		}
 	} else {
+		synch.Run()
+
 		// Gather and marshal results.
 		synchReport, err := synch.GetReporter().Finalize()
 		if err != nil {
@@ -91,6 +77,15 @@ func (a *Application) synchronize(resChan chan interface{}, synchType string, sy
 		synch.Reset()
 
 		resChan <- synchReport
+	}
+}
+
+func (a *Application) runOngoing(synch *synch.Synch) {
+	for synch.IsInitial() || synch.IsRunning() {
+		fmt.Println("run")
+		synch.Run()
+		synch.SetInitial(false)
+		time.Sleep(2 * time.Second)
 	}
 }
 

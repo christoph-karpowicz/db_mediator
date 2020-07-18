@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"go.mongodb.org/mongo-driver/bson"
@@ -53,7 +52,7 @@ func (d *mongoDatabase) Init() {
 		d.cfg.Port,
 		d.cfg.Name,
 	)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	d.ctx = ctx
 	d.close = cancel
@@ -82,8 +81,6 @@ func (d *mongoDatabase) Insert(inDto InsertDto) (bool, error) {
 // Select selects data from the database, with or without filters.
 func (d *mongoDatabase) Select(tableName string, conditions string) []map[string]interface{} {
 	var allDocuments []map[string]interface{}
-
-	// defer d.close()
 
 	client := d.GetClient()
 	collection := client.Database(d.cfg.Name).Collection(tableName)

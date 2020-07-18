@@ -52,6 +52,10 @@ func (s *Synch) GetNodes() map[string]*node {
 	return s.nodes
 }
 
+func (s *Synch) IsInitial() bool {
+	return s.initial
+}
+
 func (s *Synch) IsRunning() bool {
 	return s.running
 }
@@ -185,18 +189,24 @@ func (s *Synch) selectData() {
 		}
 
 		for _, sourceRecord := range sourceRawActiveRecords {
-			sourceRecordPointer := lnk.source.tbl.records.FindRecordPointer(sourceRecord)
+			sourceRecordPointer, searchError := lnk.source.tbl.records.FindRecordPointer(sourceRecord)
+			if searchError != nil {
+				fmt.Println(sourceRecord)
+				panic(searchError)
+			}
 			lnk.sourceActiveRecords = append(lnk.sourceActiveRecords, sourceRecordPointer)
 			sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, lnk)
 		}
 		for _, targetRecord := range targetRawActiveRecords {
-			targetRecordPointer := lnk.target.tbl.records.FindRecordPointer(targetRecord)
+			targetRecordPointer, searchError := lnk.target.tbl.records.FindRecordPointer(targetRecord)
+			if searchError != nil {
+				fmt.Println(targetRecord)
+				panic(searchError)
+			}
 			lnk.targetActiveRecords = append(lnk.targetActiveRecords, targetRecordPointer)
 			targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, lnk)
 		}
 	}
-
-	s.counters.fullSelects++
 }
 
 func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
@@ -245,6 +255,7 @@ func (s *Synch) setTable(tableName string, database *db.Database) {
 			name: tableName,
 		}
 		rawRecords := (*tbl.db).Select(tbl.name, "")
+		s.counters.fullSelects++
 
 		if !s.initial {
 			tbl.oldRecords = tbl.records
@@ -300,7 +311,9 @@ func (s *Synch) SetInitial(ini bool) {
 
 // Reset clears data preparing the Synch for the next run.
 func (s *Synch) Reset() {
+	s.initial = false
 	for _, lnk := range s.Links {
 		lnk.reset()
 	}
+	s.counters.reset()
 }
