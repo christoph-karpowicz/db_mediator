@@ -16,32 +16,30 @@ type LinkReportData struct {
 // Link represents a single link in the config file like:
 // [example_node1.example_column1 WHERE ...] TO [example_node2.example_column2 WHERE ...]
 type Link struct {
-	id                     string
-	synch                  Synchronizer
-	Cmd                    string
-	source                 *node
-	target                 *node
-	sourceColumn           string
-	targetColumn           string
-	sourceWhere            string
-	targetWhere            string
-	sourceExID             string
-	targetExID             string
-	sourceOldActiveRecords records
-	sourceActiveRecords    records
-	targetOldActiveRecords records
-	targetActiveRecords    records
-	pairs                  []*Pair
-	Rep                    *LinkReportData
+	id           string
+	synch        Synchronizer
+	Cmd          string
+	source       *node
+	target       *node
+	sourceTable  *table
+	targetTable  *table
+	sourceColumn string
+	targetColumn string
+	sourceWhere  string
+	targetWhere  string
+	sourceExID   string
+	targetExID   string
+	pairs        []*Pair
+	Rep          *LinkReportData
 }
 
 func createLink(synch Synchronizer, link map[string]string) *Link {
 
-	_, sourceNodeFound := synch.GetNodes()[link["sourceNode"]]
+	sourceNode, sourceNodeFound := synch.GetNodes()[link["sourceNode"]]
 	if !sourceNodeFound {
 		panic("[create link] ERROR: source node not found.")
 	}
-	_, targetNodeFound := synch.GetNodes()[link["targetNode"]]
+	targetNode, targetNodeFound := synch.GetNodes()[link["targetNode"]]
 	if !targetNodeFound {
 		panic("[create link] ERROR: target node not found.")
 	}
@@ -50,8 +48,10 @@ func createLink(synch Synchronizer, link map[string]string) *Link {
 		id:           uuid.New().String(),
 		synch:        synch,
 		Cmd:          link["cmd"],
-		source:       synch.GetNodes()[link["sourceNode"]],
-		target:       synch.GetNodes()[link["targetNode"]],
+		source:       sourceNode,
+		target:       targetNode,
+		sourceTable:  sourceNode.tbl,
+		targetTable:  targetNode.tbl,
 		sourceColumn: link["sourceColumn"],
 		targetColumn: link["targetColumn"],
 		sourceWhere:  link["sourceWhere"],
@@ -83,8 +83,8 @@ func (l Link) GetID() string {
 func (l *Link) comparePair(src *record, c chan bool) {
 	var pairFound bool = false
 
-	for j := range l.targetActiveRecords {
-		target := l.targetActiveRecords[j]
+	for j := range *l.targetTable.activeRecords {
+		target := (*l.targetTable.activeRecords)[j]
 
 		if l.synch.GetConfig().Match.Method == "ids" {
 			sourceExternalID, sourceOk := src.Data[l.sourceExID]
@@ -111,9 +111,9 @@ func (l *Link) comparePair(src *record, c chan bool) {
 
 // createPairs for each active record in source database finds a corresponding acitve record in target database.
 func (l *Link) createPairs(wg *sync.WaitGroup) {
-	for i := range l.sourceActiveRecords {
+	for i := range *l.sourceTable.activeRecords {
 		ch := make(chan bool)
-		source := l.sourceActiveRecords[i]
+		source := (*l.sourceTable.activeRecords)[i]
 
 		go l.comparePair(source, ch)
 
@@ -123,20 +123,15 @@ func (l *Link) createPairs(wg *sync.WaitGroup) {
 		}
 	}
 	wg.Done()
-	// for _, pair := range l.pairs {
-	// 	fmt.Printf("rec1: %s\n", pair.source.Data)
-	// 	if pair.target != nil {
-	// 		fmt.Printf("rec2: %s\n", pair.target.Data)
-	// 	}
-	// 	fmt.Println("======")
-	// }
 }
 
 func (l *Link) reset() {
-	l.sourceOldActiveRecords = nil
-	l.sourceActiveRecords = nil
-	l.targetOldActiveRecords = nil
-	l.targetActiveRecords = nil
-	l.pairs = nil
+	l.flush()
 	l.Rep = nil
+}
+
+func (l *Link) flush() {
+	l.sourceTable.activeRecords = nil
+	l.targetTable.activeRecords = nil
+	l.pairs = nil
 }

@@ -56,6 +56,12 @@ func (s *Synch) IsInitial() bool {
 	return s.initial
 }
 
+// SetInitial sets the initial struct field indicating whether
+// it's the first run of the synch.
+func (s *Synch) SetInitial(ini bool) {
+	s.initial = ini
+}
+
 func (s *Synch) IsRunning() bool {
 	return s.running
 }
@@ -183,30 +189,19 @@ func (s *Synch) selectData() {
 		sourceRawActiveRecords := (*lnk.source.db).Select(lnk.source.tbl.name, lnk.sourceWhere)
 		targetRawActiveRecords := (*lnk.target.db).Select(lnk.target.tbl.name, lnk.targetWhere)
 
-		if !s.initial {
-			lnk.sourceOldActiveRecords = lnk.sourceActiveRecords
-			lnk.targetOldActiveRecords = lnk.targetActiveRecords
-		}
+		// if !s.initial {
+		// 	lnk.sourceOldActiveRecords = lnk.sourceActiveRecords
+		// 	lnk.targetOldActiveRecords = lnk.targetActiveRecords
+		// }
 
-		for _, sourceRecord := range sourceRawActiveRecords {
-			sourceRecordPointer, searchError := lnk.source.tbl.records.FindRecordPointer(sourceRecord)
-			if searchError != nil {
-				fmt.Println(sourceRecord)
-				panic(searchError)
-			}
-			lnk.sourceActiveRecords = append(lnk.sourceActiveRecords, sourceRecordPointer)
-			sourceRecordPointer.ActiveIn = append(sourceRecordPointer.ActiveIn, lnk)
-		}
-		for _, targetRecord := range targetRawActiveRecords {
-			targetRecordPointer, searchError := lnk.target.tbl.records.FindRecordPointer(targetRecord)
-			if searchError != nil {
-				fmt.Println(targetRecord)
-				panic(searchError)
-			}
-			lnk.targetActiveRecords = append(lnk.targetActiveRecords, targetRecordPointer)
-			targetRecordPointer.ActiveIn = append(targetRecordPointer.ActiveIn, lnk)
-		}
+		lnk.sourceTable.setActiveRecords(sourceRawActiveRecords)
+		lnk.targetTable.setActiveRecords(targetRawActiveRecords)
+
+		lnk.sourceTable.activeRecords.setActiveIn(lnk)
+		lnk.targetTable.activeRecords.setActiveIn(lnk)
 	}
+
+	s.counters.selects++
 }
 
 func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
@@ -246,22 +241,14 @@ func (s *Synch) setNodes() {
 // setTable creates an individual table struct and selects all records from it.
 func (s *Synch) setTable(tableName string, database *db.Database) {
 	var tblID string = (*database).GetConfig().GetName() + "." + tableName
-	_, tableCopied := s.tables[tblID]
+	_, tableSet := s.tables[tblID]
 
-	if !tableCopied {
+	if !tableSet {
 		tbl := &table{
 			id:   tblID,
 			db:   database,
 			name: tableName,
 		}
-		rawRecords := (*tbl.db).Select(tbl.name, "")
-		s.counters.fullSelects++
-
-		if !s.initial {
-			tbl.oldRecords = tbl.records
-		}
-
-		tbl.records = mapToRecords(rawRecords)
 		s.tables[tbl.id] = tbl
 	}
 }
@@ -281,6 +268,7 @@ func (s *Synch) Run() {
 	s.selectData()
 	s.pairData()
 	s.synchronize()
+	s.flush()
 }
 
 // Stop stops the synch.
@@ -303,10 +291,10 @@ func (s *Synch) synchronize() {
 	}
 }
 
-// SetInitial sets the initial struct field indicating whether
-// it's the first run of the synch.
-func (s *Synch) SetInitial(ini bool) {
-	s.initial = ini
+func (s *Synch) flush() {
+	for i := range s.Links {
+		s.Links[i].flush()
+	}
 }
 
 // Reset clears data preparing the Synch for the next run.

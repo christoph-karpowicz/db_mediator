@@ -1,7 +1,7 @@
 package synch
 
 type counters struct {
-	fullSelects int
+	selects int
 }
 
 func newCounters() *counters {
@@ -9,5 +9,5 @@ func newCounters() *counters {
 }
 
 func (c *counters) reset() {
-	c.fullSelects = 0
+	c.selects = 0
 }

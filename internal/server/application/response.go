@@ -10,7 +10,7 @@ func createResponse(appRes interface{}) *response {
 
 	switch appRes.(type) {
 	case error:
-		// panic(appRes.(error))
+		panic(appRes.(error))
 		res = &response{
 			Err:     true,
 			Payload: appRes.(error).Error(),

@@ -85,7 +85,7 @@ func (a *Application) runOngoing(synch *synch.Synch) {
 		fmt.Println("run")
 		synch.Run()
 		synch.SetInitial(false)
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 

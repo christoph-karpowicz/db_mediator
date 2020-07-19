@@ -55,20 +55,13 @@ func createPair(link *Link, source *record, target *record) *Pair {
 // Synchronize carries out the synchronization of the two records.
 func (p Pair) Synchronize() (bool, error) {
 	if p.target != nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "UPDATE") {
-		// Updates
-		// If this pair is complete.
-		// log.Println(p.source)
-		// log.Println(p.target)
-
+		// Updates if this pair is complete.
 		sourceColumnValue := p.source.Data[p.Link.sourceColumn]
 		targetColumnValue := p.target.Data[p.Link.targetColumn]
 
 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 			log.Println(err)
 		} else if !areEqual {
-			// fmt.Println(sourceColumnValue)
-			// fmt.Println(targetColumnValue)
-
 			if !p.Link.synch.IsSimulation() {
 				p.doUpdate(sourceColumnValue)
 			}
@@ -77,7 +70,6 @@ func (p Pair) Synchronize() (bool, error) {
 			if err != nil {
 				panic(err)
 			}
-			// fmt.Println(p.Link.synch.IsSimulation())
 		} else {
 			_, err := p.Link.synch.GetReporter().AddAction(p, "idle")
 			if err != nil {
@@ -87,9 +79,6 @@ func (p Pair) Synchronize() (bool, error) {
 	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
-		// log.Println(p.source)
-		// log.Println(p.target)
-
 		if !p.Link.synch.IsSimulation() {
 			p.doInsert()
 		}
@@ -117,8 +106,6 @@ func (p Pair) doUpdate(sourceColumnValue interface{}) {
 		log.Println(err)
 	}
 	log.Println(update)
-	// log.Println(sourceColumnValue)
-	// log.Println(targetColumnValue)
 }
 
 func (p Pair) doInsert() {
