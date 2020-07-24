@@ -6,7 +6,6 @@ import (
 
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
-	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
 
 type link struct {
@@ -16,8 +15,8 @@ type link struct {
 	Updates []string `json:"updates"`
 }
 
-// Report is basically a report about what will happen after an actual synchronization is launched.
-type Report struct {
+// report is basically a report about what will happen after an actual synchronization is launched.
+type report struct {
 	msg   string
 	synch *synch.Synch
 	links map[string]*link
@@ -33,9 +32,9 @@ func (e *SynchReportError) Error() string {
 	return fmt.Sprintf("['%s' synch report] %s", e.SynchName, e.ErrMsg)
 }
 
-// CreateReport creates a Report instance.
-func CreateReport(s *synch.Synch) unifier.Reporter {
-	var newReport Report = Report{
+// CreateReport creates a report instance.
+func CreateReport(s *synch.Synch) *report {
+	var newReport report = report{
 		synch: s,
 		links: make(map[string]*link),
 	}
@@ -43,57 +42,8 @@ func CreateReport(s *synch.Synch) unifier.Reporter {
 	return &newReport
 }
 
-// AddAction adds a single action to the Report.
-// Action types:
-// 	1.	idle - means two records that have been paired, but no action will be carried out because the relevant data is the same.
-// 	2.	insert
-// 	3. 	update
-func (r *Report) AddAction(p unifier.Pairable, actionType string) (bool, error) {
-	actionJSON, err := p.ReportJSON(actionType)
-	if err != nil {
-		return false, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
-	}
-
-	switch actionType {
-	case "idle":
-		r.links[p.GetLinkID()].Idle = append(r.links[p.GetLinkID()].Idle, string(actionJSON))
-	case "insert":
-		r.links[p.GetLinkID()].Inserts = append(r.links[p.GetLinkID()].Inserts, string(actionJSON))
-	case "update":
-		r.links[p.GetLinkID()].Updates = append(r.links[p.GetLinkID()].Updates, string(actionJSON))
-	}
-
-	return true, nil
-}
-
-// Init fills the necessary fields after the Synch instance finished its Init execution.
-func (r *Report) Init() {
-	for _, lnk := range r.synch.Links {
-		_, lnkExists := r.links[lnk.GetID()]
-		if !lnkExists {
-			r.links[lnk.GetID()] = &link{Cmd: lnk.Cmd}
-		}
-	}
-}
-
-// Finalize wraps up the report creation process.
-func (r *Report) Finalize() ([]byte, error) {
-	if r.synch.IsSimulation() {
-		r.msg = "'" + r.synch.GetConfig().Name + "' simulation was successful. The report contains changes that would be made if you requested an actual synchronization."
-	} else {
-		r.msg = "'" + r.synch.GetConfig().Name + "' synchronization was successful. The report contains changes that have been made to the relevant nodes."
-	}
-
-	toJSON, err := r.ToJSON()
-	if err != nil {
-		return nil, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
-	}
-
-	return toJSON, nil
-}
-
 // MarshalJSON implements the Marshaler interface for custom JSON creation.
-func (r *Report) MarshalJSON() ([]byte, error) {
+func (r *report) MarshalJSON() ([]byte, error) {
 	linkMap := make(map[int]*link)
 	linkCounter := 1
 	for _, link := range r.links {
@@ -120,7 +70,7 @@ func (r *Report) MarshalJSON() ([]byte, error) {
 }
 
 // ToJSON turns the report into a JSON object.
-func (r *Report) ToJSON() ([]byte, error) {
+func (r *report) ToJSON() ([]byte, error) {
 	marshalled, err := json.Marshal(r)
 	if err != nil {
 		return nil, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}

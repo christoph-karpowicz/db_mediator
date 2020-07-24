@@ -62,37 +62,49 @@ func (p Pair) Synchronize() (bool, error) {
 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 			log.Println(err)
 		} else if !areEqual {
+			var updateErr error
 			if !p.Link.synch.IsSimulation() {
-				p.doUpdate(sourceColumnValue)
+				updateErr = p.doUpdate(sourceColumnValue)
 			}
 
-			_, err := p.Link.synch.GetReporter().AddAction(p, "update")
-			if err != nil {
-				panic(err)
+			if updateErr == nil {
+				_, err := p.Link.synch.GetReporter().AddAction(p, "update")
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				log.Println(updateErr)
 			}
 		} else {
-			_, err := p.Link.synch.GetReporter().AddAction(p, "idle")
-			if err != nil {
-				panic(err)
+			if p.Link.synch.GetType() == "one-off" {
+				_, err := p.Link.synch.GetReporter().AddAction(p, "idle")
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "INSERT") {
 		// Inserts
 		// If a target record has to be created.
+		var insertErr error
 		if !p.Link.synch.IsSimulation() {
 			p.doInsert()
 		}
 
-		_, err := p.Link.synch.GetReporter().AddAction(p, "insert")
-		if err != nil {
-			panic(err)
+		if insertErr == nil {
+			_, err := p.Link.synch.GetReporter().AddAction(p, "insert")
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			log.Println(insertErr)
 		}
 	}
 
 	return false, nil
 }
 
-func (p Pair) doUpdate(sourceColumnValue interface{}) {
+func (p Pair) doUpdate(sourceColumnValue interface{}) error {
 	upDto := db.UpdateDto{
 		p.synchData.tableName,
 		p.synchData.targetExtIDName,
@@ -103,12 +115,13 @@ func (p Pair) doUpdate(sourceColumnValue interface{}) {
 
 	update, err := p.synchData.targetDb.Update(upDto)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 	log.Println(update)
+	return nil
 }
 
-func (p Pair) doInsert() {
+func (p Pair) doInsert() error {
 	inDto := db.InsertDto{
 		p.synchData.tableName,
 		p.synchData.targetExtIDName,
@@ -118,9 +131,10 @@ func (p Pair) doInsert() {
 
 	insert, err := p.synchData.targetDb.Insert(inDto)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 	log.Println(insert)
+	return nil
 }
 
 // ReportJSON creates a JSON representation of an action.

@@ -54,10 +54,10 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	}
 
 	synch.SetSimulation(simulation)
-	synch.SetReporter(report.CreateReport(synch))
+	synch.SetReporter(report.CreateReporter(synch))
 
 	// Initialize synchronization.
-	synch.Init(a.dbs)
+	synch.Init(a.dbs, synchType)
 	// Initialize report data structures.
 	synch.GetReporter().Init()
 
@@ -74,9 +74,8 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 			panic(err)
 		}
 
-		synch.Reset()
-
 		resChan <- synchReport
+		synch.Reset()
 	}
 }
 

@@ -10,6 +10,7 @@ type Synchronizer interface {
 	GetConfig() *cfg.SynchConfig
 	GetReporter() unifier.Reporter
 	GetNodes() map[string]*node
+	GetType() string
 	IsSimulation() bool
 	Run()
 }
