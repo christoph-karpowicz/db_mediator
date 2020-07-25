@@ -1,7 +1,6 @@
 package synch
 
 import (
-	"encoding/json"
 	"log"
 	"reflect"
 
@@ -68,19 +67,13 @@ func (p Pair) Synchronize() (bool, error) {
 			}
 
 			if updateErr == nil {
-				_, err := p.Link.synch.GetReporter().AddAction(p, "update")
-				if err != nil {
-					panic(err)
-				}
+				p.logAction("update")
 			} else {
 				log.Println(updateErr)
 			}
 		} else {
 			if p.Link.synch.GetType() == "one-off" {
-				_, err := p.Link.synch.GetReporter().AddAction(p, "idle")
-				if err != nil {
-					panic(err)
-				}
+				p.logAction("idle")
 			}
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "INSERT") {
@@ -92,10 +85,7 @@ func (p Pair) Synchronize() (bool, error) {
 		}
 
 		if insertErr == nil {
-			_, err := p.Link.synch.GetReporter().AddAction(p, "insert")
-			if err != nil {
-				panic(err)
-			}
+			p.logAction("insert")
 		} else {
 			log.Println(insertErr)
 		}
@@ -137,8 +127,8 @@ func (p Pair) doInsert() error {
 	return nil
 }
 
-// ReportJSON creates a JSON representation of an action.
-func (p Pair) ReportJSON(actionType string) ([]byte, error) {
+// logAction adds an action to synch history.
+func (p *Pair) logAction(actionType string) {
 	var sourceColumnData interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
 	if reflect.TypeOf(sourceColumnData).Name() == "string" && len(sourceColumnData.(string)) > 25 {
 		sourceColumnData = sourceColumnData.(string)[:22] + "..."
@@ -162,17 +152,9 @@ func (p Pair) ReportJSON(actionType string) ([]byte, error) {
 		targetColumnData = nil
 	}
 
-	actionStruct := struct {
-		SourceNodeKey    string      `json:"sourceNodeKey"`
-		SourceData       interface{} `json:"sourceData"`
-		SourceColumn     string      `json:"sourceColumn"`
-		SourceColumnData interface{} `json:"sourceColumnData"`
-		TargetKeyName    string      `json:"targetKeyName"`
-		TargetKeyValue   interface{} `json:"targetKeyValue"`
-		TargetColumn     string      `json:"targetColumn"`
-		TargetColumnData interface{} `json:"targetColumnData"`
-		ActionType       string      `json:"actionType"`
-	}{
+	act := action{
+		linkId:           p.Link.GetID(),
+		atype:            actionType,
 		SourceNodeKey:    p.synchData.sourceKeyName,
 		SourceData:       p.source.Data[p.synchData.sourceKeyName],
 		SourceColumn:     p.Link.sourceColumn,
@@ -184,9 +166,5 @@ func (p Pair) ReportJSON(actionType string) ([]byte, error) {
 		ActionType:       actionType,
 	}
 
-	return json.Marshal(&actionStruct)
-}
-
-func (p Pair) GetLinkID() string {
-	return p.Link.GetID()
+	p.Link.synch.GetHistory().addAction(&act)
 }

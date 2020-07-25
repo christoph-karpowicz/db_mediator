@@ -42,11 +42,11 @@ func (a *Application) listen() {
 
 // run carries out a synchronization run requested by the client.
 func (a *Application) run(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
-	defer func() {
-		if r := recover(); r != nil {
-			resChan <- r.(error)
-		}
-	}()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		resChan <- r.(error)
+	// 	}
+	// }()
 
 	synch, synchFound := a.synchs[synchKey]
 	if !synchFound {
@@ -54,12 +54,12 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	}
 
 	synch.SetSimulation(simulation)
-	synch.SetReporter(report.CreateReporter(synch))
 
 	// Initialize synchronization.
 	synch.Init(a.dbs, synchType)
-	// Initialize report data structures.
-	synch.GetReporter().Init()
+	// Initialize history data structures.
+	synch.GetHistory().SetReporter(report.CreateReporter(synch))
+	synch.GetHistory().Init()
 
 	// Carry out all synch actions.
 	if !simulation && synchType == "ongoing" {
@@ -69,7 +69,7 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 		synch.Run()
 
 		// Gather and marshal results.
-		synchReport, err := synch.GetReporter().Finalize()
+		synchReport, err := synch.GetHistory().GenerateReport()
 		if err != nil {
 			panic(err)
 		}
@@ -124,7 +124,17 @@ func (a *Application) stop(resChan chan interface{}, synchKey string, all bool) 
 		if len(synchsStopped) > 1 {
 			synchWord += "s"
 		}
-		response = fmt.Sprintf("%s %s stopped.", synchWord, strings.Join(synchsStopped, ", "))
+
+		for _, synchStopped := range synchsStopped {
+			// Gather and marshal results.
+			synchReport, err := a.synchs[synchStopped].GetHistory().GenerateReport()
+			if err != nil {
+				panic(err)
+			}
+			response += string(synchReport)
+		}
+
+		response += fmt.Sprintf("\n\n%s %s stopped.", synchWord, strings.Join(synchsStopped, ", "))
 	} else if all && len(synchsStopped) == 0 {
 		response = "No running synchs found."
 	} else {
@@ -132,7 +142,7 @@ func (a *Application) stop(resChan chan interface{}, synchKey string, all bool) 
 	}
 
 	// Gather and marshal results.
-	// synchReport, err := synch.GetReporter().Finalize()
+	// synchReport, err := synch.GetHistory().GenerateReport()
 	// if err != nil {
 	// 	panic(err)
 	// }

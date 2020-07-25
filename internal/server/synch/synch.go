@@ -12,7 +12,6 @@ import (
 
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
 
 // Synch represents an individual synchronzation configration.
@@ -29,7 +28,30 @@ type Synch struct {
 	running    bool
 	initial    bool
 	simulation bool
-	rep        unifier.Reporter
+	History    *History
+}
+
+// Init prepares the synchronization by fetching all necessary data
+// and parsing it.
+func (s *Synch) Init(DBMap map[string]*db.Database, stype string) {
+	s.History = &History{}
+	s.stype = stype
+	tStart := time.Now()
+	s.dbs = make(map[string]*db.Database)
+	s.tables = make(map[string]*table)
+	s.nodes = make(map[string]*node)
+
+	if s.counters == nil {
+		s.counters = newCounters()
+		s.setDatabases(DBMap)
+		s.setTables()
+		s.setNodes()
+		s.parseCfgLinks()
+		s.parseCfgMappings()
+		s.parseCfgMatcher()
+	}
+
+	fmt.Println("Synch init finished in: ", time.Since(tStart).String())
 }
 
 // GetConfig returns the synch config struct.
@@ -37,14 +59,9 @@ func (s *Synch) GetConfig() *cfg.SynchConfig {
 	return s.cfg
 }
 
-// GetReporter returns the reporter struct.
-func (s *Synch) GetReporter() unifier.Reporter {
-	return s.rep
-}
-
-// SetReporter inects a Reporter to the struct.
-func (s *Synch) SetReporter(rep unifier.Reporter) {
-	s.rep = rep
+// GetHistory returns the synch's history.
+func (s *Synch) GetHistory() *History {
+	return s.History
 }
 
 // GetNodes returns all nodes between which
@@ -78,28 +95,6 @@ func (s *Synch) IsSimulation() bool {
 
 func (s *Synch) SetSimulation(sim bool) {
 	s.simulation = sim
-}
-
-// Init prepares the synchronization by fetching all necessary data
-// and parsing it.
-func (s *Synch) Init(DBMap map[string]*db.Database, stype string) {
-	s.stype = stype
-	tStart := time.Now()
-	s.dbs = make(map[string]*db.Database)
-	s.tables = make(map[string]*table)
-	s.nodes = make(map[string]*node)
-
-	if s.counters == nil {
-		s.counters = newCounters()
-		s.setDatabases(DBMap)
-		s.setTables()
-		s.setNodes()
-		s.parseCfgLinks()
-		s.parseCfgMappings()
-		s.parseCfgMatcher()
-	}
-
-	fmt.Println("Synch init finished in: ", time.Since(tStart).String())
 }
 
 // pairData pairs together records that are going to be synchronized.

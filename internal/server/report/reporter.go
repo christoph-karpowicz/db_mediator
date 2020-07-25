@@ -5,6 +5,8 @@ import (
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
 
+// Reporter acts as an interface for other packages
+// to modify the synch report.
 type Reporter struct {
 	synch *synch.Synch
 	rep   *report
@@ -35,19 +37,14 @@ func (r *Reporter) Init() {
 // 	1.	idle - means two records that have been paired, but no action will be carried out because the relevant data is the same.
 // 	2.	insert
 // 	3. 	update
-func (r *Reporter) AddAction(p unifier.Pairable, actionType string) (bool, error) {
-	actionJSON, err := p.ReportJSON(actionType)
-	if err != nil {
-		return false, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
-	}
-
+func (r *Reporter) AddAction(linkID string, actionJSON []byte, actionType string) (bool, error) {
 	switch actionType {
 	case "idle":
-		r.rep.links[p.GetLinkID()].Idle = append(r.rep.links[p.GetLinkID()].Idle, string(actionJSON))
+		r.rep.links[linkID].Idle = append(r.rep.links[linkID].Idle, string(actionJSON))
 	case "insert":
-		r.rep.links[p.GetLinkID()].Inserts = append(r.rep.links[p.GetLinkID()].Inserts, string(actionJSON))
+		r.rep.links[linkID].Inserts = append(r.rep.links[linkID].Inserts, string(actionJSON))
 	case "update":
-		r.rep.links[p.GetLinkID()].Updates = append(r.rep.links[p.GetLinkID()].Updates, string(actionJSON))
+		r.rep.links[linkID].Updates = append(r.rep.links[linkID].Updates, string(actionJSON))
 	}
 
 	return true, nil
