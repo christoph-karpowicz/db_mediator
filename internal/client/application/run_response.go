@@ -26,9 +26,13 @@ func printAction(actionString string) string {
 	if err := json.Unmarshal([]byte(actionString), &actionMap); err != nil {
 		panic(err)
 	}
-	// log.Println(actionMap)
 
-	return actionPrinters[actionMap["actionType"].(string)](actionMap)
+	actionPrinter, actionPrinterExists := actionPrinters[actionMap["actionType"].(string)]
+	if !actionPrinterExists {
+		panic("Action printer function for \"" + actionMap["actionType"].(string) + "\" doesn't exist.")
+	}
+
+	return actionPrinter(actionMap)
 }
 
 var actionPrinters map[string]func(map[string]interface{}) string = map[string]func(map[string]interface{}) string{
@@ -139,6 +143,7 @@ Link command: %s`,
 				// ACTUAL MODIFICATIONS OF RECORDS
 				if actionStrings != nil {
 					for _, actionString := range actionStrings.([]interface{}) {
+						fmt.Println(actionString.(string))
 						linkStr += fmt.Sprintf("%s",
 							printAction(actionString.(string)),
 						)

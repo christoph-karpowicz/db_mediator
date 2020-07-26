@@ -4,6 +4,7 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
@@ -53,7 +54,7 @@ func createPair(link *Link, source *record, target *record) *Pair {
 
 // Synchronize carries out the synchronization of the two records.
 func (p Pair) Synchronize() (bool, error) {
-	if p.target != nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "UPDATE") {
+	if p.target != nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_UPDATE) {
 		// Updates if this pair is complete.
 		sourceColumnValue := p.source.Data[p.Link.sourceColumn]
 		targetColumnValue := p.target.Data[p.Link.targetColumn]
@@ -67,16 +68,16 @@ func (p Pair) Synchronize() (bool, error) {
 			}
 
 			if updateErr == nil {
-				p.logAction("update")
+				p.logAction(cfg.UPDATE_ACTION)
 			} else {
 				log.Println(updateErr)
 			}
 		} else {
-			if p.Link.synch.GetType() == "one-off" {
-				p.logAction("idle")
+			if p.Link.synch.GetType() == ONE_OFF {
+				p.logAction(cfg.IDLE_ACTION)
 			}
 		}
-	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, "INSERT") {
+	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_INSERT) {
 		// Inserts
 		// If a target record has to be created.
 		var insertErr error
@@ -85,7 +86,7 @@ func (p Pair) Synchronize() (bool, error) {
 		}
 
 		if insertErr == nil {
-			p.logAction("insert")
+			p.logAction(cfg.INSERT_ACTION)
 		} else {
 			log.Println(insertErr)
 		}
@@ -128,7 +129,7 @@ func (p Pair) doInsert() error {
 }
 
 // logAction adds an action to synch history.
-func (p *Pair) logAction(actionType string) {
+func (p *Pair) logAction(actType string) {
 	var sourceColumnData interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
 	if reflect.TypeOf(sourceColumnData).Name() == "string" && len(sourceColumnData.(string)) > 25 {
 		sourceColumnData = sourceColumnData.(string)[:22] + "..."
@@ -154,7 +155,7 @@ func (p *Pair) logAction(actionType string) {
 
 	act := action{
 		linkId:           p.Link.GetID(),
-		atype:            actionType,
+		ActType:          actType,
 		SourceNodeKey:    p.synchData.sourceKeyName,
 		SourceData:       p.source.Data[p.synchData.sourceKeyName],
 		SourceColumn:     p.Link.sourceColumn,
@@ -163,7 +164,6 @@ func (p *Pair) logAction(actionType string) {
 		TargetKeyValue:   targetKeyValue,
 		TargetColumn:     p.Link.targetColumn,
 		TargetColumnData: targetColumnData,
-		ActionType:       actionType,
 	}
 
 	p.Link.synch.GetHistory().addAction(&act)

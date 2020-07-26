@@ -36,9 +36,9 @@ func (e *matcherParserError) Error() string {
 func ParseLink(link string) (map[string]string, error) {
 	result := make(map[string]string)
 	ptrn := `(?iU)^\s*` +
-		`\[(?P<sourceNode>[^\.,\s]+)\.(?P<sourceColumn>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<sourceWhere>WHERE\s+[^\s]+.+)?\]` +
+		`\[(?P<` + PSUBEXP_SOURCE_NODE + `>[^\.,\s]+)\.(?P<` + PSUBEXP_SOURCE_COLUMN + `>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<` + PSUBEXP_SOURCE_WHERE + `>WHERE\s+[^\s]+.+)?\]` +
 		`\s+TO\s+` +
-		`\[(?P<targetNode>[^\.,\s]+)\.(?P<targetColumn>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<targetWhere>WHERE\s+[^\s]+.+)?\]` +
+		`\[(?P<` + PSUBEXP_TARGET_NODE + `>[^\.,\s]+)\.(?P<` + PSUBEXP_TARGET_COLUMN + `>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<` + PSUBEXP_TARGET_WHERE + `>WHERE\s+[^\s]+.+)?\]` +
 		`\s*$`
 	compiledPtrn := regexp.MustCompile(ptrn)
 	matches := compiledPtrn.FindStringSubmatch(link)
@@ -54,7 +54,7 @@ func ParseLink(link string) (map[string]string, error) {
 			continue
 		}
 
-		if arrUtil.Contains([]string{"sourceWhere", "targetWhere"}, subNames[i]) {
+		if arrUtil.Contains([]string{PSUBEXP_SOURCE_WHERE, PSUBEXP_TARGET_WHERE}, subNames[i]) {
 			parsedWhere := ParseLinkWhere(match)
 			result[subNames[i]] = parsedWhere
 		} else {
@@ -135,9 +135,9 @@ func ParseLinkWhere(where string) string {
 func ParseMapping(mapping string) (map[string]string, error) {
 	result := make(map[string]string)
 	ptrn := `(?iU)^\s*` +
-		`(?P<sourceNode>[^\.,]+)\.(?P<sourceColumn>[^\.,]+)` +
+		`(?P<` + PSUBEXP_SOURCE_NODE + `>[^\.,]+)\.(?P<` + PSUBEXP_SOURCE_COLUMN + `>[^\.,]+)` +
 		`\s+TO\s+` +
-		`(?P<targetNode>[^\.,]+)\.(?P<targetColumn>[^\.,]+)` +
+		`(?P<` + PSUBEXP_TARGET_NODE + `>[^\.,]+)\.(?P<` + PSUBEXP_TARGET_COLUMN + `>[^\.,]+)` +
 		`\s*$`
 	compiledPtrn := regexp.MustCompile(ptrn)
 	matches := compiledPtrn.FindStringSubmatch(mapping)

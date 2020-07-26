@@ -2,7 +2,7 @@ package synch
 
 type action struct {
 	linkId           string
-	atype            string
+	ActType          string      `json:"actionType"`
 	SourceNodeKey    string      `json:"sourceNodeKey"`
 	SourceData       interface{} `json:"sourceData"`
 	SourceColumn     string      `json:"sourceColumn"`
@@ -11,5 +11,4 @@ type action struct {
 	TargetKeyValue   interface{} `json:"targetKeyValue"`
 	TargetColumn     string      `json:"targetColumn"`
 	TargetColumnData interface{} `json:"targetColumnData"`
-	ActionType       string      `json:"actionType"`
 }

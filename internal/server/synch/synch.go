@@ -24,7 +24,7 @@ type Synch struct {
 	mappings   []*Mapping
 	Links      []*Link
 	counters   *counters
-	stype      string
+	stype      synchType
 	running    bool
 	initial    bool
 	simulation bool
@@ -34,8 +34,13 @@ type Synch struct {
 // Init prepares the synchronization by fetching all necessary data
 // and parsing it.
 func (s *Synch) Init(DBMap map[string]*db.Database, stype string) {
+	stypeField, err := FindSynchType(stype)
+	if err != nil {
+		panic(err)
+	}
+	s.stype = stypeField
+
 	s.History = &History{}
-	s.stype = stype
 	tStart := time.Now()
 	s.dbs = make(map[string]*db.Database)
 	s.tables = make(map[string]*table)
@@ -71,7 +76,7 @@ func (s *Synch) GetNodes() map[string]*node {
 }
 
 // GetType returns the type of the synch.
-func (s *Synch) GetType() string {
+func (s *Synch) GetType() synchType {
 	return s.stype
 }
 
@@ -301,7 +306,7 @@ func (s *Synch) flush() {
 
 // Reset clears data preparing the Synch for the next run.
 func (s *Synch) Reset() {
-	s.stype = ""
+	s.stype = 0
 	s.SetInitial(false)
 	for _, lnk := range s.Links {
 		lnk.reset()

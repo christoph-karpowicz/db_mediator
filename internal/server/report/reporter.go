@@ -1,6 +1,7 @@
 package report
 
 import (
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/synch"
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
 )
@@ -39,11 +40,11 @@ func (r *Reporter) Init() {
 // 	3. 	update
 func (r *Reporter) AddAction(linkID string, actionJSON []byte, actionType string) (bool, error) {
 	switch actionType {
-	case "idle":
+	case cfg.IDLE_ACTION:
 		r.rep.links[linkID].Idle = append(r.rep.links[linkID].Idle, string(actionJSON))
-	case "insert":
+	case cfg.INSERT_ACTION:
 		r.rep.links[linkID].Inserts = append(r.rep.links[linkID].Inserts, string(actionJSON))
-	case "update":
+	case cfg.UPDATE_ACTION:
 		r.rep.links[linkID].Updates = append(r.rep.links[linkID].Updates, string(actionJSON))
 	}
 

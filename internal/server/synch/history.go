@@ -44,7 +44,7 @@ func (h *History) addActionsToReport() error {
 			return err
 			// return false, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 		}
-		h.rep.AddAction(act.linkId, actionJSON, act.atype)
+		h.rep.AddAction(act.linkId, actionJSON, act.ActType)
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/google/uuid"
 )
 
@@ -35,11 +36,11 @@ type Link struct {
 
 func createLink(synch Synchronizer, link map[string]string) *Link {
 
-	sourceNode, sourceNodeFound := synch.GetNodes()[link["sourceNode"]]
+	sourceNode, sourceNodeFound := synch.GetNodes()[link[cfg.PSUBEXP_SOURCE_NODE]]
 	if !sourceNodeFound {
 		panic("[create link] ERROR: source node not found.")
 	}
-	targetNode, targetNodeFound := synch.GetNodes()[link["targetNode"]]
+	targetNode, targetNodeFound := synch.GetNodes()[link[cfg.PSUBEXP_TARGET_NODE]]
 	if !targetNodeFound {
 		panic("[create link] ERROR: target node not found.")
 	}
@@ -52,10 +53,10 @@ func createLink(synch Synchronizer, link map[string]string) *Link {
 		target:       targetNode,
 		sourceTable:  sourceNode.tbl,
 		targetTable:  targetNode.tbl,
-		sourceColumn: link["sourceColumn"],
-		targetColumn: link["targetColumn"],
-		sourceWhere:  link["sourceWhere"],
-		targetWhere:  link["targetWhere"],
+		sourceColumn: link[cfg.PSUBEXP_SOURCE_COLUMN],
+		targetColumn: link[cfg.PSUBEXP_TARGET_COLUMN],
+		sourceWhere:  link[cfg.PSUBEXP_SOURCE_WHERE],
+		targetWhere:  link[cfg.PSUBEXP_TARGET_WHERE],
 	}
 
 	if synch.GetConfig().Match.Method == "ids" {

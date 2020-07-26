@@ -12,7 +12,7 @@ import (
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 	"github.com/christoph-karpowicz/unifier/internal/server/report"
-	"github.com/christoph-karpowicz/unifier/internal/server/synch"
+	synchPkg "github.com/christoph-karpowicz/unifier/internal/server/synch"
 )
 
 /*
@@ -22,14 +22,14 @@ Starts a web server and handles all requests.
 */
 type Application struct {
 	dbs    db.Databases
-	synchs synch.Synchs
+	synchs synchPkg.Synchs
 }
 
 // Init starts the application.
 func (a *Application) Init() {
 	a.dbs = make(db.Databases)
 	a.dbs.Init()
-	a.synchs = synch.CreateSynchs()
+	a.synchs = synchPkg.CreateSynchs()
 	a.synchs.Init()
 	a.listen()
 }
@@ -52,6 +52,10 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	if !synchFound {
 		panic("[synchronization search] '" + synchKey + "' not found.")
 	}
+	sType, err := synchPkg.FindSynchType(synchType)
+	if err != nil {
+		panic(err)
+	}
 
 	synch.SetSimulation(simulation)
 
@@ -62,7 +66,7 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	synch.GetHistory().Init()
 
 	// Carry out all synch actions.
-	if !simulation && synchType == "ongoing" {
+	if !simulation && sType == synchPkg.ONGOING {
 		go a.runOngoing(synch)
 		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
 	} else {
@@ -79,7 +83,7 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	}
 }
 
-func (a *Application) runOngoing(synch *synch.Synch) {
+func (a *Application) runOngoing(synch *synchPkg.Synch) {
 	for synch.IsInitial() || synch.IsRunning() {
 		fmt.Println("run")
 		synch.Run()
