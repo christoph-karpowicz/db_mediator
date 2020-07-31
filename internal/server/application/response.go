@@ -1,8 +1,14 @@
 package application
 
+const (
+	PAYLOAD_TYPE_JSON = "json"
+	PAYLOAD_TYPE_TEXT = "text"
+)
+
 type response struct {
-	Err     bool   `json:"err"`
-	Payload string `json:"payload"`
+	Err         bool   `json:"err"`
+	PayloadType string `json:"payloadType"`
+	Payload     string `json:"payload"`
 }
 
 func createResponse(appRes interface{}) *response {
@@ -12,18 +18,21 @@ func createResponse(appRes interface{}) *response {
 	case error:
 		panic(appRes.(error))
 		res = &response{
-			Err:     true,
-			Payload: appRes.(error).Error(),
+			Err:         true,
+			PayloadType: PAYLOAD_TYPE_TEXT,
+			Payload:     appRes.(error).Error(),
 		}
 	case string:
 		res = &response{
-			Err:     false,
-			Payload: appRes.(string),
+			Err:         false,
+			PayloadType: PAYLOAD_TYPE_TEXT,
+			Payload:     appRes.(string),
 		}
 	case []byte:
 		res = &response{
-			Err:     false,
-			Payload: string(appRes.([]byte)),
+			Err:         false,
+			PayloadType: PAYLOAD_TYPE_JSON,
+			Payload:     string(appRes.([]byte)),
 		}
 	}
 

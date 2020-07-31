@@ -8,6 +8,11 @@ import (
 	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
 
+const (
+	TO_CLAUSE    = "TO"
+	WHERE_CLAUSE = "WHERE"
+)
+
 type linkParserError struct {
 	errMsg string
 }
@@ -36,9 +41,9 @@ func (e *matcherParserError) Error() string {
 func ParseLink(link string) (map[string]string, error) {
 	result := make(map[string]string)
 	ptrn := `(?iU)^\s*` +
-		`\[(?P<` + PSUBEXP_SOURCE_NODE + `>[^\.,\s]+)\.(?P<` + PSUBEXP_SOURCE_COLUMN + `>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<` + PSUBEXP_SOURCE_WHERE + `>WHERE\s+[^\s]+.+)?\]` +
-		`\s+TO\s+` +
-		`\[(?P<` + PSUBEXP_TARGET_NODE + `>[^\.,\s]+)\.(?P<` + PSUBEXP_TARGET_COLUMN + `>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<` + PSUBEXP_TARGET_WHERE + `>WHERE\s+[^\s]+.+)?\]` +
+		`\[(?P<` + PSUBEXP_SOURCE_NODE + `>[^\.,\s]+)\.(?P<` + PSUBEXP_SOURCE_COLUMN + `>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<` + PSUBEXP_SOURCE_WHERE + `>` + WHERE_CLAUSE + `\s+[^\s]+.+)?\]` +
+		`\s+` + TO_CLAUSE + `\s+` +
+		`\[(?P<` + PSUBEXP_TARGET_NODE + `>[^\.,\s]+)\.(?P<` + PSUBEXP_TARGET_COLUMN + `>[^\.,\s]+|"[^\.,]+")(\s+)?(?P<` + PSUBEXP_TARGET_WHERE + `>` + WHERE_CLAUSE + `\s+[^\s]+.+)?\]` +
 		`\s*$`
 	compiledPtrn := regexp.MustCompile(ptrn)
 	matches := compiledPtrn.FindStringSubmatch(link)
@@ -79,19 +84,19 @@ func validateLink(link string) error {
 	if !sourcePartPtrnMatched {
 		errorsArr = append(errorsArr, "a link has to start with a source in square brackets")
 	}
-	sourceWherePtrn := regexp.MustCompile(`^\[.+\s+WHERE\s*\]\s+TO.+`)
+	sourceWherePtrn := regexp.MustCompile(`^\[.+\s+` + WHERE_CLAUSE + `\s*\]\s+` + TO_CLAUSE + `.+`)
 	if sourcePartPtrnMatched && sourceWherePtrn.MatchString(linkTrimmed) {
 		errorsArr = append(errorsArr, "where clause in the source has to be followed by one or more conditions")
 	}
-	sourceColumnPtrn := regexp.MustCompile(`^\[([^\.,\s]+)\.([^\.,\s]+|"[^\.,]+").*\]\s+TO.+`)
+	sourceColumnPtrn := regexp.MustCompile(`^\[([^\.,\s]+)\.([^\.,\s]+|"[^\.,]+").*\]\s+` + TO_CLAUSE + `.+`)
 	if sourcePartPtrnMatched && !sourceColumnPtrn.MatchString(linkTrimmed) {
 		errorsArr = append(errorsArr, "source node or column name is missing")
 	}
 
 	// Middle part of the link.
-	middlePartPtrn := regexp.MustCompile(`^\[.+\]\s+TO\s+\[.+\]$`)
+	middlePartPtrn := regexp.MustCompile(`^\[.+\]\s+` + TO_CLAUSE + `\s+\[.+\]$`)
 	if !middlePartPtrn.MatchString(linkTrimmed) {
-		errorsArr = append(errorsArr, "there has to be a 'TO' keyword between the source and target")
+		errorsArr = append(errorsArr, "there has to be a '"+TO_CLAUSE+"' keyword between the source and target")
 	}
 
 	// Target part of the link.
@@ -100,7 +105,7 @@ func validateLink(link string) error {
 	if !targetPartPtrnMatched {
 		errorsArr = append(errorsArr, "a link has to end with a target in square brackets")
 	}
-	targetWherePtrn := regexp.MustCompile(`.*TO\s+\[.+\s+WHERE\s*\]$`)
+	targetWherePtrn := regexp.MustCompile(`.*` + TO_CLAUSE + `\s+\[.+\s+` + WHERE_CLAUSE + `\s*\]$`)
 	if targetPartPtrnMatched && targetWherePtrn.MatchString(linkTrimmed) {
 		errorsArr = append(errorsArr, "where clause in the target has to be followed by one or more conditions")
 	}
@@ -123,7 +128,7 @@ func validateLink(link string) error {
 
 // ParseLinkWhere uses regexp to split the link's where clause into smaller parts.
 func ParseLinkWhere(where string) string {
-	ptrn := `(?iU)^\s*WHERE\s+`
+	ptrn := `(?iU)^\s*` + WHERE_CLAUSE + `\s+`
 	compiledPtrn := regexp.MustCompile(ptrn)
 	result := compiledPtrn.ReplaceAll([]byte(where), []byte(""))
 	resultAsString := string(result)
@@ -136,7 +141,7 @@ func ParseMapping(mapping string) (map[string]string, error) {
 	result := make(map[string]string)
 	ptrn := `(?iU)^\s*` +
 		`(?P<` + PSUBEXP_SOURCE_NODE + `>[^\.,]+)\.(?P<` + PSUBEXP_SOURCE_COLUMN + `>[^\.,]+)` +
-		`\s+TO\s+` +
+		`\s+` + TO_CLAUSE + `\s+` +
 		`(?P<` + PSUBEXP_TARGET_NODE + `>[^\.,]+)\.(?P<` + PSUBEXP_TARGET_COLUMN + `>[^\.,]+)` +
 		`\s*$`
 	compiledPtrn := regexp.MustCompile(ptrn)
@@ -168,14 +173,14 @@ func validateMapping(mapping string) error {
 	spacePtrn := regexp.MustCompile(`\s+`)
 	mappingSplit := spacePtrn.Split(mappingTrimmed, -1)
 
-	if len(mappingSplit) > 2 && mappingSplit[1] != "TO" {
-		errorsArr = append(errorsArr, "there has to be a 'TO' keyword between the source and target nodes")
+	if len(mappingSplit) > 2 && mappingSplit[1] != TO_CLAUSE {
+		errorsArr = append(errorsArr, "there has to be a '"+TO_CLAUSE+"' keyword between the source and target nodes")
 	}
-	if len(mappingSplit) == 2 && mappingSplit[0] == "TO" {
-		errorsArr = append(errorsArr, "there has to be a source column before the 'TO' keyword")
+	if len(mappingSplit) == 2 && mappingSplit[0] == TO_CLAUSE {
+		errorsArr = append(errorsArr, "there has to be a source column before the '"+TO_CLAUSE+"' keyword")
 	}
-	if len(mappingSplit) == 2 && mappingSplit[1] == "TO" {
-		errorsArr = append(errorsArr, "there has to be a target column after the 'TO' keyword")
+	if len(mappingSplit) == 2 && mappingSplit[1] == TO_CLAUSE {
+		errorsArr = append(errorsArr, "there has to be a target column after the '"+TO_CLAUSE+"' keyword")
 	}
 	if len(mappingSplit) > 3 {
 		errorsArr = append(errorsArr, "there's redundant data in the mapping")

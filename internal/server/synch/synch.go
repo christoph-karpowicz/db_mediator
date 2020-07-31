@@ -39,6 +39,7 @@ func (s *Synch) Init(DBMap map[string]*db.Database, stype string) {
 		panic(err)
 	}
 	s.stype = stypeField
+	fmt.Println(stypeField)
 
 	s.History = &History{}
 	tStart := time.Now()

@@ -6,10 +6,15 @@ import "fmt"
 func printStopResponse(res map[string]interface{}) {
 	var resStr string
 
+	fmt.Println(res["payloadType"].(string))
 	if res["err"].(bool) {
 		resStr = stopResponsePrinters["error"](res)
 	} else {
-		resStr = stopResponsePrinters["stop"](res)
+		if res["payloadType"].(string) == PAYLOAD_TYPE_TEXT {
+			resStr = stopResponsePrinters["stop"](res)
+		} else if res["payloadType"].(string) == PAYLOAD_TYPE_JSON {
+			resStr = runResponsePrinters["one-off"](res)
+		}
 	}
 
 	fmt.Println(resStr)

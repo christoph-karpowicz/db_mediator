@@ -7,7 +7,6 @@ package application
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -52,10 +51,6 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	if !synchFound {
 		panic("[synchronization search] '" + synchKey + "' not found.")
 	}
-	sType, err := synchPkg.FindSynchType(synchType)
-	if err != nil {
-		panic(err)
-	}
 
 	synch.SetSimulation(simulation)
 
@@ -63,10 +58,10 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	synch.Init(a.dbs, synchType)
 	// Initialize history data structures.
 	synch.GetHistory().SetReporter(report.CreateReporter(synch))
-	synch.GetHistory().Init()
+	synch.GetHistory().Init(synch)
 
 	// Carry out all synch actions.
-	if !simulation && sType == synchPkg.ONGOING {
+	if !simulation && synch.GetType() == synchPkg.ONGOING {
 		go a.runOngoing(synch)
 		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
 	} else {
@@ -93,54 +88,30 @@ func (a *Application) runOngoing(synch *synchPkg.Synch) {
 }
 
 // synchronize carries out a synchronization requested by the client.
-func (a *Application) stop(resChan chan interface{}, synchKey string, all bool) {
+func (a *Application) stop(resChan chan interface{}, synchKey string) {
 	defer func() {
 		if r := recover(); r != nil {
 			resChan <- r.(error)
 		}
 	}()
 
-	var response string
-	synchsStopped := make([]string, 0)
-	if !all {
-		for skey, synch := range a.synchs {
-			if synch.IsRunning() {
-				synch.Stop()
-				synch.Reset()
-				synchsStopped = append(synchsStopped, skey)
-			}
-		}
-	} else {
-		synch, synchFound := a.synchs[synchKey]
-		if !synchFound {
-			panic("[synchronization search] '" + synchKey + "' not found.")
-		}
-
-		if synch.IsRunning() {
-			synch.Stop()
-			synch.Reset()
-			synchsStopped = append(synchsStopped, synchKey)
-		}
+	var response interface{}
+	synch, synchFound := a.synchs[synchKey]
+	if !synchFound {
+		panic("[synchronization search] '" + synchKey + "' not found.")
 	}
 
-	if len(synchsStopped) > 0 {
-		synchWord := "Synch"
-		if len(synchsStopped) > 1 {
-			synchWord += "s"
+	if synch.IsRunning() {
+		// Gather and marshal results.
+		synchReport, err := a.synchs[synchKey].GetHistory().GenerateReport()
+		if err != nil {
+			panic(err)
 		}
 
-		for _, synchStopped := range synchsStopped {
-			// Gather and marshal results.
-			synchReport, err := a.synchs[synchStopped].GetHistory().GenerateReport()
-			if err != nil {
-				panic(err)
-			}
-			response += string(synchReport)
-		}
+		synch.Stop()
+		synch.Reset()
 
-		response += fmt.Sprintf("\n\n%s %s stopped.", synchWord, strings.Join(synchsStopped, ", "))
-	} else if all && len(synchsStopped) == 0 {
-		response = "No running synchs found."
+		response = synchReport
 	} else {
 		response = fmt.Sprintf("Synch %s is not running.", synchKey)
 	}

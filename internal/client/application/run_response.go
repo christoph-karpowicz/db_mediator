@@ -27,7 +27,8 @@ func printAction(actionString string) string {
 		panic(err)
 	}
 
-	actionPrinter, actionPrinterExists := actionPrinters[actionMap["actionType"].(string)]
+	actType := strings.ToLower(actionMap["actionType"].(string))
+	actionPrinter, actionPrinterExists := actionPrinters[actType]
 	if !actionPrinterExists {
 		panic("Action printer function for \"" + actionMap["actionType"].(string) + "\" doesn't exist.")
 	}

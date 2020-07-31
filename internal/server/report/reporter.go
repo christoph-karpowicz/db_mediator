@@ -51,16 +51,12 @@ func (r *Reporter) AddAction(linkID string, actionJSON []byte, actionType string
 	return true, nil
 }
 
+func (r *Reporter) SetReportMessage(msg string) {
+	r.rep.msg = msg
+}
+
 // Finalize wraps up the report creation process.
 func (r *Reporter) Finalize() ([]byte, error) {
-	if r.synch.IsSimulation() {
-		r.rep.msg = "'" + r.synch.GetConfig().Name + "' simulation was successful. " +
-			"The report contains changes that would be made if you requested an actual synchronization."
-	} else {
-		r.rep.msg = "'" + r.synch.GetConfig().Name + "' synchronization was successful. " +
-			"The report contains changes that have been made to the relevant nodes."
-	}
-
 	toJSON, err := r.rep.ToJSON()
 	if err != nil {
 		return nil, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}

@@ -80,17 +80,17 @@ func (a *Application) setCLI() {
 		{
 			Name:  "stop",
 			Usage: "Stop specified synchronization.",
-			Flags: []cli.Flag{
-				&cli.BoolFlag{
-					Name:    "all",
-					Aliases: []string{"a"},
-					Usage:   "Stop all synchronizations.",
-				},
-			},
+			// Flags: []cli.Flag{
+			// 	&cli.BoolFlag{
+			// 		Name:    "all",
+			// 		Aliases: []string{"a"},
+			// 		Usage:   "Stop all synchronizations.",
+			// 	},
+			// },
 			Action: func(c *cli.Context) error {
-				allFlag := c.Bool("all")
+				// allFlag := c.Bool("all")
 
-				a.stopSynch(c.Args().Get(0), allFlag)
+				a.stopSynch(c.Args().Get(0))
 
 				return nil
 			},
@@ -111,10 +111,10 @@ func (a *Application) runSynch(synchType string, synchName string, simulation bo
 }
 
 // stopSynch prepares the parameters for a synchronization stop request and invokes a GET function.
-func (a *Application) stopSynch(synchName string, all bool) {
+func (a *Application) stopSynch(synchName string) {
 	paramMap := make(map[string]string)
 	paramMap["stop"] = synchName
-	paramMap["all"] = strconv.FormatBool(all)
+	// paramMap["all"] = strconv.FormatBool(all)
 
 	response := a.makeGETRequest("http://localhost:8000/stop", paramMap)
 
