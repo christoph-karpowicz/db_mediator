@@ -4,6 +4,6 @@
 /server
 /client
 /docker-compose.yml
-/config/synchs/*
-!/config/synchs/example.yaml
+/config/synch/*
+!/config/synch/example.yaml
 /.vscode

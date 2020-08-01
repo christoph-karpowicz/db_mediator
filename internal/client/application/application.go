@@ -95,6 +95,15 @@ func (a *Application) setCLI() {
 				return nil
 			},
 		},
+		{
+			Name:  "watch",
+			Usage: "Watch tables from specified databases.",
+			Action: func(c *cli.Context) error {
+				a.runWatch(c.Args().Get(0))
+
+				return nil
+			},
+		},
 	}
 }
 
@@ -105,7 +114,7 @@ func (a *Application) runSynch(synchType string, synchName string, simulation bo
 	paramMap["run"] = synchName
 	paramMap["simulation"] = strconv.FormatBool(simulation)
 
-	response := a.makeGETRequest("http://localhost:8000/run", paramMap)
+	response := a.makeGETRequest("http://localhost:8000/runSynch", paramMap)
 
 	printRunResponse(response, synchType)
 }
@@ -116,7 +125,17 @@ func (a *Application) stopSynch(synchName string) {
 	paramMap["stop"] = synchName
 	// paramMap["all"] = strconv.FormatBool(all)
 
-	response := a.makeGETRequest("http://localhost:8000/stop", paramMap)
+	response := a.makeGETRequest("http://localhost:8000/stopSynch", paramMap)
+
+	printStopResponse(response)
+}
+
+// runWatch prepares the parameters for a watcher run request and invokes a GET function.
+func (a *Application) runWatch(watcherName string) {
+	paramMap := make(map[string]string)
+	paramMap["run"] = watcherName
+
+	response := a.makeGETRequest("http://localhost:8000/runWatch", paramMap)
 
 	printStopResponse(response)
 }
@@ -134,8 +153,6 @@ func (a *Application) makeGETRequest(url string, params map[string]string) map[s
 	}
 	req.URL.RawQuery = q.Encode()
 
-	// fmt.Println(req.URL.RawQuery)
-
 	res, err := a.client.Do(req)
 	if err != nil {
 		log.Fatalln(err)
@@ -147,8 +164,6 @@ func (a *Application) makeGETRequest(url string, params map[string]string) map[s
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	// fmt.Println(string(resBody))
 
 	return parseResponse(resBody)
 }

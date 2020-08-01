@@ -34,8 +34,10 @@ func (a *Application) Init() {
 }
 
 func (a *Application) listen() {
-	http.Handle("/run", &runHandler{app: a})
-	http.Handle("/stop", &stopHandler{app: a})
+	http.Handle("/", &frontHandler{app: a})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("front/build/static"))))
+	http.Handle("/runSynch", &runHandler{app: a})
+	http.Handle("/stopSynch", &stopHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 

@@ -16,7 +16,7 @@ func TestYAML(t *testing.T) {
 }
 
 func TestDir(t *testing.T) {
-	files, err := ioutil.ReadDir("./config/synchs")
+	files, err := ioutil.ReadDir("./config/synch")
 	if err != nil {
 		log.Fatal(err)
 	}

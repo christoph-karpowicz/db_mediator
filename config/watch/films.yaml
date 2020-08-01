@@ -1,0 +1,13 @@
+name: films
+
+nodes:
+    - 
+        name        : dvdrental_films
+        database    : dvdrental
+        table       : film
+        key         : film_id
+    -
+        name        : msamp_films
+        database    : msamp
+        table       : Sakila_films
+        key         : _id
