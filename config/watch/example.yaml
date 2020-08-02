@@ -1,0 +1,5 @@
+name: example
+
+nodes:
+    - dvdrental.film
+    - msamp.Sakila_films

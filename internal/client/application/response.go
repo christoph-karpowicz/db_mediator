@@ -1,6 +1,8 @@
 package application
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 const (
 	PAYLOAD_TYPE_JSON = "json"

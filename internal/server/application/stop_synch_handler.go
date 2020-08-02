@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-type stopHandler struct {
+type stopSynchHandler struct {
 	app *Application
 }
 
-func (h *stopHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *stopSynchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	stop, ok := r.URL.Query()["stop"]
 	if !ok || len(stop[0]) < 1 {
 		stop = []string{""}
@@ -28,7 +28,7 @@ func (h *stopHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// A response channel can receive data of type 'error' or []byte.
 	resChan := make(chan interface{})
-	go h.app.stop(resChan, stop[0])
+	go h.app.stopSynch(resChan, stop[0])
 
 	response := createResponse(<-resChan)
 	responseJSON, err := json.Marshal(response)

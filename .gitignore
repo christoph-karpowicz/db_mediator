@@ -6,4 +6,5 @@
 /docker-compose.yml
 /config/synch/*
 !/config/synch/example.yaml
+!/config/watch/example.yaml
 /.vscode

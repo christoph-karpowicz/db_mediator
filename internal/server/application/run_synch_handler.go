@@ -8,11 +8,11 @@ import (
 	"strconv"
 )
 
-type runHandler struct {
+type runSynchHandler struct {
 	app *Application
 }
 
-func (h *runHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *runSynchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	synchType, ok := r.URL.Query()["type"]
 	if !ok || len(synchType[0]) < 1 {
 		log.Fatalln("[http request] ERROR: URL param 'type' is missing.")
@@ -38,7 +38,7 @@ func (h *runHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// A response channel can receive data of type 'error' or []byte.
 	resChan := make(chan interface{})
-	go h.app.run(resChan, synchType[0], run[0], simulation)
+	go h.app.runSynch(resChan, synchType[0], run[0], simulation)
 
 	response := createResponse(<-resChan)
 	responseJSON, err := json.Marshal(response)

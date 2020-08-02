@@ -20,8 +20,9 @@ Contains all synchronization and database objects.
 Starts a web server and handles all requests.
 */
 type Application struct {
-	dbs    db.Databases
-	synchs synchPkg.Synchs
+	dbs      db.Databases
+	synchs   synchPkg.Synchs
+	watchers synchPkg.Watchers
 }
 
 // Init starts the application.
@@ -35,14 +36,16 @@ func (a *Application) Init() {
 
 func (a *Application) listen() {
 	http.Handle("/", &frontHandler{app: a})
+	http.Handle("/ws", &webSocketHandler{app: a})
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("front/build/static"))))
-	http.Handle("/runSynch", &runHandler{app: a})
-	http.Handle("/stopSynch", &stopHandler{app: a})
+	http.Handle("/runSynch", &runSynchHandler{app: a})
+	http.Handle("/stopSynch", &stopSynchHandler{app: a})
+	http.Handle("/runWatch", &runWatchHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 
-// run carries out a synchronization run requested by the client.
-func (a *Application) run(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
+// runSynch carries out a synchronization run requested by the client.
+func (a *Application) runSynch(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
 	// defer func() {
 	// 	if r := recover(); r != nil {
 	// 		resChan <- r.(error)
@@ -64,7 +67,7 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 
 	// Carry out all synch actions.
 	if !simulation && synch.GetType() == synchPkg.ONGOING {
-		go a.runOngoing(synch)
+		go a.runOngoingSynch(synch)
 		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
 	} else {
 		synch.Run()
@@ -80,7 +83,7 @@ func (a *Application) run(resChan chan interface{}, synchType string, synchKey s
 	}
 }
 
-func (a *Application) runOngoing(synch *synchPkg.Synch) {
+func (a *Application) runOngoingSynch(synch *synchPkg.Synch) {
 	for synch.IsInitial() || synch.IsRunning() {
 		fmt.Println("run")
 		synch.Run()
@@ -89,8 +92,8 @@ func (a *Application) runOngoing(synch *synchPkg.Synch) {
 	}
 }
 
-// synchronize carries out a synchronization requested by the client.
-func (a *Application) stop(resChan chan interface{}, synchKey string) {
+// stopSynch stops a specified synchronization.
+func (a *Application) stopSynch(resChan chan interface{}, synchKey string) {
 	defer func() {
 		if r := recover(); r != nil {
 			resChan <- r.(error)
@@ -105,7 +108,7 @@ func (a *Application) stop(resChan chan interface{}, synchKey string) {
 
 	if synch.IsRunning() {
 		// Gather and marshal results.
-		synchReport, err := a.synchs[synchKey].GetHistory().GenerateReport()
+		synchReport, err := synch.GetHistory().GenerateReport()
 		if err != nil {
 			panic(err)
 		}
@@ -118,11 +121,38 @@ func (a *Application) stop(resChan chan interface{}, synchKey string) {
 		response = fmt.Sprintf("Synch %s is not running.", synchKey)
 	}
 
-	// Gather and marshal results.
-	// synchReport, err := synch.GetHistory().GenerateReport()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	// Send the reponse to the http init handler.
+	resChan <- response
+}
+
+// runWatch starts a watcher.
+func (a *Application) runWatch(resChan chan interface{}, watcherKey string) {
+	defer func() {
+		if r := recover(); r != nil {
+			resChan <- r.(error)
+		}
+	}()
+
+	var response interface{}
+	watcher, watcherFound := a.watchers[watcherKey]
+	if !watcherFound {
+		panic("[watcher search] '" + watcherKey + "' not found.")
+	}
+
+	if watcher.IsRunning() {
+		// Gather and marshal results.
+		synchReport, err := watcher.GetHistory().GenerateReport()
+		if err != nil {
+			panic(err)
+		}
+
+		watcher.Stop()
+		watcher.Reset()
+
+		response = synchReport
+	} else {
+		response = fmt.Sprintf("Watcher %s is not running.", watcherKey)
+	}
 
 	// Send the reponse to the http init handler.
 	resChan <- response
