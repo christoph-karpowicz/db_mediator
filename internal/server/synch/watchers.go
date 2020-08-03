@@ -14,12 +14,11 @@ func (w *Watchers) Init() {
 }
 
 func (w *Watchers) getConfigs() {
-	var wtchCfgs []*cfg.WatcherConfig = cfg.GetWatcherConfigs()
+	var wtchCfgs []cfg.Config = cfg.GetWatcherConfigs()
 
 	for i := 0; i < len(wtchCfgs); i++ {
-		wtchCfg := wtchCfgs[i]
-		(*w)[wtchCfgs[i].Name] = &Watcher{cfg: wtchCfg, initial: true}
-		// fmt.Printf("val: %s\n", dbDataArr.Databases[i].Name)
+		wtchCfg := wtchCfgs[i].(*cfg.WatcherConfig)
+		(*w)[wtchCfg.Name] = &Watcher{cfg: wtchCfg, initial: true}
 	}
 }
 

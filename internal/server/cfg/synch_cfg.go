@@ -1,6 +1,8 @@
 package cfg
 
 import (
+	"fmt"
+
 	validationUtil "github.com/christoph-karpowicz/unifier/internal/util/validation"
 )
 
@@ -31,6 +33,7 @@ func (s *SynchConfig) Validate() {
 }
 
 // GetSynchConfigs loads configs from the synchs directory.
-func GetSynchConfigs() []*SynchConfig {
+func GetSynchConfigs() []Config {
+	fmt.Println("Synchs:")
 	return ImportYAMLDir("./config/synch")
 }

@@ -3,6 +3,7 @@ package application
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -13,8 +14,7 @@ type runWatchHandler struct {
 func (h *runWatchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	run, ok := r.URL.Query()["run"]
 	if !ok || len(run[0]) < 1 {
-		run = []string{""}
-		// log.Fatalln("[http request] ERROR: URL param 'run' is missing.")
+		log.Fatalln("[http request] ERROR: URL param 'run' is missing.")
 	}
 
 	// A response channel can receive data of type 'error' or []byte.

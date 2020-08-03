@@ -31,6 +31,8 @@ func (a *Application) Init() {
 	a.dbs.Init()
 	a.synchs = synchPkg.CreateSynchs()
 	a.synchs.Init()
+	a.watchers = synchPkg.CreateWatchers()
+	a.watchers.Init()
 	a.listen()
 }
 
@@ -41,6 +43,7 @@ func (a *Application) listen() {
 	http.Handle("/runSynch", &runSynchHandler{app: a})
 	http.Handle("/stopSynch", &stopSynchHandler{app: a})
 	http.Handle("/runWatch", &runWatchHandler{app: a})
+	http.Handle("/stopWatch", &stopWatchHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 
@@ -127,6 +130,31 @@ func (a *Application) stopSynch(resChan chan interface{}, synchKey string) {
 
 // runWatch starts a watcher.
 func (a *Application) runWatch(resChan chan interface{}, watcherKey string) {
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		resChan <- r.(error)
+	// 	}
+	// }()
+
+	var response interface{}
+	watcher, watcherFound := a.watchers[watcherKey]
+	if !watcherFound {
+		panic("[watcher search] '" + watcherKey + "' not found.")
+	}
+
+	if watcher.IsRunning() {
+		response = fmt.Sprintf("Watcher %s is already running.", watcherKey)
+	} else {
+		// watcher.Init()
+		resChan <- fmt.Sprintf("Watcher %s started.", watcherKey)
+	}
+
+	// Send the reponse to the http init handler.
+	resChan <- response
+}
+
+// stopWatch stops a specified watcher.
+func (a *Application) stopWatch(resChan chan interface{}, watcherKey string) {
 	defer func() {
 		if r := recover(); r != nil {
 			resChan <- r.(error)
@@ -140,27 +168,13 @@ func (a *Application) runWatch(resChan chan interface{}, watcherKey string) {
 	}
 
 	if watcher.IsRunning() {
-		// Gather and marshal results.
-		synchReport, err := watcher.GetHistory().GenerateReport()
-		if err != nil {
-			panic(err)
-		}
-
-		watcher.Stop()
-		watcher.Reset()
-
-		response = synchReport
+		// watcher.Stop()
+		// watcher.Reset()
+		response = fmt.Sprintf("Watch %s stopped.", watcherKey)
 	} else {
-		response = fmt.Sprintf("Watcher %s is not running.", watcherKey)
+		response = fmt.Sprintf("Watch %s is not running.", watcherKey)
 	}
 
 	// Send the reponse to the http init handler.
 	resChan <- response
 }
-
-// synchronizeArray carries out aan array of synchronizations requested by the client.
-// func (a *Application) synchronizeArray(synchType string, synchKeys []string, simulation bool) {
-// 	for _, arg := range synchKeys {
-// 		a.synchronize(synchType, arg, simulation)
-// 	}
-// }

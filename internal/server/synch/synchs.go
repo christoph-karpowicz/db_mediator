@@ -14,12 +14,11 @@ func (s *Synchs) Init() {
 }
 
 func (s *Synchs) getConfigs() {
-	var synchCfgs []*cfg.SynchConfig = cfg.GetSynchConfigs()
+	var synchCfgs []cfg.Config = cfg.GetSynchConfigs()
 
 	for i := 0; i < len(synchCfgs); i++ {
-		synchCfg := synchCfgs[i]
-		(*s)[synchCfgs[i].Name] = &Synch{cfg: synchCfg, initial: true}
-		// fmt.Printf("val: %s\n", dbDataArr.Databases[i].Name)
+		synchCfg := synchCfgs[i].(*cfg.SynchConfig)
+		(*s)[synchCfg.Name] = &Synch{cfg: synchCfg, initial: true}
 	}
 }
 

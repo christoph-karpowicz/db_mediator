@@ -24,3 +24,17 @@ type Watcher struct {
 func (w *Watcher) GetConfig() *cfg.WatcherConfig {
 	return w.cfg
 }
+
+func (w *Watcher) IsInitial() bool {
+	return w.initial
+}
+
+// SetInitial sets the initial struct field indicating whether
+// it'w the first run of the synch.
+func (w *Watcher) SetInitial(ini bool) {
+	w.initial = ini
+}
+
+func (w *Watcher) IsRunning() bool {
+	return w.running
+}

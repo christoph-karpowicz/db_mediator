@@ -12,32 +12,30 @@ import (
 
 // ImportYAMLDir invokes the import function on all .yaml files from
 // a directory.
-func ImportYAMLDir(dirPath string) []*SynchConfig {
-	var synchCfgArray []*SynchConfig = make([]*SynchConfig, 0)
+func ImportYAMLDir(dirPath string) []Config {
+	var cfgs []Config = make([]Config, 0)
 
 	configFiles, err := ioutil.ReadDir(dirPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("----------------")
-	fmt.Println("Synchs:")
 	for _, configFile := range configFiles {
-		var synchCfg SynchConfig = SynchConfig{}
-		ImportYAMLFile(&synchCfg, dirPath+"/"+configFile.Name())
+		var config Config
+		switch dirPath {
+		case "./config/synch":
+			config = &SynchConfig{}
+			cfgs = append(cfgs, config)
+		case "./config/watch":
+			config = &WatcherConfig{}
+			cfgs = append(cfgs, config)
+		}
 
-		// Don't load inactive synchs.
-		// if !synchData.Settings.Active {
-		// 	continue
-		// }
-
-		synchCfgArray = append(synchCfgArray, &synchCfg)
 		fmt.Println("Config file name: " + configFile.Name())
-		// fmt.Println(synchData)
+		ImportYAMLFile(config, dirPath+"/"+configFile.Name())
 	}
-	fmt.Println("----------------")
 
-	return synchCfgArray
+	return cfgs
 }
 
 // ImportYAMLFile imports a configuration file into a Config struct.
@@ -63,6 +61,8 @@ func ImportYAMLFile(cfg Config, filePath string) {
 		marshalErr = yaml.Unmarshal(byteArray, cfg.(*DbConfigArray))
 	case *SynchConfig:
 		marshalErr = yaml.Unmarshal(byteArray, cfg.(*SynchConfig))
+	case *WatcherConfig:
+		marshalErr = yaml.Unmarshal(byteArray, cfg.(*WatcherConfig))
 	}
 
 	if marshalErr != nil {

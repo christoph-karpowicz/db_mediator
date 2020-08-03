@@ -1,6 +1,8 @@
 package cfg
 
 import (
+	"fmt"
+
 	validationUtil "github.com/christoph-karpowicz/unifier/internal/util/validation"
 )
 
@@ -12,14 +14,11 @@ type WatcherConfig struct {
 
 // Validate data from the YAML file.
 func (s *WatcherConfig) Validate() {
-	validationUtil.YAMLStruct(*s, synchNullableFields)
-
-	for _, node := range s.Nodes {
-		validationUtil.YAMLStruct(node, synchNullableFields)
-	}
+	validationUtil.YAMLStruct(*s, nil)
 }
 
 // GetWatcherConfigs loads configs from the synchs directory.
-func GetWatcherConfigs() []*WatcherConfig {
+func GetWatcherConfigs() []Config {
+	fmt.Println("Watchers:")
 	return ImportYAMLDir("./config/watch")
 }
