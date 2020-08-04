@@ -35,5 +35,5 @@ func (s *SynchConfig) Validate() {
 // GetSynchConfigs loads configs from the synchs directory.
 func GetSynchConfigs() []Config {
 	fmt.Println("Synchs:")
-	return ImportYAMLDir("./config/synch")
+	return ImportYAMLDir(SYNCH_DIR)
 }

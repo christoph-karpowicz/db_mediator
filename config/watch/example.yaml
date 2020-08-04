@@ -1,5 +1,9 @@
 name: example
 
 nodes:
-    - dvdrental.film
-    - msamp.Sakila_films
+    - 
+        database    : dvdrental
+        table       : film
+    -
+        database    : msamp
+        table       : Sakila_films

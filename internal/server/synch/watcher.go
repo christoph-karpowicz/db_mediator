@@ -4,6 +4,9 @@ Package synch handles all data sychronization.
 package synch
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
 )
@@ -12,12 +15,19 @@ import (
 // It holds all configuration from an .yaml file, raw and parsed.
 type Watcher struct {
 	cfg     *cfg.WatcherConfig
-	dbs     map[string]*db.Database
-	tables  map[string]*table
-	nodes   map[string]*node
+	dbStore *dbStore
 	running bool
 	initial bool
 	History *History
+}
+
+// Init prepares the watcher by fetching all necessary data
+// and parsing it.
+func (w *Watcher) Init(DBMap map[string]*db.Database) {
+	tStart := time.Now()
+	w.dbStore = &dbStore{}
+	w.dbStore.Init(DBMap, w.cfg.Nodes)
+	fmt.Println("Watcher init finished in: ", time.Since(tStart).String())
 }
 
 // GetConfig returns the synch config struct.
@@ -37,4 +47,14 @@ func (w *Watcher) SetInitial(ini bool) {
 
 func (w *Watcher) IsRunning() bool {
 	return w.running
+}
+
+// Run executes a single run of the watcher.
+func (w *Watcher) Run() {
+	w.running = true
+
+	// s.selectData()
+	// s.pairData()
+	// s.synchronize()
+	// s.flush()
 }

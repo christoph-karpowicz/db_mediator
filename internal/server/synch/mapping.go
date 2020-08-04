@@ -25,8 +25,8 @@ func createMapping(synch *Synch, mapping map[string]string) *Mapping {
 
 	newMapping := Mapping{
 		synch:        synch,
-		source:       synch.nodes[mapping[cfg.PSUBEXP_SOURCE_NODE]],
-		target:       synch.nodes[mapping[cfg.PSUBEXP_TARGET_NODE]],
+		source:       synch.dbStore.nodes[mapping[cfg.PSUBEXP_SOURCE_NODE]],
+		target:       synch.dbStore.nodes[mapping[cfg.PSUBEXP_TARGET_NODE]],
 		sourceColumn: mapping[cfg.PSUBEXP_SOURCE_COLUMN],
 		targetColumn: mapping[cfg.PSUBEXP_TARGET_COLUMN],
 	}

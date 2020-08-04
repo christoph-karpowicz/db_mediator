@@ -70,7 +70,7 @@ func (a *Application) runSynch(resChan chan interface{}, synchType string, synch
 
 	// Carry out all synch actions.
 	if !simulation && synch.GetType() == synchPkg.ONGOING {
-		go a.runOngoingSynch(synch)
+		go a.runSynchLoop(synch)
 		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
 	} else {
 		synch.Run()
@@ -86,9 +86,9 @@ func (a *Application) runSynch(resChan chan interface{}, synchType string, synch
 	}
 }
 
-func (a *Application) runOngoingSynch(synch *synchPkg.Synch) {
+func (a *Application) runSynchLoop(synch *synchPkg.Synch) {
 	for synch.IsInitial() || synch.IsRunning() {
-		fmt.Println("run")
+		fmt.Println("run synch")
 		synch.Run()
 		synch.SetInitial(false)
 		time.Sleep(1 * time.Second)
@@ -145,12 +145,22 @@ func (a *Application) runWatch(resChan chan interface{}, watcherKey string) {
 	if watcher.IsRunning() {
 		response = fmt.Sprintf("Watcher %s is already running.", watcherKey)
 	} else {
-		// watcher.Init()
+		watcher.Init(a.dbs)
+		a.runWatchLoop(watcher)
 		resChan <- fmt.Sprintf("Watcher %s started.", watcherKey)
 	}
 
 	// Send the reponse to the http init handler.
 	resChan <- response
+}
+
+func (a *Application) runWatchLoop(watcher *synchPkg.Watcher) {
+	for watcher.IsInitial() || watcher.IsRunning() {
+		fmt.Println("run watch")
+		watcher.Run()
+		watcher.SetInitial(false)
+		time.Sleep(1 * time.Second)
+	}
 }
 
 // stopWatch stops a specified watcher.

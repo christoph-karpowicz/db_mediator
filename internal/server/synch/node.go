@@ -23,6 +23,14 @@ func createNode(cfg *cfg.NodeConfig, db *db.Database, tbl *table) *node {
 	return &newNode
 }
 
+func createWatcherNode(db *db.Database, tbl *table) *node {
+	newNode := node{
+		db:  db,
+		tbl: tbl,
+	}
+	return &newNode
+}
+
 func (n *node) setMatchColumn(col string) {
 	n.matchColumn = col
 }

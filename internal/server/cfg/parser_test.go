@@ -4,8 +4,6 @@ import (
 	"log"
 	"os"
 	"testing"
-
-	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 )
 
 func TestParser(t *testing.T) {
@@ -13,7 +11,7 @@ func TestParser(t *testing.T) {
 
 	var synchCfgs []Config = GetSynchConfigs()
 	for _, config := range synchCfgs {
-		cfg := config.(*cfg.SynchConfig)
+		cfg := config.(*SynchConfig)
 		if cfg.Name == "films" {
 			cfg.Validate()
 

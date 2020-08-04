@@ -18,9 +18,7 @@ import (
 // It holds all configuration from an .yaml file, raw and parsed.
 type Synch struct {
 	cfg        *cfg.SynchConfig
-	dbs        map[string]*db.Database
-	tables     map[string]*table
-	nodes      map[string]*node
+	dbStore    *dbStore
 	mappings   []*Mapping
 	Links      []*Link
 	counters   *counters
@@ -34,24 +32,19 @@ type Synch struct {
 // Init prepares the synchronization by fetching all necessary data
 // and parsing it.
 func (s *Synch) Init(DBMap map[string]*db.Database, stype string) {
+	tStart := time.Now()
 	stypeField, err := FindSynchType(stype)
 	if err != nil {
 		panic(err)
 	}
 	s.stype = stypeField
-	fmt.Println(stypeField)
 
 	s.History = &History{}
-	tStart := time.Now()
-	s.dbs = make(map[string]*db.Database)
-	s.tables = make(map[string]*table)
-	s.nodes = make(map[string]*node)
+	s.dbStore = &dbStore{}
 
 	if s.counters == nil {
 		s.counters = newCounters()
-		s.setDatabases(DBMap)
-		s.setTables()
-		s.setNodes()
+		s.dbStore.Init(DBMap, s.cfg.Nodes)
 		s.parseCfgLinks()
 		s.parseCfgMappings()
 		s.parseCfgMatcher()
@@ -73,7 +66,7 @@ func (s *Synch) GetHistory() *History {
 // GetNodes returns all nodes between which
 // synchronization takes place.
 func (s *Synch) GetNodes() map[string]*node {
-	return s.nodes
+	return s.dbStore.nodes
 }
 
 // GetType returns the type of the synch.
@@ -177,7 +170,7 @@ func (s *Synch) parseCfgMatcher() {
 		}
 
 		for _, arg := range parsedMatcher {
-			node, found := s.nodes[arg[0]]
+			node, found := s.dbStore.nodes[arg[0]]
 			if !found {
 				panic(errors.New("node name not found"))
 			}
@@ -210,63 +203,6 @@ func (s *Synch) selectData() {
 	}
 
 	s.counters.selects++
-}
-
-func (s *Synch) setDatabase(DBMap map[string]*db.Database, dbName string) {
-	_, dbExists := DBMap[dbName]
-	if dbExists {
-		s.dbs[dbName] = DBMap[dbName]
-		(*s.dbs[dbName]).Init()
-	} else {
-		dbErr := &db.DatabaseError{DBName: dbName, ErrMsg: "database hasn't been configured"}
-		panic(dbErr)
-	}
-}
-
-// setDatabases opens the chosen database connections.
-func (s *Synch) setDatabases(DBMap map[string]*db.Database) {
-	for j := range s.cfg.Nodes {
-		var nodeConfig *cfg.NodeConfig = &s.cfg.Nodes[j]
-		s.setDatabase(DBMap, nodeConfig.Database)
-	}
-}
-
-// setNodes creates node structs and adds them to the relevant synch struct field.
-func (s *Synch) setNodes() {
-	for i := range s.cfg.Nodes {
-		var nodeConfig *cfg.NodeConfig = &s.cfg.Nodes[i]
-
-		var tableName string = nodeConfig.Database + "." + nodeConfig.Table
-		_, tableFound := s.tables[tableName]
-		if !tableFound {
-			log.Fatalln("[create node] ERROR: table " + tableName + " not found.")
-		}
-
-		s.nodes[nodeConfig.Name] = createNode(nodeConfig, s.dbs[nodeConfig.Database], s.tables[tableName])
-	}
-}
-
-// setTable creates an individual table struct and selects all records from it.
-func (s *Synch) setTable(tableName string, database *db.Database) {
-	var tblID string = (*database).GetConfig().GetName() + "." + tableName
-	_, tableSet := s.tables[tblID]
-
-	if !tableSet {
-		tbl := &table{
-			id:   tblID,
-			db:   database,
-			name: tableName,
-		}
-		s.tables[tbl.id] = tbl
-	}
-}
-
-// setTables creates table structs based on node yaml data.
-func (s *Synch) setTables() {
-	for j := range s.cfg.Nodes {
-		var nodeConfig *cfg.NodeConfig = &s.cfg.Nodes[j]
-		s.setTable(nodeConfig.Table, s.dbs[nodeConfig.Database])
-	}
 }
 
 // Run executes a single run of the synchronization.

@@ -23,10 +23,10 @@ func ImportYAMLDir(dirPath string) []Config {
 	for _, configFile := range configFiles {
 		var config Config
 		switch dirPath {
-		case "./config/synch":
+		case SYNCH_DIR:
 			config = &SynchConfig{}
 			cfgs = append(cfgs, config)
-		case "./config/watch":
+		case WATCHER_DIR:
 			config = &WatcherConfig{}
 			cfgs = append(cfgs, config)
 		}
