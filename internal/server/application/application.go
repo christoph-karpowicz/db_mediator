@@ -5,6 +5,7 @@ I/O of the app.
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -38,7 +39,7 @@ func (a *Application) Init() {
 
 func (a *Application) listen() {
 	http.Handle("/", &frontHandler{app: a})
-	http.Handle("/ws", &webSocketHandler{app: a})
+	http.Handle("/ws/", &webSocketHandler{app: a})
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("front/build/static"))))
 	http.Handle("/runSynch", &runSynchHandler{app: a})
 	http.Handle("/stopSynch", &stopSynchHandler{app: a})
@@ -187,4 +188,21 @@ func (a *Application) stopWatch(resChan chan interface{}, watcherKey string) {
 
 	// Send the reponse to the http init handler.
 	resChan <- response
+}
+
+func (a *Application) listWatchers() []string {
+	watcherList := make([]string, 0)
+	for name := range a.watchers {
+		watcherList = append(watcherList, name)
+	}
+	return watcherList
+}
+
+func (a *Application) listWatchersToJSON() []byte {
+	watcherList := a.listWatchers()
+	watcherListJSON, err := json.Marshal(watcherList)
+	if err != nil {
+		panic(err)
+	}
+	return watcherListJSON
 }

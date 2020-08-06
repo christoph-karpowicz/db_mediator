@@ -19,14 +19,20 @@ type webSocketHandler struct {
 
 func (wsh *webSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wsUpgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	// w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	ws, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
 
 	log.Println("Client Connected")
-	err = ws.WriteMessage(1, []byte("Hi Client!"))
+	log.Println(string(wsh.app.listWatchersToJSON()))
+
+	if wsh.app == nil {
+		log.Println("err")
+	}
+	err = ws.WriteMessage(1, wsh.app.listWatchersToJSON())
 	if err != nil {
 		log.Println(err)
 	}

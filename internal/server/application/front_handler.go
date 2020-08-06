@@ -10,7 +10,7 @@ type frontHandler struct {
 }
 
 func (h *frontHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("front/build/index.html")
+	t, _ := template.ParseFiles("web/build/index.html")
 	err := t.Execute(w, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
