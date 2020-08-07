@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // Application is the main struct of the app.
