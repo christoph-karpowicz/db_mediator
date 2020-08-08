@@ -1,4 +1,3 @@
-// import socketIO from 'socket.io-client';
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -6,41 +5,23 @@ import {
   Route,
   Link
 } from "react-router-dom";
+import WS from './ws/ws';
+import WSReqiest from './ws/request';
 import './App.css';
 import { ReactComponent as WatchersIcon } from './assets/watchers.svg';
 import WatchersSection from './WatchersSection';
 
 function App() {
-  // const socket = socketIO('http://localhost:8000', { forceNew: true, path: '/ws' });
+  const ws = new WS("ws://127.0.0.1:8000/ws/");
+  ws.init();
 
-  // // function subscribeToTimer(cb) {
-  //   socket.on('timer', (m: any) => {
-  //     console.log(m)
-  //   });
-  //   socket.emit('subscribeToTimer', 1000);
-  // // }
-  
-  let socket = new WebSocket("ws://127.0.0.1:8000/ws/");
-  console.log("Attempting Connection...");
+  let req = new WSReqiest("test", {a:1});
+  ws.emit(req.json);
+  setTimeout(() => {
+    ws.emit(req.json);
+  }, 4000);
+  // while (!ws.emit(req.json));
 
-  socket.onopen = () => {
-    console.log("Successfully Connected");
-    socket.send("test")
-  };
-  
-  socket.onclose = event => {
-    console.log("Socket Closed Connection: ", event);
-    socket.send("Client Closed!")
-  };
-
-  socket.onerror = error => {
-    console.log("Socket Error: ", error);
-  };
-
-  socket.onmessage = function (event) {
-    console.log(event.data);
-  }
-  
   return (
     <Router>
       <div className="App">
