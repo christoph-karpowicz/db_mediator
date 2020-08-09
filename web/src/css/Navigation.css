@@ -1,0 +1,25 @@
+nav {
+    grid-area: nav;
+    display: flex;
+    position: fixed;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    width: 60px;
+    height: 100vh;
+    background-color: #fff;
+}
+nav.bordered {
+    border-right: 1px solid grey;
+}
+nav ul {
+    padding: 0;
+}
+nav li {
+    list-style: none;
+}
+nav svg {
+    width: 40px;
+    height: auto;
+    cursor: pointer;
+}

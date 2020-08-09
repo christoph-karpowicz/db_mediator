@@ -1,0 +1,28 @@
+#sub-navigation {
+    display: flex;
+    position: fixed;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid grey;
+    z-index: 90;
+    width: 60px;
+    height: 100vh;
+    transition: left .5s;
+    left: 0;
+    background-color: #fff;
+}
+#sub-navigation ul {
+    padding: 0;
+}
+#sub-navigation li {
+    list-style: none;
+}
+#sub-navigation svg {
+    width: 60px;
+    height: auto;
+    cursor: pointer;
+}
+
+#sub-navigation.active {
+    left: 60px;
+}

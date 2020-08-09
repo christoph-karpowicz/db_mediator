@@ -1,0 +1,8 @@
+div.content {
+    grid-area: content;
+    /* padding: 10px 10px 10px 60px; */
+    padding: 10px;
+    height: 150vh;
+    z-index: 80;
+    /* border: 1px solid red; */
+}

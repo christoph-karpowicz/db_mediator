@@ -1,44 +1,42 @@
 import React from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import WS from './ws/ws';
-import WSReqiest from './ws/request';
-import './App.css';
-import { ReactComponent as WatchersIcon } from './assets/watchers.svg';
-import WatchersSection from './WatchersSection';
+import WSRequest from './ws/request';
+import './css/App.css';
+import Navigation from './componenets/nav/Navigation';
+import SubNavigation from './componenets/nav/SubNavigation'
+import Content from './componenets/content/Content';
 
-function App() {
-  const ws = new WS("ws://127.0.0.1:8000/ws/");
-  ws.init();
+function App(): JSX.Element {
+  const [subNavigationActive, setSubNavigationActive] = 
+    React.useState(false)
+  
+  // const ws = new WS("ws://127.0.0.1:8000/ws/");
+  // ws.init();
 
-  let req = new WSReqiest("test", {a:1});
-  ws.emit(req.json);
-  setTimeout(() => {
-    ws.emit(req.json);
-  }, 4000);
+  // let req = new WSRequest("test", {a:1});
+  // ws.emit(req.json);
+  // setTimeout(() => {
+  //   ws.emit(req.json);
+  // }, 4000);
   // while (!ws.emit(req.json));
 
+  function onNavClick(): void {
+    console.log('ss')
+    setSubNavigationActive(!subNavigationActive);
+  }
+  
   return (
     <Router>
       <div className="App">
-        <nav>
-          <ul>
-            <li>
-              <Link to="/"><WatchersIcon /></Link>
-            </li>
-          </ul>
-        </nav>
-        <div className="content">
-          <Switch>
-            <Route path="/">
-              <WatchersSection />
-            </Route>
-          </Switch>
-        </div>
+        <Navigation 
+          isSubNavigationActive={subNavigationActive} 
+          onNavClick={onNavClick} 
+        />
+        <SubNavigation 
+          isActive={subNavigationActive} 
+        />
+        <Content />
       </div>
     </Router>
   );
