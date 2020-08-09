@@ -1,12 +1,38 @@
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
+
+const (
+	WS_REQ_GETWATCHERSLIST = "getWatchersList"
+)
+
+type wsInbound struct {
+	ID   string        `yaml:"id"`
+	Name string        `yaml:"name"`
+	Data wsInboundData `yaml:"data"`
+}
+
+type wsInboundData struct {
+}
+
+type wsOutbound struct {
+	ID      string         `yaml:"id"`
+	Name    string         `yaml:"name"`
+	Success bool           `yaml:"success"`
+	Data    wsOutboundData `yaml:"data"`
+}
+
+type wsOutboundData struct {
+	Message string `yaml:"message"`
+	Payload string `yaml:"payload"`
+}
 
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -25,9 +51,7 @@ func (wsh *webSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
 	log.Println("Client Connected")
-	log.Println(string(wsh.app.listWatchersToJSON()))
 
 	if wsh.app == nil {
 		log.Println("err")
@@ -40,19 +64,61 @@ func (wsh *webSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go wsh.wsReader(ws)
 }
 
-func (wsh *webSocketHandler) wsReader(conn *websocket.Conn) {
+func (wsh *webSocketHandler) wsReader(ws *websocket.Conn) {
 	for {
-		messageType, p, err := conn.ReadMessage()
+		messageType, message, err := ws.ReadMessage()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		fmt.Println(string(p))
+		var wsReq wsInbound
+		marshalErr := json.Unmarshal(message, &wsReq)
+		if marshalErr != nil {
+			// panic(marshalErr)
+		}
+		fmt.Println(wsReq)
+		wsh.dispatchWsRequest(ws, &wsReq, messageType)
 
-		if err := conn.WriteMessage(messageType, p); err != nil {
+		if err := ws.WriteMessage(messageType, message); err != nil {
 			log.Println(err)
 			return
 		}
 
+	}
+}
+
+func (wsh *webSocketHandler) dispatchWsRequest(ws *websocket.Conn, wsReq *wsInbound, messageType int) {
+	var wsOut wsOutbound
+
+	switch wsReq.Name {
+	case WS_REQ_GETWATCHERSLIST:
+		watchersList := wsh.app.listWatchersToJSON()
+		wsOut = wsOutbound{
+			ID:      wsReq.ID,
+			Name:    "getWatchersList",
+			Success: true,
+			Data: wsOutboundData{
+				Payload: string(watchersList),
+			},
+		}
+	default:
+		wsOut = wsOutbound{
+			ID:      wsReq.ID,
+			Name:    "unknownRequest",
+			Success: false,
+			Data: wsOutboundData{
+				Message: "Unknown websocket request name \"" + wsReq.Name + "\".",
+			},
+		}
+	}
+
+	wsOutJSON, err := json.Marshal(wsOut)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := ws.WriteMessage(messageType, wsOutJSON); err != nil {
+		log.Println(err)
+		return
 	}
 }

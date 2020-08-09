@@ -1,10 +1,19 @@
 class WS {
+    private static _instance: WS;
     private _connString: string;
     private _socket: WebSocket;
     private _isConnected: boolean;
 
     constructor(connString: string) {
         this._connString = connString;
+    }
+
+    public static getSocket(): WS {
+        if (!WS._instance) {
+            WS._instance = new WS("ws://127.0.0.1:8000/ws/");
+            WS._instance.init();
+        }
+        return WS._instance;
     }
     
     public init() {
@@ -40,7 +49,7 @@ class WS {
 
     private setOnMessage() {
         this._socket.onmessage = function (event) {
-            console.log(event.data);
+            console.log(JSON.parse(event.data));
         }
     }
     

@@ -16,6 +16,7 @@
 }
 #sub-navigation li {
     list-style: none;
+    margin: 10px 0;
 }
 #sub-navigation svg {
     width: 60px;

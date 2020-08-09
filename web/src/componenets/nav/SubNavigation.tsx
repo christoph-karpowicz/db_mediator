@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 function SubNavigation(props: any) {
   return (
-    <div id="sub-navigation" className={props.isActive ? "active" : ""}>
+    <div id="sub-navigation" className={props.isActive ? "active" : ""} onClick={props.toggleSubNavigationActive}>
         <ul>
             <li>
                 <Link to="/">test1</Link>

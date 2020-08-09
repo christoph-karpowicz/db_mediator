@@ -11,8 +11,6 @@ function App(): JSX.Element {
   const [subNavigationActive, setSubNavigationActive] = 
     React.useState(false)
   
-  // const ws = new WS("ws://127.0.0.1:8000/ws/");
-  // ws.init();
 
   // let req = new WSRequest("test", {a:1});
   // ws.emit(req.json);
@@ -21,8 +19,7 @@ function App(): JSX.Element {
   // }, 4000);
   // while (!ws.emit(req.json));
 
-  function onNavClick(): void {
-    console.log('ss')
+  function toggleSubNavigationActive(): void {
     setSubNavigationActive(!subNavigationActive);
   }
   
@@ -31,9 +28,10 @@ function App(): JSX.Element {
       <div className="App">
         <Navigation 
           isSubNavigationActive={subNavigationActive} 
-          onNavClick={onNavClick} 
+          toggleSubNavigationActive={toggleSubNavigationActive} 
         />
         <SubNavigation 
+          toggleSubNavigationActive={toggleSubNavigationActive} 
           isActive={subNavigationActive} 
         />
         <Content />
