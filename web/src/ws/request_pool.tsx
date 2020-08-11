@@ -15,8 +15,8 @@ class WSRequestPool {
         this._pool[req.getId()] = null;
     }
 
-    public respond(response: { id: string }): void {
-        this._pool[response.id] = response;
+    public respond(response: { ID: string }): void {
+        this._pool[response.ID] = response;
     }
 
     public hasResponse(reqId: string): boolean {

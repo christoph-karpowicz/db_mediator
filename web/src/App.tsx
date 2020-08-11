@@ -13,6 +13,8 @@ function App(): JSX.Element {
   
   const [subNavigationActive, setSubNavigationActive] = 
     React.useState(false)
+  const [watchers, setWatchers] = React.useState(null);
+
   
 
   // let req = new WSRequest("test", {a:1});
@@ -32,10 +34,12 @@ function App(): JSX.Element {
         <Navigation 
           isSubNavigationActive={subNavigationActive} 
           toggleSubNavigationActive={toggleSubNavigationActive} 
+          setWatchers={setWatchers}
         />
         <SubNavigation 
           toggleSubNavigationActive={toggleSubNavigationActive} 
-          isActive={subNavigationActive} 
+          isActive={subNavigationActive}
+          watchers={watchers}
         />
         <Content />
       </div>

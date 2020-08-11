@@ -5,10 +5,10 @@
     justify-content: center;
     border-right: 1px solid grey;
     z-index: 90;
-    width: 60px;
+    padding: 0 5px;
+    width: auto;
     height: 100vh;
     transition: left .5s;
-    left: 0;
     background-color: #fff;
 }
 #sub-navigation ul {
@@ -22,8 +22,4 @@
     width: 60px;
     height: auto;
     cursor: pointer;
-}
-
-#sub-navigation.active {
-    left: 60px;
 }

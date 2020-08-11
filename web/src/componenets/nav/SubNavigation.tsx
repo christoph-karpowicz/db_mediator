@@ -1,17 +1,35 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import '../../css/SubNavigation.css';
 import { Link } from "react-router-dom";
 
 function SubNavigation(props: any) {
+  const subnav = useRef<HTMLDivElement>(null);
+  const [left, setLeft] = useState<number>(0);
+
+  useEffect(() => {
+    if (subnav.current) {
+      const current: { offsetWidth: number } = subnav.current;
+      const width: number = current.offsetWidth;
+      const left = width > 0 ? width : 200;
+      setLeft(left);
+    }
+  })
+  
   return (
-    <div id="sub-navigation" className={props.isActive ? "active" : ""} onClick={props.toggleSubNavigationActive}>
+    <div 
+      id="sub-navigation" 
+      onClick={props.toggleSubNavigationActive}
+      style={{ left: (props.isActive ? left : -1*left) + "px" }}
+      ref={subnav}
+    >
         <ul>
-            <li>
-                <Link to="/">test1</Link>
-            </li>
-            <li>
-                <Link to="/">test2</Link>
-            </li>
+            {props.watchers && props.watchers.map((watcher: string, i: number) => {
+              return (
+                <li key={i}>
+                    <Link to="/">{watcher}</Link>
+                </li>
+              );
+            })}
         </ul>
     </div>
   );

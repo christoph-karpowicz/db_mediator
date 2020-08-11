@@ -56,10 +56,6 @@ func (wsh *webSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if wsh.app == nil {
 		log.Println("err")
 	}
-	err = ws.WriteMessage(1, wsh.app.listWatchersToJSON())
-	if err != nil {
-		log.Println(err)
-	}
 
 	go wsh.wsReader(ws)
 }
@@ -78,12 +74,6 @@ func (wsh *webSocketHandler) wsReader(ws *websocket.Conn) {
 		}
 		fmt.Println(wsReq)
 		wsh.dispatchWsRequest(ws, &wsReq, messageType)
-
-		// if err := ws.WriteMessage(messageType, message); err != nil {
-		// 	log.Println(err)
-		// 	return
-		// }
-
 	}
 }
 

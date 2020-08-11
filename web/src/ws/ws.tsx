@@ -7,7 +7,7 @@ class WS {
     private _connString: string;
     private _socket: WebSocket;
     private _isConnected: boolean;
-    private static TIMEOUT_AFTER: number = 5000;
+    private static readonly TIMEOUT_AFTER: number = 2500;
 
     private constructor(connString: string) {
         this._connString = connString;
@@ -58,7 +58,6 @@ class WS {
     private setOnMessage() {
         this._socket.onmessage = function (event) {
             try {
-                console.log(event.data);
                 const response = JSON.parse(event.data);
                 Application.wsRequestPool.respond(response);
             } catch(e) {
@@ -67,7 +66,7 @@ class WS {
         }
     }
     
-    public emitAndExpectResponse(req: WSRequest): Promise<object> {
+    public emitAndAwaitResponse(req: WSRequest): Promise<object> {
         req.setExpectResponse(true);
         
         return new Promise<object>((resolve, reject) => {
@@ -79,22 +78,28 @@ class WS {
                 return;
             }
 
-            while (true) {
-                const currentTime = new Date().getTime();
-                const timeDiff = currentTime - timeStart;
-                console.log(timeDiff)
-                if (timeDiff > WS.TIMEOUT_AFTER) {
-                    reject({ msg: `Request with ID: ${req.getId()} timed out.` });
-                    break;
-                }
-
-                if (!Application.wsRequestPool.hasResponse(req.getId())) {
-                    resolve(Application.wsRequestPool.poll(req.getId()));
-                    break;
-                }
+            const awaitResponse = (initial?: boolean) => {
+                const sleepFor = initial ? 1 : 1000;
                 
-                // await sleep(1000);
+                sleep(sleepFor).then(() => {
+                    const currentTime = new Date().getTime();
+                    const timeDiff = currentTime - timeStart;
+                    // console.log(timeDiff)
+                    if (timeDiff > WS.TIMEOUT_AFTER) {
+                        reject({ msg: `Request with ID: ${req.getId()} timed out.` });
+                        return;
+                    }
+    
+                    if (Application.wsRequestPool.hasResponse(req.getId())) {
+                        resolve(Application.wsRequestPool.poll(req.getId()));
+                        return;
+                    }
+
+                    awaitResponse();
+                });
             }
+
+            awaitResponse(true);
         });
     }
 
@@ -104,6 +109,7 @@ class WS {
         }
         
         this._socket.send(req.json);
+        Application.wsRequestPool.append(req);
         return true;
     }
 

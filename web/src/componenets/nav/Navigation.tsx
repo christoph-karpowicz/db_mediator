@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../../css/Navigation.css';
 import { Link } from "react-router-dom";
 import WS from '../../ws/ws';
@@ -9,8 +9,14 @@ function Navigation(props: any) {
   function onWatchersClick(): void {
     let req = new WSRequest("getWatchersList", {});
     WS.getSocket().then((ws) => {
-      ws.emitAndExpectResponse(req)
+      ws.emitAndAwaitResponse(req)
         .then((res: any) => {
+          try {
+            const watchers = JSON.parse(res.Data.Payload);
+            props.setWatchers(watchers);
+          } catch(e) {
+            console.error(e);
+          }
           console.log(res);
         })
         .catch((err: any) => {
