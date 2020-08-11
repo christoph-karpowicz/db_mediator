@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router } from "react-router-dom";
+import Application from './app/app';
 import WS from './ws/ws';
 import WSRequest from './ws/request';
 import './css/App.css';
@@ -8,6 +9,8 @@ import SubNavigation from './componenets/nav/SubNavigation'
 import Content from './componenets/content/Content';
 
 function App(): JSX.Element {
+  Application.init();
+  
   const [subNavigationActive, setSubNavigationActive] = 
     React.useState(false)
   

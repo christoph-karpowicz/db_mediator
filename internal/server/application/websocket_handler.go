@@ -79,10 +79,10 @@ func (wsh *webSocketHandler) wsReader(ws *websocket.Conn) {
 		fmt.Println(wsReq)
 		wsh.dispatchWsRequest(ws, &wsReq, messageType)
 
-		if err := ws.WriteMessage(messageType, message); err != nil {
-			log.Println(err)
-			return
-		}
+		// if err := ws.WriteMessage(messageType, message); err != nil {
+		// 	log.Println(err)
+		// 	return
+		// }
 
 	}
 }

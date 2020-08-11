@@ -1,42 +1,50 @@
+import Application from '../app/app';
+import WSRequest from './request';
+import { sleep } from '../utils/async';
+
 class WS {
     private static _instance: WS;
     private _connString: string;
     private _socket: WebSocket;
     private _isConnected: boolean;
+    private static TIMEOUT_AFTER: number = 5000;
 
-    constructor(connString: string) {
+    private constructor(connString: string) {
         this._connString = connString;
     }
 
-    public static getSocket(): WS {
+    public static async getSocket(): Promise<WS> {
         if (!WS._instance) {
             WS._instance = new WS("ws://127.0.0.1:8000/ws/");
-            WS._instance.init();
+            await WS._instance.init();
         }
         return WS._instance;
     }
     
-    public init() {
+    public async init(): Promise<void> {
+        console.log('Websocket init.')
         this._socket = new WebSocket(this._connString);
-        this.setOnOpen();
+        await this.setOnOpen();
         this.setOnClose();
         this.setOnError();
         this.setOnMessage();
     }
 
-    private setOnOpen() {
-        this._socket.onopen = () => {
-            console.log("Successfully Connected");
-            this.isConnected = true;
-            this._socket.send("test")
-        };
+    private setOnOpen(): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            this._socket.onopen = () => {
+                console.log("Successfully Connected");
+                this.isConnected = true;
+                resolve(true)
+            };
+        });
     }
 
     private setOnClose() {
         this._socket.onclose = event => {
             console.log("Socket Closed Connection: ", event);
             this.isConnected = false;
-            this.emit("Client Closed!");
+            // this.emit("Client Closed!");
         };
     }
 
@@ -49,17 +57,53 @@ class WS {
 
     private setOnMessage() {
         this._socket.onmessage = function (event) {
-            console.log(JSON.parse(event.data));
+            try {
+                console.log(event.data);
+                const response = JSON.parse(event.data);
+                Application.wsRequestPool.respond(response);
+            } catch(e) {
+                console.error(e);
+            }
         }
     }
     
-    public emit(msg: string): boolean {
+    public emitAndExpectResponse(req: WSRequest): Promise<object> {
+        req.setExpectResponse(true);
+        
+        return new Promise<object>((resolve, reject) => {
+            const timeStart = new Date().getTime();
+            
+            const emitted: boolean = this.emit(req);
+            if (!emitted) {
+                reject({ msg: "Websocket is closed." });
+                return;
+            }
+
+            while (true) {
+                const currentTime = new Date().getTime();
+                const timeDiff = currentTime - timeStart;
+                console.log(timeDiff)
+                if (timeDiff > WS.TIMEOUT_AFTER) {
+                    reject({ msg: `Request with ID: ${req.getId()} timed out.` });
+                    break;
+                }
+
+                if (!Application.wsRequestPool.hasResponse(req.getId())) {
+                    resolve(Application.wsRequestPool.poll(req.getId()));
+                    break;
+                }
+                
+                // await sleep(1000);
+            }
+        });
+    }
+
+    public emit(req: WSRequest): boolean {
         if (!this.isConnected) {
-            console.error("Websocket is closed.");
             return false;
         }
         
-        this._socket.send(msg);
+        this._socket.send(req.json);
         return true;
     }
 

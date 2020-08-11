@@ -8,7 +8,15 @@ import { ReactComponent as WatchersIcon } from '../../assets/watchers.svg';
 function Navigation(props: any) {
   function onWatchersClick(): void {
     let req = new WSRequest("getWatchersList", {});
-    WS.getSocket().emit(req.json);
+    WS.getSocket().then((ws) => {
+      ws.emitAndExpectResponse(req)
+        .then((res: any) => {
+          console.log(res);
+        })
+        .catch((err: any) => {
+          console.error(err);
+        });
+    });
 
     // console.log('ss')
     props.toggleSubNavigationActive();

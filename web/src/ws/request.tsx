@@ -4,6 +4,7 @@ class WSRequest {
     private _id: string;
     private _name: string;
     private _data: object;
+    private _expectResponse: boolean;
 
     constructor(name: string, data: object) {
         this._name = name;
@@ -16,7 +17,9 @@ class WSRequest {
 
     get json(): string {
         let req: object;
-        this.assignId();
+        if (this._expectResponse) {
+            this.assignId();
+        }
 
         if (this._data) {
             req = {
@@ -32,6 +35,14 @@ class WSRequest {
         }
         
         return JSON.stringify(req);
+    }
+
+    public getId(): string {
+        return this._id;
+    }
+
+    public setExpectResponse(expectResponse: boolean): void {
+        this._expectResponse = expectResponse;
     }
 }
 
