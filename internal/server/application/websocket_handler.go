@@ -45,7 +45,6 @@ type webSocketHandler struct {
 
 func (wsh *webSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wsUpgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	// w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 
 	ws, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {

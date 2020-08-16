@@ -1,8 +1,32 @@
 div.content {
     grid-area: content;
-    /* padding: 10px 10px 10px 60px; */
     padding: 10px;
     height: 150vh;
     z-index: 80;
-    /* border: 1px solid red; */
+}
+
+.watchers-top-pane {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ebebeb;
+}
+.watchers-top-pane-button {
+    padding: 7px 30px;
+    background-color: #fff;
+    border: none;
+}
+.watchers-top-pane-button:first-child {
+    border-right: 1px solid #ebebeb;
+}
+.watchers-top-pane-button:hover {
+    cursor: pointer;
+    background-color: #ebebeb;
+}
+.watchers-top-pane-button:focus {
+    outline-width: 0;
+}
+
+.watchers-body {
+    padding: 50px;
 }

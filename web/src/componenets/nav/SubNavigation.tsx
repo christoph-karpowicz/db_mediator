@@ -26,7 +26,7 @@ function SubNavigation(props: any) {
             {props.watchers && props.watchers.map((watcher: string, i: number) => {
               return (
                 <li key={i}>
-                    <Link to="/">{watcher}</Link>
+                    <Link to={"/watchers/" + watcher}>{watcher}</Link>
                 </li>
               );
             })}

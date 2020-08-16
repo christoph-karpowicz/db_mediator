@@ -10,7 +10,7 @@ nav {
     background-color: #fff;
 }
 nav.bordered {
-    border-right: 1px solid grey;
+    border-right: 1px solid #ebebeb;
 }
 nav ul {
     padding: 0;

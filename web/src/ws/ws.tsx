@@ -3,35 +3,60 @@ import WSRequest from './request';
 import { sleep } from '../utils/async';
 
 class WS {
+    private static readonly TIMEOUT_AFTER: number = 2500;
     private static _instance: WS;
     private _connString: string;
     private _socket: WebSocket;
     private _isConnected: boolean;
-    private static readonly TIMEOUT_AFTER: number = 2500;
 
     private constructor(connString: string) {
         this._connString = connString;
     }
 
+    set isConnected(isConnected: boolean) {
+        this._isConnected = isConnected;
+    }
+
+    get isConnected(): boolean {
+        return this._isConnected;
+    }
+    
+    get socket(): WebSocket {
+        return this._socket;
+    }
+
     public static async getSocket(): Promise<WS> {
-        if (!WS._instance) {
+        if (!WS._instance || !WS._instance.isConnected) {
             WS._instance = new WS("ws://127.0.0.1:8000/ws/");
-            await WS._instance.init();
+            await WS._instance.init().catch(err => {
+                console.log(err);
+            });
         }
         return WS._instance;
     }
     
     public async init(): Promise<void> {
         console.log('Websocket init.')
-        this._socket = new WebSocket(this._connString);
+        await this.createSocket();
         await this.setOnOpen();
         this.setOnClose();
         this.setOnError();
         this.setOnMessage();
     }
 
-    private setOnOpen(): Promise<boolean> {
+    private createSocket(): Promise<any> {
         return new Promise<boolean>((resolve, reject) => {
+            try {
+                this._socket = new WebSocket(this._connString);
+                resolve(true);
+            } catch(err) {
+                reject(`Invalid URL "${this._connString}". Failed to create a web socket.`);
+            }
+        });
+    }
+
+    private setOnOpen(): Promise<boolean> {
+        return new Promise<boolean>(resolve => {
             this._socket.onopen = () => {
                 console.log("Successfully Connected");
                 this.isConnected = true;
@@ -44,7 +69,6 @@ class WS {
         this._socket.onclose = event => {
             console.log("Socket Closed Connection: ", event);
             this.isConnected = false;
-            // this.emit("Client Closed!");
         };
     }
 
@@ -84,7 +108,6 @@ class WS {
                 sleep(sleepFor).then(() => {
                     const currentTime = new Date().getTime();
                     const timeDiff = currentTime - timeStart;
-                    // console.log(timeDiff)
                     if (timeDiff > WS.TIMEOUT_AFTER) {
                         reject({ msg: `Request with ID: ${req.getId()} timed out.` });
                         return;
@@ -113,17 +136,6 @@ class WS {
         return true;
     }
 
-    set isConnected(isConnected: boolean) {
-        this._isConnected = isConnected;
-    }
-
-    get isConnected(): boolean {
-        return this._isConnected;
-    }
-    
-    get socket(): WebSocket {
-        return this._socket;
-    }
 }
 
 export default WS;

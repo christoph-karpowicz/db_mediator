@@ -1,3 +1,7 @@
+* {
+  font-family: 'Courier New', Courier, monospace;
+}
+
 .App {
   display: grid;
   width: 100%;
@@ -5,6 +9,3 @@
   grid-template-areas: 
     "nav content";
 }
-
-
-
