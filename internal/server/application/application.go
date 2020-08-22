@@ -147,7 +147,7 @@ func (a *Application) runWatch(resChan chan interface{}, watcherKey string) {
 		response = fmt.Sprintf("Watcher %s is already running.", watcherKey)
 	} else {
 		watcher.Init(a.dbs)
-		a.runWatchLoop(watcher)
+		go a.runWatchLoop(watcher)
 		resChan <- fmt.Sprintf("Watcher %s started.", watcherKey)
 	}
 

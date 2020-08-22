@@ -1,5 +1,7 @@
-* {
+:root {
   font-family: 'Courier New', Courier, monospace;
+  --main-lightgrey: #e0e0e0;
+  --main-border: 1px solid var(--main-lightgrey);
 }
 
 .App {

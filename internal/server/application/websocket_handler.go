@@ -11,6 +11,8 @@ import (
 
 const (
 	WS_REQ_GETWATCHERSLIST = "getWatchersList"
+	WS_REQ_STARTWATCHER    = "startWatcher"
+	WS_REQ_STOPWATCHER     = "stopWatcher"
 )
 
 type wsInbound struct {
@@ -20,6 +22,7 @@ type wsInbound struct {
 }
 
 type wsInboundData struct {
+	Payload string `yaml:"payload"`
 }
 
 type wsOutbound struct {
@@ -84,10 +87,40 @@ func (wsh *webSocketHandler) dispatchWsRequest(ws *websocket.Conn, wsReq *wsInbo
 		watchersList := wsh.app.listWatchersToJSON()
 		wsOut = wsOutbound{
 			ID:      wsReq.ID,
-			Name:    "getWatchersList",
+			Name:    "watchersListFetched",
 			Success: true,
 			Data: wsOutboundData{
 				Payload: string(watchersList),
+			},
+		}
+	case WS_REQ_STARTWATCHER:
+		watcherName := wsReq.Data.Payload
+
+		resChan := make(chan interface{})
+		go wsh.app.runWatch(resChan, watcherName)
+		response := <-resChan
+
+		wsOut = wsOutbound{
+			ID:      wsReq.ID,
+			Name:    "watcherStarted",
+			Success: true,
+			Data: wsOutboundData{
+				Message: response.(string),
+			},
+		}
+	case WS_REQ_STOPWATCHER:
+		watcherName := wsReq.Data.Payload
+
+		resChan := make(chan interface{})
+		go wsh.app.stopWatch(resChan, watcherName)
+		response := <-resChan
+
+		wsOut = wsOutbound{
+			ID:      wsReq.ID,
+			Name:    "watcherStopped",
+			Success: true,
+			Data: wsOutboundData{
+				Message: response.(string),
 			},
 		}
 	default:

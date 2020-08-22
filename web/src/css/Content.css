@@ -9,7 +9,7 @@ div.content {
     display: flex;
     justify-content: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid #ebebeb;
+    border-bottom: var(--main-border);
 }
 .watchers-top-pane-button {
     padding: 7px 30px;
@@ -17,11 +17,11 @@ div.content {
     border: none;
 }
 .watchers-top-pane-button:first-child {
-    border-right: 1px solid #ebebeb;
+    border-right: var(--main-border);
 }
 .watchers-top-pane-button:hover {
     cursor: pointer;
-    background-color: #ebebeb;
+    background-color: #e0e0e0;
 }
 .watchers-top-pane-button:focus {
     outline-width: 0;

@@ -7,6 +7,7 @@ class WSRequest {
     private _expectResponse: boolean;
 
     constructor(name: string, data: object) {
+        console.log(data)
         this._name = name;
         this._data = data;
     }
@@ -34,6 +35,7 @@ class WSRequest {
             };
         }
         
+        console.log(JSON.stringify(req))
         return JSON.stringify(req);
     }
 

@@ -4,6 +4,6 @@ nodes:
     - 
         database    : dvdrental
         table       : film
-    -
-        database    : msamp
-        table       : Sakila_films
+    # -
+    #     database    : msamp
+    #     table       : Sakila_films

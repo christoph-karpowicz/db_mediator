@@ -9,6 +9,7 @@ import { ReactComponent as WatchersIcon } from '../../assets/watchers.svg';
 function Navigation(props: any) {
   function onWatchersClick(): void {
     const req = new WSRequest("getWatchersList", {});
+    
     WS.getSocket().then((ws) => {
       ws.emitAndAwaitResponse(req)
         .then((res: any) => {
