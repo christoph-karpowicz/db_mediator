@@ -2,7 +2,6 @@ package synch
 
 import (
 	"log"
-	"reflect"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -131,9 +130,9 @@ func (p Pair) doInsert() error {
 // logAction adds an action to synch history.
 func (p *Pair) logAction(actType string) {
 	var sourceColumnData interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
-	if reflect.TypeOf(sourceColumnData).Name() == "string" && len(sourceColumnData.(string)) > 25 {
-		sourceColumnData = sourceColumnData.(string)[:22] + "..."
-	}
+	// if reflect.TypeOf(sourceColumnData).Name() == "string" && len(sourceColumnData.(string)) > 25 {
+	// 	sourceColumnData = sourceColumnData.(string)[:22] + "..."
+	// }
 
 	var targetKeyName string
 	var targetKeyValue interface{}
@@ -144,9 +143,9 @@ func (p *Pair) logAction(actType string) {
 		targetKeyName = p.synchData.targetKeyName
 
 		targetColumnData = p.target.Data[p.Link.targetColumn].(interface{})
-		if reflect.TypeOf(targetColumnData).Name() == "string" && len(targetColumnData.(string)) > 25 {
-			targetColumnData = targetColumnData.(string)[:22] + "..."
-		}
+		// if reflect.TypeOf(targetColumnData).Name() == "string" && len(targetColumnData.(string)) > 25 {
+		// 	targetColumnData = targetColumnData.(string)[:22] + "..."
+		// }
 	} else {
 		targetKeyName = ""
 		targetKeyValue = nil
@@ -166,5 +165,6 @@ func (p *Pair) logAction(actType string) {
 		TargetColumnData: targetColumnData,
 	}
 
-	p.Link.synch.GetHistory().addAction(&act)
+	p.Link.synch.GetIteration().addAction(&act)
+	// p.Link.synch.GetHistory().addAction(&act)
 }

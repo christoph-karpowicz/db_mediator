@@ -1,8 +1,10 @@
 /config/databases.yaml
 /vendor/
 /data/
+/simulation/
+/log/
 /server
-/client
+/unifier
 /docker-compose.yml
 /config/synch/*
 !/config/synch/example.yaml

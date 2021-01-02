@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	"github.com/christoph-karpowicz/unifier/internal/server/report"
 	synchPkg "github.com/christoph-karpowicz/unifier/internal/server/synch"
 )
 
@@ -66,8 +65,8 @@ func (a *Application) runSynch(resChan chan interface{}, synchType string, synch
 	// Initialize synchronization.
 	synch.Init(a.dbs, synchType)
 	// Initialize history data structures.
-	synch.GetHistory().SetReporter(report.CreateReporter(synch))
-	synch.GetHistory().Init(synch)
+	// synch.GetHistory().SetReporter(report.CreateReporter(synch))
+	// synch.GetHistory().Init(synch)
 
 	// Carry out all synch actions.
 	if !simulation && synch.GetType() == synchPkg.ONGOING {
@@ -77,12 +76,13 @@ func (a *Application) runSynch(resChan chan interface{}, synchType string, synch
 		synch.Run()
 
 		// Gather and marshal results.
-		synchReport, err := synch.GetHistory().GenerateReport()
-		if err != nil {
-			panic(err)
-		}
+		// synchReport, err := synch.GetHistory().GenerateReport()
+		// if err != nil {
+		// 	panic(err)
+		// }
 
-		resChan <- synchReport
+		// resChan <- synchReport
+		resChan <- "synchReport"
 		synch.Reset()
 	}
 }
@@ -112,15 +112,16 @@ func (a *Application) stopSynch(resChan chan interface{}, synchKey string) {
 
 	if synch.IsRunning() {
 		// Gather and marshal results.
-		synchReport, err := synch.GetHistory().GenerateReport()
-		if err != nil {
-			panic(err)
-		}
+		// synchReport, err := synch.GetHistory().GenerateReport()
+		// if err != nil {
+		// 	panic(err)
+		// }
 
 		synch.Stop()
 		synch.Reset()
 
-		response = synchReport
+		response = "synchReport"
+		// response = synchReport
 	} else {
 		response = fmt.Sprintf("Synch %s is not running.", synchKey)
 	}

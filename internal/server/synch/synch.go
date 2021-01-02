@@ -17,16 +17,17 @@ import (
 // Synch represents an individual synchronzation configration.
 // It holds all configuration from an .yaml file, raw and parsed.
 type Synch struct {
-	cfg        *cfg.SynchConfig
-	dbStore    *dbStore
-	mappings   []*Mapping
-	Links      []*Link
-	counters   *counters
-	stype      synchType
-	running    bool
-	initial    bool
-	simulation bool
-	History    *History
+	cfg              *cfg.SynchConfig
+	dbStore          *dbStore
+	mappings         []*Mapping
+	Links            []*Link
+	counters         *counters
+	stype            synchType
+	running          bool
+	initial          bool
+	simulation       bool
+	History          *History
+	currentIteration *iteration
 }
 
 // Init prepares the synchronization by fetching all necessary data
@@ -58,9 +59,9 @@ func (s *Synch) GetConfig() *cfg.SynchConfig {
 	return s.cfg
 }
 
-// GetHistory returns the synch's history.
-func (s *Synch) GetHistory() *History {
-	return s.History
+// GetIteration returns the synch's current iteration.
+func (s *Synch) GetIteration() *iteration {
+	return s.currentIteration
 }
 
 // GetNodes returns all nodes between which
@@ -209,10 +210,20 @@ func (s *Synch) selectData() {
 func (s *Synch) Run() {
 	s.running = true
 
+	s.resetIteration()
 	s.selectData()
 	s.pairData()
 	s.synchronize()
 	s.flush()
+	s.finishIteration()
+}
+
+func (s *Synch) resetIteration() {
+	s.currentIteration = newIteration(s)
+}
+
+func (s *Synch) finishIteration() {
+	s.currentIteration.flush()
 }
 
 // Stop stops the synch.

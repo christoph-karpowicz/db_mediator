@@ -7,7 +7,7 @@ import (
 // Synchronizer is implemented by structs that do the actual synchronization actions.
 type Synchronizer interface {
 	GetConfig() *cfg.SynchConfig
-	GetHistory() *History
+	GetIteration() *iteration
 	GetNodes() map[string]*node
 	GetType() synchType
 	IsSimulation() bool

@@ -36,7 +36,7 @@ func (a *Application) setCLI() {
 	a.CLI = cli.NewApp()
 	a.CLI.UseShortOptionHandling = true
 
-	a.CLI.Name = "Unifier cli"
+	a.CLI.Name = "Unifier CLI"
 	a.CLI.Usage = "Database synchronization app."
 	author := &cli.Author{Name: "Krzysztof Karpowicz", Email: "christoph.karpowicz@gmail.com"}
 	a.CLI.Authors = append(a.CLI.Authors, author)
@@ -45,7 +45,7 @@ func (a *Application) setCLI() {
 	a.CLI.Commands = []*cli.Command{
 		{
 			Name:  "run",
-			Usage: "Start specified synchronization.",
+			Usage: "Start the specified synchronization.",
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:    "simulate",
@@ -79,7 +79,7 @@ func (a *Application) setCLI() {
 		},
 		{
 			Name:  "stop",
-			Usage: "Stop specified synchronization.",
+			Usage: "Stop the specified synchronization.",
 			// Flags: []cli.Flag{
 			// 	&cli.BoolFlag{
 			// 		Name:    "all",
@@ -97,7 +97,7 @@ func (a *Application) setCLI() {
 		},
 		{
 			Name:  "watch",
-			Usage: "Watch tables from specified databases.",
+			Usage: "Watch tables from the specified databases.",
 			Action: func(c *cli.Context) error {
 				a.runWatch(c.Args().Get(0))
 
