@@ -2,6 +2,7 @@ package synch
 
 import (
 	"log"
+	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
@@ -67,13 +68,13 @@ func (p Pair) Synchronize() (bool, error) {
 			}
 
 			if updateErr == nil {
-				p.logAction(cfg.UPDATE_ACTION)
+				p.logAction(cfg.OPERATION_UPDATE)
 			} else {
 				log.Println(updateErr)
 			}
 		} else {
 			if p.Link.synch.GetType() == ONE_OFF {
-				p.logAction(cfg.IDLE_ACTION)
+				p.logAction(cfg.OPERATION_IDLE)
 			}
 		}
 	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_INSERT) {
@@ -85,7 +86,7 @@ func (p Pair) Synchronize() (bool, error) {
 		}
 
 		if insertErr == nil {
-			p.logAction(cfg.INSERT_ACTION)
+			p.logAction(cfg.OPERATION_INSERT)
 		} else {
 			log.Println(insertErr)
 		}
@@ -128,43 +129,49 @@ func (p Pair) doInsert() error {
 }
 
 // logAction adds an action to synch history.
-func (p *Pair) logAction(actType string) {
-	var sourceColumnData interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
-	// if reflect.TypeOf(sourceColumnData).Name() == "string" && len(sourceColumnData.(string)) > 25 {
-	// 	sourceColumnData = sourceColumnData.(string)[:22] + "..."
+func (p *Pair) logAction(operationType string) {
+	var sourceColumnValue interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
+	// if reflect.TypeOf(sourceColumnValue).Name() == "string" && len(sourceColumnValue.(string)) > 25 {
+	// 	sourceColumnValue = sourceColumnValue.(string)[:22] + "..."
 	// }
 
 	var targetKeyName string
 	var targetKeyValue interface{}
-	var targetColumnData interface{}
+	var targetColumnValue interface{}
 
 	if p.target != nil {
 		targetKeyValue = p.target.Data[p.synchData.targetKeyName]
 		targetKeyName = p.synchData.targetKeyName
 
-		targetColumnData = p.target.Data[p.Link.targetColumn].(interface{})
-		// if reflect.TypeOf(targetColumnData).Name() == "string" && len(targetColumnData.(string)) > 25 {
-		// 	targetColumnData = targetColumnData.(string)[:22] + "..."
+		targetColumnValue = p.target.Data[p.Link.targetColumn].(interface{})
+		// if reflect.TypeOf(targetColumnValue).Name() == "string" && len(targetColumnValue.(string)) > 25 {
+		// 	targetColumnValue = targetColumnValue.(string)[:22] + "..."
 		// }
 	} else {
 		targetKeyName = ""
 		targetKeyValue = nil
-		targetColumnData = nil
+		targetColumnValue = nil
 	}
 
-	act := action{
-		linkId:           p.Link.GetID(),
-		ActType:          actType,
-		SourceNodeKey:    p.synchData.sourceKeyName,
-		SourceData:       p.source.Data[p.synchData.sourceKeyName],
-		SourceColumn:     p.Link.sourceColumn,
-		SourceColumnData: sourceColumnData,
-		TargetKeyName:    targetKeyName,
-		TargetKeyValue:   targetKeyValue,
-		TargetColumn:     p.Link.targetColumn,
-		TargetColumnData: targetColumnData,
+	dateLayout := "Mon, 02 Jan 2006 15:04:05 MST"
+	date := time.Now()
+
+	operation := operation{
+		Operation:         operationType,
+		Timestamp:         date.Format(dateLayout),
+		SourceKeyName:     p.synchData.sourceKeyName,
+		SourceKeyValue:    p.source.Data[p.synchData.sourceKeyName],
+		SourceColumnName:  p.Link.sourceColumn,
+		SourceColumnValue: sourceColumnValue,
+		TargetKeyName:     targetKeyName,
+		TargetKeyValue:    targetKeyValue,
+		TargetColumnName:  p.Link.targetColumn,
+		TargetColumnValue: targetColumnValue,
 	}
 
-	p.Link.synch.GetIteration().addAction(&act)
-	// p.Link.synch.GetHistory().addAction(&act)
+	if !p.Link.synch.IsSimulation() {
+		operation.IterationId = p.Link.synch.GetIteration().id
+	}
+
+	p.Link.synch.GetIteration().addOperation(&operation)
 }

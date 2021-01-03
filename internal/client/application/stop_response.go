@@ -18,6 +18,7 @@ func printStopResponse(res map[string]interface{}) {
 	}
 
 	fmt.Println(resStr)
+	fmt.Println(res["payload"].(string))
 }
 
 // stopResponsePrinters is a map of functions that print the JSON responses received from the backend.

@@ -207,7 +207,7 @@ func (s *Synch) selectData() {
 }
 
 // Run executes a single run of the synchronization.
-func (s *Synch) Run() {
+func (s *Synch) Run() string {
 	s.running = true
 
 	s.resetIteration()
@@ -215,15 +215,16 @@ func (s *Synch) Run() {
 	s.pairData()
 	s.synchronize()
 	s.flush()
-	s.finishIteration()
+	response := s.finishIteration()
+	return response
 }
 
 func (s *Synch) resetIteration() {
 	s.currentIteration = newIteration(s)
 }
 
-func (s *Synch) finishIteration() {
-	s.currentIteration.flush()
+func (s *Synch) finishIteration() string {
+	return s.currentIteration.flush()
 }
 
 // Stop stops the synch.

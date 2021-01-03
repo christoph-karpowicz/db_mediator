@@ -1,7 +1,6 @@
 package synch
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/unifier"
@@ -10,7 +9,7 @@ import (
 type History struct {
 	synch   *Synch
 	rep     unifier.Reporter
-	actions []*action
+	actions []*operation
 }
 
 func (h *History) Init(synch *Synch) {
@@ -23,7 +22,7 @@ func (h *History) SetReporter(rep unifier.Reporter) {
 	h.rep = rep
 }
 
-func (h *History) addAction(act *action) {
+func (h *History) addAction(act *operation) {
 	h.actions = append(h.actions, act)
 }
 
@@ -42,14 +41,14 @@ func (h History) GenerateReport() ([]byte, error) {
 }
 
 func (h *History) addActionsToReport() error {
-	for _, act := range h.actions {
-		actionJSON, err := json.Marshal(&act)
-		if err != nil {
-			return err
-			// return false, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
-		}
-		h.rep.AddAction(act.linkId, actionJSON, act.ActType)
-	}
+	// for _, act := range h.actions {
+	// 	actionJSON, err := json.Marshal(&act)
+	// 	if err != nil {
+	// 		return err
+	// 		// return false, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
+	// 	}
+	// 	h.rep.AddAction(act.linkId, actionJSON, act.ActType)
+	// }
 	return nil
 }
 

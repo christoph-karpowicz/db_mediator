@@ -40,11 +40,11 @@ func (r *Reporter) Init() {
 // 	3. 	update
 func (r *Reporter) AddAction(linkID string, actionJSON []byte, actionType string) (bool, error) {
 	switch actionType {
-	case cfg.IDLE_ACTION:
+	case cfg.OPERATION_IDLE:
 		r.rep.links[linkID].Idle = append(r.rep.links[linkID].Idle, string(actionJSON))
-	case cfg.INSERT_ACTION:
+	case cfg.OPERATION_INSERT:
 		r.rep.links[linkID].Inserts = append(r.rep.links[linkID].Inserts, string(actionJSON))
-	case cfg.UPDATE_ACTION:
+	case cfg.OPERATION_UPDATE:
 		r.rep.links[linkID].Updates = append(r.rep.links[linkID].Updates, string(actionJSON))
 	}
 

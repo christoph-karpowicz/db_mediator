@@ -11,5 +11,5 @@ type Synchronizer interface {
 	GetNodes() map[string]*node
 	GetType() synchType
 	IsSimulation() bool
-	Run()
+	Run() string
 }

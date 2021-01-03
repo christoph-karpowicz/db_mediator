@@ -73,16 +73,8 @@ func (a *Application) runSynch(resChan chan interface{}, synchType string, synch
 		go a.runSynchLoop(synch)
 		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
 	} else {
-		synch.Run()
-
-		// Gather and marshal results.
-		// synchReport, err := synch.GetHistory().GenerateReport()
-		// if err != nil {
-		// 	panic(err)
-		// }
-
-		// resChan <- synchReport
-		resChan <- "synchReport"
+		synchResponse := synch.Run()
+		resChan <- synchResponse
 		synch.Reset()
 	}
 }

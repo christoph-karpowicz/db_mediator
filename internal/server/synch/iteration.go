@@ -2,6 +2,7 @@ package synch
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -14,9 +15,9 @@ const (
 )
 
 type iteration struct {
-	id      string
-	synch   *Synch
-	actions []*action
+	id         string
+	synch      *Synch
+	operations []*operation
 }
 
 func newIteration(synch *Synch) *iteration {
@@ -30,35 +31,36 @@ func getNewIterationID(synch *Synch) string {
 	return synch.cfg.Name + "-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 
-func (i *iteration) addAction(act *action) {
-	i.actions = append(i.actions, act)
+func (i *iteration) addOperation(operation *operation) {
+	i.operations = append(i.operations, operation)
 }
 
-func (i *iteration) flush() {
-	actionsToJSON, err := i.actionsToJSON()
+func (i *iteration) flush() string {
+	operationsToJSON, err := i.operationsToJSON()
 	if err != nil {
 		panic(err)
 	}
-	actionsToJSONString := strings.Join(actionsToJSON, "\n")
+	operationsToJSONString := strings.Join(operationsToJSON, "\n")
 	if i.synch.IsSimulation() {
-		err := ioutil.WriteFile(SIMULATION_DIR+i.id, []byte(actionsToJSONString), 0644)
+		err := ioutil.WriteFile(SIMULATION_DIR+i.id, []byte(operationsToJSONString), 0644)
 		if err != nil {
 			panic(err)
 		}
 	} else {
-
+		fmt.Println(operationsToJSONString)
 	}
+	return operationsToJSONString
 }
 
-func (i *iteration) actionsToJSON() ([]string, error) {
-	actionsToJSON := make([]string, 0)
-	for _, act := range i.actions {
-		actionJSON, err := json.Marshal(&act)
+func (i *iteration) operationsToJSON() ([]string, error) {
+	operationsToJSON := make([]string, 0)
+	for _, operation := range i.operations {
+		operationJSON, err := json.MarshalIndent(&operation, "", "	")
 		if err != nil {
 			return nil, err
 			// return false, &SynchReportError{SynchName: r.synch.GetConfig().Name, ErrMsg: err.Error()}
 		}
-		actionsToJSON = append(actionsToJSON, string(actionJSON))
+		operationsToJSON = append(operationsToJSON, string(operationJSON))
 	}
-	return actionsToJSON, nil
+	return operationsToJSON, nil
 }
