@@ -37,10 +37,10 @@ func (h *runSynchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// A response channel can receive data of type 'error' or []byte.
-	resChan := make(chan interface{})
+	resChan := createResponseChannel()
 	go h.app.runSynch(resChan, synchType[0], run[0], simulation)
 
-	response := createResponse(<-resChan)
+	response := <-resChan
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
 		panic("Error while marshalling response.")

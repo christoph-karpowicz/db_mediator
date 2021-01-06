@@ -1,38 +1,37 @@
 package application
 
-const (
-	PAYLOAD_TYPE_JSON = "json"
-	PAYLOAD_TYPE_TEXT = "text"
-)
+import "github.com/christoph-karpowicz/unifier/internal/server/synch"
 
 type response struct {
-	Err         bool   `json:"err"`
-	PayloadType string `json:"payloadType"`
-	Payload     string `json:"payload"`
+	Err     bool   `json:"err"`
+	Message string `json:"message"`
+	Payload string `json:"payload"`
 }
 
-func createResponse(appRes interface{}) *response {
+func createResponseChannel() chan *response {
+	return make(chan *response)
+}
+
+func createResponse(synchResult interface{}) *response {
 	var res *response
 
-	switch appRes.(type) {
+	switch synchResult.(type) {
 	case error:
-		panic(appRes.(error))
+		panic(synchResult.(error))
 		res = &response{
-			Err:         true,
-			PayloadType: PAYLOAD_TYPE_TEXT,
-			Payload:     appRes.(error).Error(),
+			Err:     true,
+			Message: synchResult.(error).Error(),
 		}
 	case string:
 		res = &response{
-			Err:         false,
-			PayloadType: PAYLOAD_TYPE_TEXT,
-			Payload:     appRes.(string),
+			Err:     false,
+			Message: synchResult.(string),
 		}
-	case []byte:
+	case *synch.Result:
 		res = &response{
-			Err:         false,
-			PayloadType: PAYLOAD_TYPE_JSON,
-			Payload:     string(appRes.([]byte)),
+			Err:     false,
+			Message: synchResult.(*synch.Result).Message,
+			Payload: synchResult.(*synch.Result).OperationsToJSON(),
 		}
 	}
 

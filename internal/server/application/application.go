@@ -48,33 +48,30 @@ func (a *Application) listen() {
 }
 
 // runSynch carries out a synchronization run requested by the client.
-func (a *Application) runSynch(resChan chan interface{}, synchType string, synchKey string, simulation bool) {
+func (a *Application) runSynch(responseChan chan *response, synchType string, synchName string, isSimulation bool) {
 	// defer func() {
 	// 	if r := recover(); r != nil {
-	// 		resChan <- r.(error)
+	// 		responseChan <- createResponse(r.(error))
 	// 	}
 	// }()
 
-	synch, synchFound := a.synchs[synchKey]
+	synch, synchFound := a.synchs[synchName]
 	if !synchFound {
-		panic("[synchronization search] '" + synchKey + "' not found.")
+		panic("[synchronization search] '" + synchName + "' not found.")
 	}
 
-	synch.SetSimulation(simulation)
+	synch.SetSimulation(isSimulation)
 
 	// Initialize synchronization.
-	synch.Init(a.dbs, synchType)
-	// Initialize history data structures.
-	// synch.GetHistory().SetReporter(report.CreateReporter(synch))
-	// synch.GetHistory().Init(synch)
+	synchID := synch.Init(a.dbs, synchType)
 
 	// Carry out all synch actions.
-	if !simulation && synch.GetType() == synchPkg.ONGOING {
+	if !isSimulation && synch.GetType() == synchPkg.ONGOING {
 		go a.runSynchLoop(synch)
-		resChan <- fmt.Sprintf("Synch %s started.", synchKey)
+		responseChan <- createResponse(fmt.Sprintf("Synch %s started with ID %s.", synchName, synchID))
 	} else {
 		synchResponse := synch.Run()
-		resChan <- synchResponse
+		responseChan <- createResponse(synchResponse)
 		synch.Reset()
 	}
 }
@@ -89,17 +86,17 @@ func (a *Application) runSynchLoop(synch *synchPkg.Synch) {
 }
 
 // stopSynch stops a specified synchronization.
-func (a *Application) stopSynch(resChan chan interface{}, synchKey string) {
+func (a *Application) stopSynch(responseChan chan *response, synchName string) {
 	defer func() {
 		if r := recover(); r != nil {
-			resChan <- r.(error)
+			responseChan <- createResponse(r.(error))
 		}
 	}()
 
 	var response interface{}
-	synch, synchFound := a.synchs[synchKey]
+	synch, synchFound := a.synchs[synchName]
 	if !synchFound {
-		panic("[synchronization search] '" + synchKey + "' not found.")
+		panic("[synchronization search] '" + synchName + "' not found.")
 	}
 
 	if synch.IsRunning() {
@@ -115,18 +112,18 @@ func (a *Application) stopSynch(resChan chan interface{}, synchKey string) {
 		response = "synchReport"
 		// response = synchReport
 	} else {
-		response = fmt.Sprintf("Synch %s is not running.", synchKey)
+		response = fmt.Sprintf("Synch %s is not running.", synchName)
 	}
 
 	// Send the reponse to the http init handler.
-	resChan <- response
+	responseChan <- createResponse(response)
 }
 
 // runWatch starts a watcher.
-func (a *Application) runWatch(resChan chan interface{}, watcherKey string) {
+func (a *Application) runWatch(responseChan chan *response, watcherKey string) {
 	// defer func() {
 	// 	if r := recover(); r != nil {
-	// 		resChan <- r.(error)
+	// 		responseChan <- createResponse(r.(error))
 	// 	}
 	// }()
 
@@ -141,11 +138,11 @@ func (a *Application) runWatch(resChan chan interface{}, watcherKey string) {
 	} else {
 		watcher.Init(a.dbs)
 		go a.runWatchLoop(watcher)
-		resChan <- fmt.Sprintf("Watcher %s started.", watcherKey)
+		responseChan <- createResponse(fmt.Sprintf("Watcher %s started.", watcherKey))
 	}
 
 	// Send the reponse to the http init handler.
-	resChan <- response
+	responseChan <- createResponse(response)
 }
 
 func (a *Application) runWatchLoop(watcher *synchPkg.Watcher) {
@@ -158,10 +155,10 @@ func (a *Application) runWatchLoop(watcher *synchPkg.Watcher) {
 }
 
 // stopWatch stops a specified watcher.
-func (a *Application) stopWatch(resChan chan interface{}, watcherKey string) {
+func (a *Application) stopWatch(responseChan chan *response, watcherKey string) {
 	defer func() {
 		if r := recover(); r != nil {
-			resChan <- r.(error)
+			responseChan <- createResponse(r.(error))
 		}
 	}()
 
@@ -180,7 +177,7 @@ func (a *Application) stopWatch(resChan chan interface{}, watcherKey string) {
 	}
 
 	// Send the reponse to the http init handler.
-	resChan <- response
+	responseChan <- createResponse(response)
 }
 
 func (a *Application) listWatchers() []string {

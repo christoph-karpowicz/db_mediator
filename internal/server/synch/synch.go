@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 // Synch represents an individual synchronzation configration.
 // It holds all configuration from an .yaml file, raw and parsed.
 type Synch struct {
+	id               string
 	cfg              *cfg.SynchConfig
 	dbStore          *dbStore
 	mappings         []*Mapping
@@ -26,21 +28,20 @@ type Synch struct {
 	running          bool
 	initial          bool
 	simulation       bool
-	History          *History
 	currentIteration *iteration
 }
 
 // Init prepares the synchronization by fetching all necessary data
 // and parsing it.
-func (s *Synch) Init(DBMap map[string]*db.Database, stype string) {
+func (s *Synch) Init(DBMap map[string]*db.Database, stype string) string {
 	tStart := time.Now()
+	s.id = s.getNewSynchID()
 	stypeField, err := FindSynchType(stype)
 	if err != nil {
 		panic(err)
 	}
 	s.stype = stypeField
 
-	s.History = &History{}
 	s.dbStore = &dbStore{}
 
 	if s.counters == nil {
@@ -52,6 +53,11 @@ func (s *Synch) Init(DBMap map[string]*db.Database, stype string) {
 	}
 
 	fmt.Println("Synch init finished in: ", time.Since(tStart).String())
+	return s.id
+}
+
+func (s *Synch) getNewSynchID() string {
+	return s.cfg.Name + "-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 
 // GetConfig returns the synch config struct.
@@ -207,7 +213,7 @@ func (s *Synch) selectData() {
 }
 
 // Run executes a single run of the synchronization.
-func (s *Synch) Run() string {
+func (s *Synch) Run() *Result {
 	s.running = true
 
 	s.resetIteration()
@@ -223,7 +229,7 @@ func (s *Synch) resetIteration() {
 	s.currentIteration = newIteration(s)
 }
 
-func (s *Synch) finishIteration() string {
+func (s *Synch) finishIteration() *Result {
 	return s.currentIteration.flush()
 }
 

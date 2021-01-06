@@ -35,21 +35,25 @@ func (i *iteration) addOperation(operation *operation) {
 	i.operations = append(i.operations, operation)
 }
 
-func (i *iteration) flush() string {
+func (i *iteration) flush() *Result {
+	iterationResult := Result{}
 	operationsToJSON, err := i.operationsToJSON()
 	if err != nil {
 		panic(err)
 	}
 	operationsToJSONString := strings.Join(operationsToJSON, "\n")
 	if i.synch.IsSimulation() {
-		err := ioutil.WriteFile(SIMULATION_DIR+i.id, []byte(operationsToJSONString), 0644)
+		fileName := SIMULATION_DIR + i.id
+		err := ioutil.WriteFile(fileName, []byte(operationsToJSONString), 0644)
 		if err != nil {
 			panic(err)
 		}
+		iterationResult.Message = fmt.Sprintf("Simulation report saved to file %s", fileName)
 	} else {
 		fmt.Println(operationsToJSONString)
 	}
-	return operationsToJSONString
+	iterationResult.Operations = i.operations
+	return &iterationResult
 }
 
 func (i *iteration) operationsToJSON() ([]string, error) {

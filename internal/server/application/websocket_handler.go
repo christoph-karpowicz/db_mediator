@@ -96,31 +96,31 @@ func (wsh *webSocketHandler) dispatchWsRequest(ws *websocket.Conn, wsReq *wsInbo
 	case WS_REQ_STARTWATCHER:
 		watcherName := wsReq.Data.Payload
 
-		resChan := make(chan interface{})
+		resChan := createResponseChannel()
 		go wsh.app.runWatch(resChan, watcherName)
-		response := <-resChan
+		// response := <-resChan
 
 		wsOut = wsOutbound{
 			ID:      wsReq.ID,
 			Name:    "watcherStarted",
 			Success: true,
-			Data: wsOutboundData{
-				Message: response.(string),
+			Data:    wsOutboundData{
+				// Message: response.(string),
 			},
 		}
 	case WS_REQ_STOPWATCHER:
 		watcherName := wsReq.Data.Payload
 
-		resChan := make(chan interface{})
+		resChan := createResponseChannel()
 		go wsh.app.stopWatch(resChan, watcherName)
-		response := <-resChan
+		// response := <-resChan
 
 		wsOut = wsOutbound{
 			ID:      wsReq.ID,
 			Name:    "watcherStopped",
 			Success: true,
-			Data: wsOutboundData{
-				Message: response.(string),
+			Data:    wsOutboundData{
+				// Message: response.(string),
 			},
 		}
 	default:

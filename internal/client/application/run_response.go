@@ -6,31 +6,29 @@ import (
 
 // printRunResponse dispatches the response to the corresponding printer function.
 func printRunResponse(res map[string]interface{}, resType string) {
-	var resStr string
-
 	if res["err"].(bool) {
-		resStr = runResponsePrinters["error"](res)
+		runResponsePrinters["error"](res)
 	} else {
-		resStr = runResponsePrinters[resType](res)
+		runResponsePrinters[resType](res)
 	}
-
-	fmt.Println(resStr)
 }
 
 // runResponsePrinters is a map of functions that print the JSON responses received from the backend.
-var runResponsePrinters map[string]func(map[string]interface{}) string = map[string]func(map[string]interface{}) string{
+var runResponsePrinters map[string]func(map[string]interface{}) = map[string]func(map[string]interface{}){
 	// Error printer.
-	"error": func(res map[string]interface{}) string {
-		return res["payload"].(string)
+	"error": func(res map[string]interface{}) {
+		fmt.Println(res["message"].(string))
 	},
 
 	// one-off synch printer.
-	"one-off": func(res map[string]interface{}) string {
-		return res["payload"].(string)
+	"one-off": func(res map[string]interface{}) {
+		fmt.Println(res["payload"].(string))
+		fmt.Println(res["message"].(string))
 	},
 
 	// ongoing synch printer.
-	"ongoing": func(res map[string]interface{}) string {
-		return res["payload"].(string)
+	"ongoing": func(res map[string]interface{}) {
+		fmt.Println(res["payload"].(string))
+		fmt.Println(res["message"].(string))
 	},
 }

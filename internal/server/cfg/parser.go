@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
+	arrayUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
 
 const (
@@ -59,7 +59,7 @@ func ParseLink(link string) (map[string]string, error) {
 			continue
 		}
 
-		if arrUtil.Contains([]string{PSUBEXP_SOURCE_WHERE, PSUBEXP_TARGET_WHERE}, subNames[i]) {
+		if arrayUtil.Contains([]string{PSUBEXP_SOURCE_WHERE, PSUBEXP_TARGET_WHERE}, subNames[i]) {
 			parsedWhere := ParseLinkWhere(match)
 			result[subNames[i]] = parsedWhere
 		} else {

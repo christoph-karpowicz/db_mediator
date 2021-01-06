@@ -18,7 +18,6 @@ type Watcher struct {
 	dbStore *dbStore
 	running bool
 	initial bool
-	History *History
 }
 
 // Init prepares the watcher by fetching all necessary data

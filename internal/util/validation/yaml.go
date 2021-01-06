@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
+	arrayUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
 
 func YAMLField(fieldValue interface{}, fieldName string) bool {
@@ -43,7 +43,7 @@ func YAMLStruct(structure interface{}, nullableFields []string) {
 		}
 
 		if !YAMLField(fieldValue.Field(i).Interface(), fieldType.Field(i).Name) {
-			if !arrUtil.Contains(nullableFields, strings.ToLower(fieldType.Field(i).Name)) {
+			if !arrayUtil.Contains(nullableFields, strings.ToLower(fieldType.Field(i).Name)) {
 				panic(fieldType.Field(i).Name + " is invalid.")
 			}
 		}

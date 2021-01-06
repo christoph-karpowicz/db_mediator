@@ -6,7 +6,7 @@ import (
 
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	arrUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
+	arrayUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
 )
 
 type pairSynchData struct {
@@ -53,9 +53,10 @@ func createPair(link *Link, source *record, target *record) *Pair {
 }
 
 // Synchronize carries out the synchronization of the two records.
+// Updates if this pair is complete (has both the source and the target)
+// and inserts if a target record has to be created.
 func (p Pair) Synchronize() (bool, error) {
-	if p.target != nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_UPDATE) {
-		// Updates if this pair is complete.
+	if p.target != nil && arrayUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_UPDATE) {
 		sourceColumnValue := p.source.Data[p.Link.sourceColumn]
 		targetColumnValue := p.target.Data[p.Link.targetColumn]
 
@@ -64,7 +65,7 @@ func (p Pair) Synchronize() (bool, error) {
 		} else if !areEqual {
 			var updateErr error
 			if !p.Link.synch.IsSimulation() {
-				updateErr = p.doUpdate(sourceColumnValue)
+				// updateErr = p.doUpdate(sourceColumnValue)
 			}
 
 			if updateErr == nil {
@@ -77,12 +78,10 @@ func (p Pair) Synchronize() (bool, error) {
 				p.logAction(cfg.OPERATION_IDLE)
 			}
 		}
-	} else if p.target == nil && arrUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_INSERT) {
-		// Inserts
-		// If a target record has to be created.
+	} else if p.target == nil && arrayUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_INSERT) {
 		var insertErr error
 		if !p.Link.synch.IsSimulation() {
-			p.doInsert()
+			// p.doInsert()
 		}
 
 		if insertErr == nil {
@@ -130,23 +129,15 @@ func (p Pair) doInsert() error {
 
 // logAction adds an action to synch history.
 func (p *Pair) logAction(operationType string) {
-	var sourceColumnValue interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
-	// if reflect.TypeOf(sourceColumnValue).Name() == "string" && len(sourceColumnValue.(string)) > 25 {
-	// 	sourceColumnValue = sourceColumnValue.(string)[:22] + "..."
-	// }
-
 	var targetKeyName string
 	var targetKeyValue interface{}
 	var targetColumnValue interface{}
 
+	var sourceColumnValue interface{} = p.source.Data[p.Link.sourceColumn].(interface{})
 	if p.target != nil {
 		targetKeyValue = p.target.Data[p.synchData.targetKeyName]
 		targetKeyName = p.synchData.targetKeyName
-
 		targetColumnValue = p.target.Data[p.Link.targetColumn].(interface{})
-		// if reflect.TypeOf(targetColumnValue).Name() == "string" && len(targetColumnValue.(string)) > 25 {
-		// 	targetColumnValue = targetColumnValue.(string)[:22] + "..."
-		// }
 	} else {
 		targetKeyName = ""
 		targetKeyValue = nil

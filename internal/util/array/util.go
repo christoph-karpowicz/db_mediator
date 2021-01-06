@@ -1,4 +1,4 @@
-package arrUtil
+package arrayUtil
 
 func Contains(array []string, val string) bool {
 	for _, item := range array {
