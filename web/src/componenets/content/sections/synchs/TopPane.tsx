@@ -6,8 +6,8 @@ import WSRequest from '../../../../ws/request';
 function TopPane() {
     const { name } = useParams();
     
-    const onStartWatcher = () => {
-        const req = new WSRequest("startWatcher", { payload: name });
+    const onStartSynch = () => {
+        const req = new WSRequest("startSynch", { payload: name });
         WS.getSocket().then((ws) => {
             ws.emitAndAwaitResponse(req)
             .then((res: any) => {
@@ -24,8 +24,8 @@ function TopPane() {
         });
     };
 
-    const onStopWatcher = () => {
-        const req = new WSRequest("stopWatcher", { payload: name });
+    const onStopSynch = () => {
+        const req = new WSRequest("stopSynch", { payload: name });
         WS.getSocket().then((ws) => {
             ws.emitAndAwaitResponse(req)
             .then((res: any) => {
@@ -43,11 +43,11 @@ function TopPane() {
     };
     
     return (
-        <div className="watchers-top-pane">
-            <button className="watchers-top-pane-button" onClick={onStartWatcher}>
+        <div className="synchs-top-pane">
+            <button className="synchs-top-pane-button" onClick={onStartSynch}>
                 Start
             </button>
-            <button className="watchers-top-pane-button" onClick={onStopWatcher}>
+            <button className="synchs-top-pane-button" onClick={onStopSynch}>
                 Stop
             </button>
         </div>

@@ -23,10 +23,10 @@ function SubNavigation(props: any) {
       ref={subnav}
     >
         <ul>
-            {props.watchers && props.watchers.map((watcher: string, i: number) => {
+            {props.synchs && props.synchs.map((synch: string, i: number) => {
               return (
                 <li key={i}>
-                    <Link to={"/watchers/" + watcher}>{watcher}</Link>
+                    <Link to={"/synchs/" + synch}>{synch}</Link>
                 </li>
               );
             })}

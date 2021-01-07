@@ -7,15 +7,15 @@ import { ReactComponent as DashboardIcon } from '../../assets/dashboard.svg';
 import { ReactComponent as WatchersIcon } from '../../assets/watchers.svg';
 
 function Navigation(props: any) {
-  function onWatchersClick(): void {
-    const req = new WSRequest("getWatchersList", {});
+  function onSynchsClick(): void {
+    const req = new WSRequest("getSynchsList", {});
     
     WS.getSocket().then((ws) => {
       ws.emitAndAwaitResponse(req)
         .then((res: any) => {
           try {
-            const watchers = JSON.parse(res.Data.Payload);
-            props.setWatchers(watchers);
+            const synchs = JSON.parse(res.Data.Payload);
+            props.setSynchs(synchs);
             props.toggleSubNavigationActive();
           } catch(e) {
             console.error(e);
@@ -35,7 +35,7 @@ function Navigation(props: any) {
                 <Link to="/"><DashboardIcon /></Link>
             </li>
             <li>
-                <WatchersIcon onClick={onWatchersClick} />
+                <WatchersIcon onClick={onSynchsClick} />
             </li>
         </ul>
     </nav>

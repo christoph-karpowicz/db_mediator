@@ -95,15 +95,6 @@ func (a *Application) setCLI() {
 				return nil
 			},
 		},
-		{
-			Name:  "watch",
-			Usage: "Watch tables from the specified databases.",
-			Action: func(c *cli.Context) error {
-				a.runWatch(c.Args().Get(0))
-
-				return nil
-			},
-		},
 	}
 }
 
@@ -126,16 +117,6 @@ func (a *Application) stopSynch(synchName string) {
 	// paramMap["all"] = strconv.FormatBool(all)
 
 	response := a.makeGETRequest("http://localhost:8000/stopSynch", paramMap)
-
-	printStopResponse(response)
-}
-
-// runWatch prepares the parameters for a watcher run request and invokes a GET function.
-func (a *Application) runWatch(watcherName string) {
-	paramMap := make(map[string]string)
-	paramMap["run"] = watcherName
-
-	response := a.makeGETRequest("http://localhost:8000/runWatch", paramMap)
 
 	printStopResponse(response)
 }

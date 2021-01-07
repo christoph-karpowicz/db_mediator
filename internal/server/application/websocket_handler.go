@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	WS_REQ_GETWATCHERSLIST = "getWatchersList"
-	WS_REQ_STARTWATCHER    = "startWatcher"
-	WS_REQ_STOPWATCHER     = "stopWatcher"
+	WS_REQ_GETSYNCHLIST = "getSynchsList"
+	WS_REQ_STARTSYNCH   = "startSynch"
+	WS_REQ_STOPSYNCH    = "stopSynch"
 )
 
 type wsInbound struct {
@@ -83,41 +83,41 @@ func (wsh *webSocketHandler) dispatchWsRequest(ws *websocket.Conn, wsReq *wsInbo
 	var wsOut wsOutbound
 
 	switch wsReq.Name {
-	case WS_REQ_GETWATCHERSLIST:
-		watchersList := wsh.app.listWatchersToJSON()
+	case WS_REQ_GETSYNCHLIST:
+		synchsList := wsh.app.listSynchsToJSON()
 		wsOut = wsOutbound{
 			ID:      wsReq.ID,
-			Name:    "watchersListFetched",
+			Name:    "synchsListFetched",
 			Success: true,
 			Data: wsOutboundData{
-				Payload: string(watchersList),
+				Payload: string(synchsList),
 			},
 		}
-	case WS_REQ_STARTWATCHER:
-		watcherName := wsReq.Data.Payload
+	case WS_REQ_STARTSYNCH:
+		synchName := wsReq.Data.Payload
 
-		resChan := createResponseChannel()
-		go wsh.app.runWatch(resChan, watcherName)
-		// response := <-resChan
+		responseChan := createResponseChannel()
+		go wsh.app.runSynch(responseChan, "one-off", synchName, true)
+		// response := <-responseChan
 
 		wsOut = wsOutbound{
 			ID:      wsReq.ID,
-			Name:    "watcherStarted",
+			Name:    "synchStarted",
 			Success: true,
 			Data:    wsOutboundData{
 				// Message: response.(string),
 			},
 		}
-	case WS_REQ_STOPWATCHER:
-		watcherName := wsReq.Data.Payload
+	case WS_REQ_STOPSYNCH:
+		synchName := wsReq.Data.Payload
 
-		resChan := createResponseChannel()
-		go wsh.app.stopWatch(resChan, watcherName)
-		// response := <-resChan
+		responseChan := createResponseChannel()
+		go wsh.app.stopSynch(responseChan, synchName)
+		// response := <-responseChan
 
 		wsOut = wsOutbound{
 			ID:      wsReq.ID,
-			Name:    "watcherStopped",
+			Name:    "synchStopped",
 			Success: true,
 			Data:    wsOutboundData{
 				// Message: response.(string),

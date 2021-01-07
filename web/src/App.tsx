@@ -11,7 +11,7 @@ function App(): JSX.Element {
   
   const [subNavigationActive, setSubNavigationActive] = 
     React.useState(false)
-  const [watchers, setWatchers] = React.useState(null);
+  const [synchs, setSynchs] = React.useState(null);
 
   function toggleSubNavigationActive(): void {
     setSubNavigationActive(!subNavigationActive);
@@ -23,12 +23,12 @@ function App(): JSX.Element {
         <Navigation 
           isSubNavigationActive={subNavigationActive} 
           toggleSubNavigationActive={toggleSubNavigationActive} 
-          setWatchers={setWatchers}
+          setSynchs={setSynchs}
         />
         <SubNavigation 
           toggleSubNavigationActive={toggleSubNavigationActive} 
           isActive={subNavigationActive}
-          watchers={watchers}
+          synchs={synchs}
         />
         <Content />
       </div>

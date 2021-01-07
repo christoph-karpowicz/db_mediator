@@ -26,9 +26,6 @@ func ImportYAMLDir(dirPath string) []Config {
 		case SYNCH_DIR:
 			config = &SynchConfig{}
 			cfgs = append(cfgs, config)
-		case WATCHER_DIR:
-			config = &WatcherConfig{}
-			cfgs = append(cfgs, config)
 		}
 
 		fmt.Println("Config file name: " + configFile.Name())
@@ -61,8 +58,6 @@ func ImportYAMLFile(cfg Config, filePath string) {
 		marshalErr = yaml.Unmarshal(byteArray, cfg.(*DbConfigArray))
 	case *SynchConfig:
 		marshalErr = yaml.Unmarshal(byteArray, cfg.(*SynchConfig))
-	case *WatcherConfig:
-		marshalErr = yaml.Unmarshal(byteArray, cfg.(*WatcherConfig))
 	}
 
 	if marshalErr != nil {

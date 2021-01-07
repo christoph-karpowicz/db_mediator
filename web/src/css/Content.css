@@ -5,28 +5,28 @@ div.content {
     z-index: 80;
 }
 
-.watchers-top-pane {
+.synchs-top-pane {
     display: flex;
     justify-content: center;
     padding-bottom: 10px;
     border-bottom: var(--main-border);
 }
-.watchers-top-pane-button {
+.synchs-top-pane-button {
     padding: 7px 30px;
     background-color: #fff;
     border: none;
 }
-.watchers-top-pane-button:first-child {
+.synchs-top-pane-button:first-child {
     border-right: var(--main-border);
 }
-.watchers-top-pane-button:hover {
+.synchs-top-pane-button:hover {
     cursor: pointer;
     background-color: #e0e0e0;
 }
-.watchers-top-pane-button:focus {
+.synchs-top-pane-button:focus {
     outline-width: 0;
 }
 
-.watchers-body {
+.synchs-body {
     padding: 50px;
 }

@@ -20,9 +20,8 @@ Contains all synchronization and database objects.
 Starts a web server and handles all requests.
 */
 type Application struct {
-	dbs      db.Databases
-	synchs   synchPkg.Synchs
-	watchers synchPkg.Watchers
+	dbs    db.Databases
+	synchs synchPkg.Synchs
 }
 
 // Init starts the application.
@@ -31,8 +30,6 @@ func (a *Application) Init() {
 	a.dbs.Init()
 	a.synchs = synchPkg.CreateSynchs()
 	a.synchs.Init()
-	a.watchers = synchPkg.CreateWatchers()
-	a.watchers.Init()
 	a.listen()
 }
 
@@ -42,8 +39,6 @@ func (a *Application) listen() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("front/build/static"))))
 	http.Handle("/runSynch", &runSynchHandler{app: a})
 	http.Handle("/stopSynch", &stopSynchHandler{app: a})
-	http.Handle("/runWatch", &runWatchHandler{app: a})
-	http.Handle("/stopWatch", &stopWatchHandler{app: a})
 	http.ListenAndServe(":8000", nil)
 }
 
@@ -119,80 +114,19 @@ func (a *Application) stopSynch(responseChan chan *response, synchName string) {
 	responseChan <- createResponse(response)
 }
 
-// runWatch starts a watcher.
-func (a *Application) runWatch(responseChan chan *response, watcherKey string) {
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		responseChan <- createResponse(r.(error))
-	// 	}
-	// }()
-
-	var response interface{}
-	watcher, watcherFound := a.watchers[watcherKey]
-	if !watcherFound {
-		panic("[watcher search] '" + watcherKey + "' not found.")
+func (a *Application) listSynchs() []string {
+	synchList := make([]string, 0)
+	for name := range a.synchs {
+		synchList = append(synchList, name)
 	}
-
-	if watcher.IsRunning() {
-		response = fmt.Sprintf("Watcher %s is already running.", watcherKey)
-	} else {
-		watcher.Init(a.dbs)
-		go a.runWatchLoop(watcher)
-		responseChan <- createResponse(fmt.Sprintf("Watcher %s started.", watcherKey))
-	}
-
-	// Send the reponse to the http init handler.
-	responseChan <- createResponse(response)
+	return synchList
 }
 
-func (a *Application) runWatchLoop(watcher *synchPkg.Watcher) {
-	for watcher.IsInitial() || watcher.IsRunning() {
-		fmt.Println("run watch")
-		watcher.Run()
-		watcher.SetInitial(false)
-		time.Sleep(1 * time.Second)
-	}
-}
-
-// stopWatch stops a specified watcher.
-func (a *Application) stopWatch(responseChan chan *response, watcherKey string) {
-	defer func() {
-		if r := recover(); r != nil {
-			responseChan <- createResponse(r.(error))
-		}
-	}()
-
-	var response interface{}
-	watcher, watcherFound := a.watchers[watcherKey]
-	if !watcherFound {
-		panic("[watcher search] '" + watcherKey + "' not found.")
-	}
-
-	if watcher.IsRunning() {
-		// watcher.Stop()
-		// watcher.Reset()
-		response = fmt.Sprintf("Watch %s stopped.", watcherKey)
-	} else {
-		response = fmt.Sprintf("Watch %s is not running.", watcherKey)
-	}
-
-	// Send the reponse to the http init handler.
-	responseChan <- createResponse(response)
-}
-
-func (a *Application) listWatchers() []string {
-	watcherList := make([]string, 0)
-	for name := range a.watchers {
-		watcherList = append(watcherList, name)
-	}
-	return watcherList
-}
-
-func (a *Application) listWatchersToJSON() []byte {
-	watcherList := a.listWatchers()
-	watcherListJSON, err := json.Marshal(watcherList)
+func (a *Application) listSynchsToJSON() []byte {
+	synchList := a.listSynchs()
+	synchListJSON, err := json.Marshal(synchList)
 	if err != nil {
 		panic(err)
 	}
-	return watcherListJSON
+	return synchListJSON
 }
