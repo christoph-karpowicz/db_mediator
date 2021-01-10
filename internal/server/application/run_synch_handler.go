@@ -36,7 +36,6 @@ func (h *runSynchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln("[http request] ERROR: Cannot start an ongoing synchronization simulation.")
 	}
 
-	// A response channel can receive data of type 'error' or []byte.
 	resChan := createResponseChannel()
 	go h.app.runSynch(resChan, synchType[0], run[0], simulation)
 

@@ -26,7 +26,6 @@ func (h *stopSynchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 	log.Fatalln("[http request] ERROR: Wrong 'all' URL param value.")
 	// }
 
-	// A response channel can receive data of type 'error' or []byte.
 	resChan := createResponseChannel()
 	go h.app.stopSynch(resChan, stop[0])
 

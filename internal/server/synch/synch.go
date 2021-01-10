@@ -6,8 +6,10 @@ package synch
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +31,7 @@ type Synch struct {
 	initial          bool
 	simulation       bool
 	currentIteration *iteration
+	result           *Result
 }
 
 // Init prepares the synchronization by fetching all necessary data
@@ -41,8 +44,8 @@ func (s *Synch) Init(DBMap map[string]*db.Database, stype string) string {
 		panic(err)
 	}
 	s.stype = stypeField
-
 	s.dbStore = &dbStore{}
+	s.result = &Result{}
 
 	if s.counters == nil {
 		s.counters = newCounters()
@@ -213,24 +216,23 @@ func (s *Synch) selectData() {
 }
 
 // Run executes a single run of the synchronization.
-func (s *Synch) Run() *Result {
+func (s *Synch) Run() {
 	s.running = true
 
 	s.resetIteration()
 	s.selectData()
 	s.pairData()
 	s.synchronize()
-	s.flush()
-	response := s.finishIteration()
-	return response
+	s.resetLinks()
+	s.finishIteration()
 }
 
 func (s *Synch) resetIteration() {
 	s.currentIteration = newIteration(s)
 }
 
-func (s *Synch) finishIteration() *Result {
-	return s.currentIteration.flush()
+func (s *Synch) finishIteration() {
+	s.currentIteration.flush()
 }
 
 // Stop stops the synch.
@@ -253,10 +255,34 @@ func (s *Synch) synchronize() {
 	}
 }
 
-func (s *Synch) flush() {
+func (s *Synch) resetLinks() {
 	for i := range s.Links {
-		s.Links[i].flush()
+		s.Links[i].reset()
 	}
+}
+
+func (s *Synch) Flush() *Result {
+	if s.IsSimulation() {
+		s.result.setSimulationPath(s.id)
+	} else {
+		s.result.setLogPath(s.id)
+	}
+	if s.stype == ONE_OFF {
+		operationsToJSON := s.result.operationsToJSONSlice()
+		operationsToJSONString := strings.Join(operationsToJSON, "\n")
+		err := ioutil.WriteFile(s.result.path, []byte(operationsToJSONString), 0644)
+		if err != nil {
+			panic(err)
+		}
+		if s.IsSimulation() {
+			s.result.Message = fmt.Sprintf("Simulation report saved to file: %s", s.result.path)
+		} else {
+			s.result.Message = fmt.Sprintf("One-off synchronization report saved to file: %s", s.result.path)
+		}
+	} else {
+		s.result.Message = fmt.Sprintf("Synchronization \"%s\" stopped. Ongoing synchronization report saved to file: %s", s.cfg.Name, s.result.path)
+	}
+	return s.result
 }
 
 // Reset clears data preparing the Synch for the next run.

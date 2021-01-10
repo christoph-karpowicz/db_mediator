@@ -1,5 +1,7 @@
 package synch
 
+import "encoding/json"
+
 type operation struct {
 	IterationId       string      `json:"iterationId"`
 	Timestamp         string      `json:"timestamp"`
@@ -12,4 +14,12 @@ type operation struct {
 	TargetKeyValue    interface{} `json:"targetKeyValue"`
 	TargetColumnName  string      `json:"targetColumnName"`
 	TargetColumnValue interface{} `json:"targetColumnValue"`
+}
+
+func (o *operation) toJSON() string {
+	operationsJSON, err := json.MarshalIndent(o, "", "	")
+	if err != nil {
+		panic(err)
+	}
+	return string(operationsJSON)
 }

@@ -9,11 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// LinkReportData link data for simulation purposes.
-type LinkReportData struct {
-	Link map[string]string
-}
-
 // Link represents a single link in the config file like:
 // [example_node1.example_column1 WHERE ...] TO [example_node2.example_column2 WHERE ...]
 type Link struct {
@@ -31,7 +26,6 @@ type Link struct {
 	sourceExID   string
 	targetExID   string
 	pairs        []*Pair
-	Rep          *LinkReportData
 }
 
 func createLink(synch Synchronizer, link map[string]string) *Link {
@@ -71,8 +65,6 @@ func createLink(synch Synchronizer, link map[string]string) *Link {
 			}
 		}
 	}
-
-	newLink.Rep = &LinkReportData{link}
 
 	return &newLink
 }
@@ -127,11 +119,6 @@ func (l *Link) createPairs(wg *sync.WaitGroup) {
 }
 
 func (l *Link) reset() {
-	l.flush()
-	l.Rep = nil
-}
-
-func (l *Link) flush() {
 	l.sourceTable.activeRecords = nil
 	l.targetTable.activeRecords = nil
 	l.pairs = nil

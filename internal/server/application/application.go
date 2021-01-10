@@ -44,11 +44,11 @@ func (a *Application) listen() {
 
 // runSynch carries out a synchronization run requested by the client.
 func (a *Application) runSynch(responseChan chan *response, synchType string, synchName string, isSimulation bool) {
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		responseChan <- createResponse(r.(error))
-	// 	}
-	// }()
+	defer func() {
+		if r := recover(); r != nil {
+			responseChan <- createResponse(r.(error))
+		}
+	}()
 
 	synch, synchFound := a.synchs[synchName]
 	if !synchFound {
@@ -65,7 +65,8 @@ func (a *Application) runSynch(responseChan chan *response, synchType string, sy
 		go a.runSynchLoop(synch)
 		responseChan <- createResponse(fmt.Sprintf("Synch %s started with ID %s.", synchName, synchID))
 	} else {
-		synchResponse := synch.Run()
+		synch.Run()
+		synchResponse := synch.Flush()
 		responseChan <- createResponse(synchResponse)
 		synch.Reset()
 	}
@@ -88,30 +89,21 @@ func (a *Application) stopSynch(responseChan chan *response, synchName string) {
 		}
 	}()
 
-	var response interface{}
+	var synchResponse interface{}
 	synch, synchFound := a.synchs[synchName]
 	if !synchFound {
-		panic("[synchronization search] '" + synchName + "' not found.")
-	}
-
-	if synch.IsRunning() {
-		// Gather and marshal results.
-		// synchReport, err := synch.GetHistory().GenerateReport()
-		// if err != nil {
-		// 	panic(err)
-		// }
-
+		synchResponse = fmt.Sprintf("[synchronization search] \"%s\" not found.", synchName)
+	} else if synch.IsRunning() {
 		synch.Stop()
+		synchResponse = synch.Flush()
 		synch.Reset()
-
-		response = "synchReport"
-		// response = synchReport
 	} else {
-		response = fmt.Sprintf("Synch %s is not running.", synchName)
+		synchResponse = fmt.Sprintf("Synch \"%s\" is not running.", synchName)
 	}
 
+	fmt.Println(synchResponse)
 	// Send the reponse to the http init handler.
-	responseChan <- createResponse(response)
+	responseChan <- createResponse(synchResponse)
 }
 
 func (a *Application) listSynchs() []string {
