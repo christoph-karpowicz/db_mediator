@@ -1,6 +1,7 @@
 package synch
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -65,7 +66,7 @@ func (p Pair) Synchronize() (bool, error) {
 		} else if !areEqual {
 			var updateErr error
 			if !p.Link.synch.IsSimulation() {
-				// updateErr = p.doUpdate(sourceColumnValue)
+				updateErr = p.doUpdate(sourceColumnValue)
 			}
 
 			if updateErr == nil {
@@ -74,14 +75,14 @@ func (p Pair) Synchronize() (bool, error) {
 				log.Println(updateErr)
 			}
 		} else {
-			if p.Link.synch.GetType() == ONE_OFF {
+			if p.Link.synch.GetType() == ONE_OFF && p.Link.synch.IsSimulation() {
 				p.logAction(cfg.OPERATION_IDLE)
 			}
 		}
 	} else if p.target == nil && arrayUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_INSERT) {
 		var insertErr error
 		if !p.Link.synch.IsSimulation() {
-			// p.doInsert()
+			p.doInsert()
 		}
 
 		if insertErr == nil {
@@ -112,19 +113,41 @@ func (p Pair) doUpdate(sourceColumnValue interface{}) error {
 }
 
 func (p Pair) doInsert() error {
-	inDto := db.InsertDto{
-		p.synchData.tableName,
-		p.synchData.targetExtIDName,
-		p.synchData.sourceKeyValue,
-		p.source.Data,
-	}
-
+	inDto := p.prepareInsertValues()
 	insert, err := p.synchData.targetDb.Insert(inDto)
 	if err != nil {
 		return err
 	}
 	log.Println(insert)
 	return nil
+}
+
+func (p *Pair) prepareInsertValues() db.InsertDto {
+	values := make(map[string]interface{})
+	for columnName, value := range p.source.Data {
+		targetColumn, err := p.findTargetColumnName(columnName)
+		if err != nil {
+			fmt.Println(err)
+		}
+		values[targetColumn] = value
+	}
+
+	inDto := db.InsertDto{
+		p.synchData.tableName,
+		p.synchData.targetExtIDName,
+		p.synchData.sourceKeyValue,
+		values,
+	}
+	return inDto
+}
+
+func (p *Pair) findTargetColumnName(columnName string) (string, error) {
+	for _, mapping := range p.Link.synch.GetRawMappings() {
+		if columnName == mapping["sourceColumn"] {
+			return mapping["targetColumn"], nil
+		}
+	}
+	return "", &mappingError{errMsg: fmt.Sprintf("Mapping for column \"%s\" not found.", columnName)}
 }
 
 // logAction adds an action to synch history.

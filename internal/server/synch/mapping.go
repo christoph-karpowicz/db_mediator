@@ -10,6 +10,7 @@ type Mapping struct {
 	target       *node
 	sourceColumn string
 	targetColumn string
+	raw          map[string]string
 }
 
 func createMapping(synch *Synch, mapping map[string]string) *Mapping {
@@ -29,6 +30,7 @@ func createMapping(synch *Synch, mapping map[string]string) *Mapping {
 		target:       synch.dbStore.nodes[mapping[cfg.PSUBEXP_TARGET_NODE]],
 		sourceColumn: mapping[cfg.PSUBEXP_SOURCE_COLUMN],
 		targetColumn: mapping[cfg.PSUBEXP_TARGET_COLUMN],
+		raw:          mapping,
 	}
 
 	return &newMapping

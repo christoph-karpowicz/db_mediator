@@ -157,11 +157,19 @@ func ParseMapping(mapping string) (map[string]string, error) {
 		if i == 0 {
 			continue
 		}
-
-		result[subNames[i]] = match
+		result[subNames[i]] = removeQuotes(match)
 	}
 
 	return result, nil
+}
+
+func removeQuotes(match string) string {
+	result := match
+	targetColumnPtrn := regexp.MustCompile(`^".+"$`)
+	if len(match) > 0 && targetColumnPtrn.MatchString(match) {
+		result = match[1 : len(match)-1]
+	}
+	return result
 }
 
 func validateMapping(mapping string) error {

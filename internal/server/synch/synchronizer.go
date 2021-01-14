@@ -9,6 +9,7 @@ type Synchronizer interface {
 	GetConfig() *cfg.SynchConfig
 	GetIteration() *iteration
 	GetNodes() map[string]*node
+	GetRawMappings() []map[string]string
 	GetType() synchType
 	IsSimulation() bool
 	Run()

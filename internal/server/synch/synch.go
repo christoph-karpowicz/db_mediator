@@ -79,6 +79,14 @@ func (s *Synch) GetNodes() map[string]*node {
 	return s.dbStore.nodes
 }
 
+func (s *Synch) GetRawMappings() []map[string]string {
+	rawMappings := make([]map[string]string, len(s.mappings))
+	for i, mapping := range s.mappings {
+		rawMappings[i] = mapping.raw
+	}
+	return rawMappings
+}
+
 // GetType returns the type of the synch.
 func (s *Synch) GetType() synchType {
 	return s.stype

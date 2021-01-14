@@ -62,6 +62,7 @@ func (d *mongoDatabase) Init() {
 
 // Insert inserts one row into a given collection.
 func (d *mongoDatabase) Insert(inDto InsertDto) (bool, error) {
+	fmt.Println(inDto)
 	client := d.GetClient()
 	collection := client.Database(d.cfg.Name).Collection(inDto.TableName)
 

@@ -10,3 +10,11 @@ type synchInitError struct {
 func (e *synchInitError) Error() string {
 	return fmt.Sprintf("[synch init] %s in method %s", e.errMsg, e.method)
 }
+
+type mappingError struct {
+	errMsg string
+}
+
+func (e *mappingError) Error() string {
+	return fmt.Sprintf("[mapping] %s", e.errMsg)
+}
