@@ -3,20 +3,20 @@ package synch
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
 	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	arrayUtil "github.com/christoph-karpowicz/unifier/internal/util/array"
+	"github.com/christoph-karpowicz/unifier/internal/util"
 )
 
 type pairSynchData struct {
 	targetDb        db.Database
-	tableName       string
+	sourceTableName string
 	sourceKeyName   string
 	sourceKeyValue  interface{}
 	targetKeyName   string
 	targetExtIDName string
+	targetTableName string
 }
 
 // Pair represents a connection between two records, that are going
@@ -36,11 +36,12 @@ type Pair struct {
 func createPair(link *Link, source *record, target *record) *Pair {
 	var synchData pairSynchData = pairSynchData{
 		*link.target.db,
-		link.target.tbl.name,
+		link.source.tbl.name,
 		link.source.cfg.Key,
 		source.Data[link.source.cfg.Key],
 		link.target.cfg.Key,
 		link.target.matchColumn,
+		link.target.tbl.name,
 	}
 
 	var newPair Pair = Pair{
@@ -57,36 +58,28 @@ func createPair(link *Link, source *record, target *record) *Pair {
 // Updates if this pair is complete (has both the source and the target)
 // and inserts if a target record has to be created.
 func (p Pair) Synchronize() (bool, error) {
-	if p.target != nil && arrayUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_UPDATE) {
+	if p.target != nil && util.StringSliceContains(p.Link.synch.GetConfig().Do, cfg.DB_UPDATE) {
 		sourceColumnValue := p.source.Data[p.Link.sourceColumn]
 		targetColumnValue := p.target.Data[p.Link.targetColumn]
 
 		if areEqual, err := areEqual(sourceColumnValue, targetColumnValue); err != nil {
 			log.Println(err)
 		} else if !areEqual {
-			var updateErr error
-			if !p.Link.synch.IsSimulation() {
-				updateErr = p.doUpdate(sourceColumnValue)
-			}
-
+			updateErr := p.doUpdate(sourceColumnValue)
 			if updateErr == nil {
-				p.logAction(cfg.OPERATION_UPDATE)
+				p.logUpdateOrIdleOperation(cfg.OPERATION_UPDATE)
 			} else {
 				log.Println(updateErr)
 			}
 		} else {
 			if p.Link.synch.GetType() == ONE_OFF && p.Link.synch.IsSimulation() {
-				p.logAction(cfg.OPERATION_IDLE)
+				p.logUpdateOrIdleOperation(cfg.OPERATION_IDLE)
 			}
 		}
-	} else if p.target == nil && arrayUtil.Contains(p.Link.synch.GetConfig().Do, cfg.DB_INSERT) {
-		var insertErr error
-		if !p.Link.synch.IsSimulation() {
-			p.doInsert()
-		}
-
+	} else if p.target == nil && util.StringSliceContains(p.Link.synch.GetConfig().Do, cfg.DB_INSERT) {
+		inDto, insertErr := p.doInsert()
 		if insertErr == nil {
-			p.logAction(cfg.OPERATION_INSERT)
+			p.logInsertOperation(inDto)
 		} else {
 			log.Println(insertErr)
 		}
@@ -97,32 +90,36 @@ func (p Pair) Synchronize() (bool, error) {
 
 func (p Pair) doUpdate(sourceColumnValue interface{}) error {
 	upDto := db.UpdateDto{
-		p.synchData.tableName,
+		p.synchData.sourceTableName,
 		p.synchData.targetExtIDName,
 		p.synchData.sourceKeyValue,
 		p.Link.targetColumn,
 		sourceColumnValue,
 	}
 
-	update, err := p.synchData.targetDb.Update(upDto)
-	if err != nil {
-		return err
+	if !p.Link.synch.IsSimulation() {
+		update, err := p.synchData.targetDb.Update(upDto)
+		if err != nil {
+			return err
+		}
+		log.Println(update)
 	}
-	log.Println(update)
 	return nil
 }
 
-func (p Pair) doInsert() error {
+func (p Pair) doInsert() (*db.InsertDto, error) {
 	inDto := p.prepareInsertValues()
-	insert, err := p.synchData.targetDb.Insert(inDto)
-	if err != nil {
-		return err
+	if !p.Link.synch.IsSimulation() {
+		insert, err := p.synchData.targetDb.Insert(*inDto)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(insert)
 	}
-	log.Println(insert)
-	return nil
+	return inDto, nil
 }
 
-func (p *Pair) prepareInsertValues() db.InsertDto {
+func (p *Pair) prepareInsertValues() *db.InsertDto {
 	values := make(map[string]interface{})
 	for columnName, value := range p.source.Data {
 		targetColumn, err := p.findTargetColumnName(columnName)
@@ -133,12 +130,12 @@ func (p *Pair) prepareInsertValues() db.InsertDto {
 	}
 
 	inDto := db.InsertDto{
-		p.synchData.tableName,
+		p.synchData.sourceTableName,
 		p.synchData.targetExtIDName,
 		p.synchData.sourceKeyValue,
 		values,
 	}
-	return inDto
+	return &inDto
 }
 
 func (p *Pair) findTargetColumnName(columnName string) (string, error) {
@@ -150,8 +147,7 @@ func (p *Pair) findTargetColumnName(columnName string) (string, error) {
 	return "", &mappingError{errMsg: fmt.Sprintf("Mapping for column \"%s\" not found.", columnName)}
 }
 
-// logAction adds an action to synch history.
-func (p *Pair) logAction(operationType string) {
+func (p *Pair) logUpdateOrIdleOperation(operationType string) {
 	var targetKeyName string
 	var targetKeyValue interface{}
 	var targetColumnValue interface{}
@@ -167,20 +163,38 @@ func (p *Pair) logAction(operationType string) {
 		targetColumnValue = nil
 	}
 
-	dateLayout := "Mon, 02 Jan 2006 15:04:05 MST"
-	date := time.Now()
-
-	operation := operation{
+	operation := updateOrIdleOperation{
 		Operation:         operationType,
-		Timestamp:         date.Format(dateLayout),
+		Timestamp:         util.GetTimestamp(),
+		SourceTableName:   p.synchData.sourceTableName,
 		SourceKeyName:     p.synchData.sourceKeyName,
 		SourceKeyValue:    p.source.Data[p.synchData.sourceKeyName],
 		SourceColumnName:  p.Link.sourceColumn,
 		SourceColumnValue: sourceColumnValue,
+		TargetTableName:   p.synchData.targetTableName,
 		TargetKeyName:     targetKeyName,
 		TargetKeyValue:    targetKeyValue,
 		TargetColumnName:  p.Link.targetColumn,
 		TargetColumnValue: targetColumnValue,
+	}
+
+	if !p.Link.synch.IsSimulation() {
+		operation.IterationId = p.Link.synch.GetIteration().id
+	}
+
+	p.Link.synch.GetIteration().addOperation(&operation)
+}
+
+func (p *Pair) logInsertOperation(inDto *db.InsertDto) {
+	operation := insertOperation{
+		Operation:        cfg.OPERATION_INSERT,
+		Timestamp:        util.GetTimestamp(),
+		SourceTableName:  p.synchData.sourceTableName,
+		SourceKeyName:    p.synchData.sourceKeyName,
+		SourceKeyValue:   p.source.Data[p.synchData.sourceKeyName],
+		SourceColumnName: p.Link.sourceColumn,
+		TargetTableName:  p.synchData.targetTableName,
+		InsertedRow:      inDto.Values,
 	}
 
 	if !p.Link.synch.IsSimulation() {

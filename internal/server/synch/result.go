@@ -10,8 +10,8 @@ const (
 )
 
 type Result struct {
-	Message    string       `json:"message"`
-	Operations []*operation `json:"operations"`
+	Message    string      `json:"message"`
+	Operations []operation `json:"operations"`
 	path       string
 }
 

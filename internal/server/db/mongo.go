@@ -63,18 +63,18 @@ func (d *mongoDatabase) Init() {
 // Insert inserts one row into a given collection.
 func (d *mongoDatabase) Insert(inDto InsertDto) (bool, error) {
 	fmt.Println(inDto)
-	client := d.GetClient()
-	collection := client.Database(d.cfg.Name).Collection(inDto.TableName)
+	// client := d.GetClient()
+	// collection := client.Database(d.cfg.Name).Collection(inDto.TableName)
 
-	insertResult, err := collection.InsertOne(context.TODO(), inDto.Values)
-	if err != nil {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
-		return false, dbErr
-	}
-	if insertResult.InsertedID == nil {
-		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "could not insert document", KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
-		return false, dbErr
-	}
+	// insertResult, err := collection.InsertOne(context.TODO(), inDto.Values)
+	// if err != nil {
+	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
+	// 	return false, dbErr
+	// }
+	// if insertResult.InsertedID == nil {
+	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "could not insert document", KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
+	// 	return false, dbErr
+	// }
 
 	return true, nil
 }
