@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/cfg"
 	_ "github.com/lib/pq"
 )
 

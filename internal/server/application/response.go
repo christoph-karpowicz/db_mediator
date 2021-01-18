@@ -1,6 +1,6 @@
 package application
 
-import "github.com/christoph-karpowicz/unifier/internal/server/synch"
+import "github.com/christoph-karpowicz/db_mediator/internal/server/synch"
 
 type response struct {
 	Err     bool   `json:"err"`

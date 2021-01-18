@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
-	"github.com/christoph-karpowicz/unifier/internal/server/db"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/cfg"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/db"
 )
 
 // Synch represents an individual synchronzation configration.

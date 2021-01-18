@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/cfg"
 )
 
 // Database interface is the blueprint for all structs for specific databases.

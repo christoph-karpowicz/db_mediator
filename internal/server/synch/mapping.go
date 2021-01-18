@@ -1,6 +1,6 @@
 package synch
 
-import "github.com/christoph-karpowicz/unifier/internal/server/cfg"
+import "github.com/christoph-karpowicz/db_mediator/internal/server/cfg"
 
 // Mapping represents a single mapping in the config file like:
 // example_node1.example_column1 TO example_node2.example_column2

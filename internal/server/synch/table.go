@@ -1,6 +1,6 @@
 package synch
 
-import "github.com/christoph-karpowicz/unifier/internal/server/db"
+import "github.com/christoph-karpowicz/db_mediator/internal/server/db"
 
 type table struct {
 	id            string

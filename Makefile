@@ -1,6 +1,6 @@
 main:
 	go build -o server cmd/server/main.go
-	go build -o unifier cmd/client/main.go
+	go build -o mediator cmd/client/main.go
 
 run:
 	go run cmd/server/main.go

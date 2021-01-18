@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/christoph-karpowicz/unifier/internal/util"
+	"github.com/christoph-karpowicz/db_mediator/internal/util"
 )
 
 func YAMLField(fieldValue interface{}, fieldName string) bool {

@@ -1,7 +1,7 @@
 package synch
 
 import (
-	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/cfg"
 )
 
 // Synchs is a collection of all synchronizations.

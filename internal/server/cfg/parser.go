@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/christoph-karpowicz/unifier/internal/util"
+	"github.com/christoph-karpowicz/db_mediator/internal/util"
 )
 
 const (

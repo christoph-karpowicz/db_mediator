@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	validationUtil "github.com/christoph-karpowicz/unifier/internal/util/validation"
+	validationUtil "github.com/christoph-karpowicz/db_mediator/internal/util/validation"
 )
 
 var dbNullableFields = []string{"alias"}

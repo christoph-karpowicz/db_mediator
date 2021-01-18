@@ -5,7 +5,7 @@ methods for querying.
 package db
 
 import (
-	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/cfg"
 )
 
 // Databases imports, validates and holds information about databases from JSON config files.

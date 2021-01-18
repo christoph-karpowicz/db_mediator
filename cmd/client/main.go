@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/christoph-karpowicz/unifier/internal/client/application"
+	"github.com/christoph-karpowicz/db_mediator/internal/client/application"
 
 	_ "github.com/lib/pq"
 )

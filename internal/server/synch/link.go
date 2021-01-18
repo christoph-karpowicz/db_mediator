@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/christoph-karpowicz/unifier/internal/server/cfg"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/cfg"
 	"github.com/google/uuid"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/christoph-karpowicz/unifier/internal/server/application"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/application"
 
 	_ "github.com/lib/pq"
 )

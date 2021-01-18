@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/christoph-karpowicz/unifier/internal/server/db"
-	synchPkg "github.com/christoph-karpowicz/unifier/internal/server/synch"
+	"github.com/christoph-karpowicz/db_mediator/internal/server/db"
+	synchPkg "github.com/christoph-karpowicz/db_mediator/internal/server/synch"
 )
 
 /*

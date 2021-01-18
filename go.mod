@@ -1,4 +1,4 @@
-module github.com/christoph-karpowicz/unifier
+module github.com/christoph-karpowicz/db_mediator
 
 go 1.13
 

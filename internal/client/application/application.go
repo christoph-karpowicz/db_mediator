@@ -36,7 +36,7 @@ func (a *Application) setCLI() {
 	a.CLI = cli.NewApp()
 	a.CLI.UseShortOptionHandling = true
 
-	a.CLI.Name = "Unifier CLI"
+	a.CLI.Name = "Database mediator CLI"
 	a.CLI.Usage = "Database synchronization app."
 	author := &cli.Author{Name: "Krzysztof Karpowicz", Email: "christoph.karpowicz@gmail.com"}
 	a.CLI.Authors = append(a.CLI.Authors, author)

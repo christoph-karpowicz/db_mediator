@@ -4,7 +4,7 @@
 /simulation/
 /log/
 /server
-/unifier
+/mediator
 /docker-compose.yml
 /config/synch/*
 !/config/synch/example.yaml
