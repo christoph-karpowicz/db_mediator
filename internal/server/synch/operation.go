@@ -31,16 +31,15 @@ func (o *updateOrIdleOperation) toJSON() string {
 }
 
 type insertOperation struct {
-	IterationId       string                 `json:"iterationId"`
-	Timestamp         string                 `json:"timestamp"`
-	Operation         string                 `json:"operation"`
-	SourceTableName   string                 `json:"sourceTableName"`
-	SourceKeyName     string                 `json:"sourceKeyName"`
-	SourceKeyValue    interface{}            `json:"sourceKeyValue"`
-	SourceColumnName  string                 `json:"sourceColumnName"`
-	SourceColumnValue interface{}            `json:"sourceColumnValue"`
-	TargetTableName   string                 `json:"targetTableName"`
-	InsertedRow       map[string]interface{} `json:"insertedRow"`
+	IterationId      string                 `json:"iterationId"`
+	Timestamp        string                 `json:"timestamp"`
+	Operation        string                 `json:"operation"`
+	SourceTableName  string                 `json:"sourceTableName"`
+	SourceKeyName    string                 `json:"sourceKeyName"`
+	SourceKeyValue   interface{}            `json:"sourceKeyValue"`
+	SourceColumnName string                 `json:"sourceColumnName"`
+	TargetTableName  string                 `json:"targetTableName"`
+	InsertedRow      map[string]interface{} `json:"insertedRow"`
 }
 
 func (o *insertOperation) toJSON() string {

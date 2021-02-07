@@ -8,7 +8,7 @@ type synchInitError struct {
 }
 
 func (e *synchInitError) Error() string {
-	return fmt.Sprintf("[synch init] %s in method %s", e.errMsg, e.method)
+	return fmt.Sprintf("[ERROR] synch init: %s in method %s", e.errMsg, e.method)
 }
 
 type mappingError struct {
@@ -16,5 +16,5 @@ type mappingError struct {
 }
 
 func (e *mappingError) Error() string {
-	return fmt.Sprintf("[mapping] %s", e.errMsg)
+	return fmt.Sprintf("[ERROR] mapping: %s", e.errMsg)
 }

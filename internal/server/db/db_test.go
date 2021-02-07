@@ -45,7 +45,7 @@ func TestMongoCRUD(t *testing.T) {
 			1,
 			row,
 		}
-		_, insertErr := database.Insert(inDto)
+		insertErr := database.Insert(inDto)
 		if insertErr != nil {
 			log.Fatalln(insertErr)
 		}
@@ -58,7 +58,7 @@ func TestMongoCRUD(t *testing.T) {
 			"Rating",
 			"test",
 		}
-		_, updateErr := database.Update(upDto)
+		updateErr := database.Update(upDto)
 		if updateErr != nil {
 			log.Fatalln(updateErr)
 		}
@@ -96,7 +96,7 @@ func TestPostgresCRUD(t *testing.T) {
 			1,
 			row,
 		}
-		_, insertErr := database.Insert(inDto)
+		insertErr := database.Insert(inDto)
 		if insertErr != nil {
 			log.Fatalln(insertErr)
 		}
@@ -109,7 +109,7 @@ func TestPostgresCRUD(t *testing.T) {
 			"Rating",
 			"test",
 		}
-		_, updateErr := database.Update(upDto)
+		updateErr := database.Update(upDto)
 		if updateErr != nil {
 			log.Fatalln(updateErr)
 		}

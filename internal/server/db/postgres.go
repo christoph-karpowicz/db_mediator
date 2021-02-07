@@ -31,7 +31,7 @@ func (d *postgresDatabase) Init() {
 }
 
 // Insert inserts one row into a given table.
-func (d *postgresDatabase) Insert(inDto InsertDto) (bool, error) {
+func (d *postgresDatabase) Insert(inDto InsertDto) error {
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
 		panic(err)
@@ -56,18 +56,18 @@ func (d *postgresDatabase) Insert(inDto InsertDto) (bool, error) {
 
 	result, err := database.Exec(query, valuesList...)
 	if err != nil {
-		return false, err
+		return err
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return false, err
+		return err
 	}
 	if rowsAffected == 0 {
 		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "row hasn't been inserted" /* , KeyName: keyName, KeyValue: keyVal */}
-		return false, dbErr
+		return dbErr
 	}
 
-	return true, nil
+	return nil
 }
 
 // Select selects data from the database, with or without a WHERE clause.
@@ -139,7 +139,7 @@ func (d *postgresDatabase) TestConnection() {
 }
 
 // Update updates a record with the provided key.
-func (d *postgresDatabase) Update(upDto UpdateDto) (bool, error) {
+func (d *postgresDatabase) Update(upDto UpdateDto) error {
 	database, err := sql.Open("postgres", d.connectionString)
 	if err != nil {
 		panic(err)
@@ -150,16 +150,16 @@ func (d *postgresDatabase) Update(upDto UpdateDto) (bool, error) {
 
 	result, err := database.Exec(query, upDto.NewValue, upDto.KeyValue)
 	if err != nil {
-		return false, err
+		return err
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return false, err
+		return err
 	}
 	if rowsAffected == 0 {
 		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no rows affected in update", KeyName: upDto.KeyName, KeyValue: upDto.KeyValue}
-		return false, dbErr
+		return dbErr
 	}
 
-	return true, nil
+	return nil
 }

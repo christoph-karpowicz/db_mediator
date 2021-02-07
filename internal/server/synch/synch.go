@@ -270,25 +270,32 @@ func (s *Synch) resetLinks() {
 }
 
 func (s *Synch) Flush() *Result {
+	operationsToJSON := s.result.operationsToJSONSlice()
+	operationsToJSONString := strings.Join(operationsToJSON, "\n")
 	if s.IsSimulation() {
 		s.result.setSimulationPath(s.id)
 	} else {
 		s.result.setLogPath(s.id)
 	}
 	if s.stype == ONE_OFF {
-		operationsToJSON := s.result.operationsToJSONSlice()
-		operationsToJSONString := strings.Join(operationsToJSON, "\n")
-		err := ioutil.WriteFile(s.result.path, []byte(operationsToJSONString), 0644)
-		if err != nil {
-			panic(err)
-		}
-		if s.IsSimulation() {
+		if len(s.result.Operations) == 0 {
+			s.result.Message = fmt.Sprintf("There are no database operations to be carried out.")
+			return s.result
+		} else if s.IsSimulation() {
 			s.result.Message = fmt.Sprintf("Simulation report saved to file: %s", s.result.path)
 		} else {
 			s.result.Message = fmt.Sprintf("One-off synchronization report saved to file: %s", s.result.path)
 		}
 	} else {
+		if len(s.result.Operations) == 0 {
+			s.result.Message = fmt.Sprintf("Synchronization \"%s\" stopped. No database operations have been carried out.", s.cfg.Name)
+			return s.result
+		}
 		s.result.Message = fmt.Sprintf("Synchronization \"%s\" stopped. Ongoing synchronization report saved to file: %s", s.cfg.Name, s.result.path)
+	}
+	err := ioutil.WriteFile(s.result.path, []byte(operationsToJSONString), 0644)
+	if err != nil {
+		panic(err)
 	}
 	return s.result
 }

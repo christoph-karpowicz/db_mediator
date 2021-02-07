@@ -90,7 +90,7 @@ func (p Pair) Synchronize() (bool, error) {
 
 func (p Pair) doUpdate(sourceColumnValue interface{}) error {
 	upDto := db.UpdateDto{
-		p.synchData.sourceTableName,
+		p.synchData.targetTableName,
 		p.synchData.targetExtIDName,
 		p.synchData.sourceKeyValue,
 		p.Link.targetColumn,
@@ -98,11 +98,10 @@ func (p Pair) doUpdate(sourceColumnValue interface{}) error {
 	}
 
 	if !p.Link.synch.IsSimulation() {
-		update, err := p.synchData.targetDb.Update(upDto)
+		err := p.synchData.targetDb.Update(upDto)
 		if err != nil {
 			return err
 		}
-		log.Println(update)
 	}
 	return nil
 }
@@ -110,11 +109,10 @@ func (p Pair) doUpdate(sourceColumnValue interface{}) error {
 func (p Pair) doInsert() (*db.InsertDto, error) {
 	inDto := p.prepareInsertValues()
 	if !p.Link.synch.IsSimulation() {
-		insert, err := p.synchData.targetDb.Insert(*inDto)
+		err := p.synchData.targetDb.Insert(*inDto)
 		if err != nil {
 			return nil, err
 		}
-		log.Println(insert)
 	}
 	return inDto, nil
 }
@@ -130,7 +128,7 @@ func (p *Pair) prepareInsertValues() *db.InsertDto {
 	}
 
 	inDto := db.InsertDto{
-		p.synchData.sourceTableName,
+		p.synchData.targetTableName,
 		p.synchData.targetExtIDName,
 		p.synchData.sourceKeyValue,
 		values,

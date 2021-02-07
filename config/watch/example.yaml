@@ -1,9 +1,0 @@
-name: example
-
-nodes:
-    - 
-        database    : dvdrental
-        table       : film
-    # -
-    #     database    : msamp
-    #     table       : Sakila_films

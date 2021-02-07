@@ -61,22 +61,22 @@ func (d *mongoDatabase) Init() {
 }
 
 // Insert inserts one row into a given collection.
-func (d *mongoDatabase) Insert(inDto InsertDto) (bool, error) {
+func (d *mongoDatabase) Insert(inDto InsertDto) error {
 	fmt.Println(inDto)
-	// client := d.GetClient()
-	// collection := client.Database(d.cfg.Name).Collection(inDto.TableName)
+	client := d.GetClient()
+	collection := client.Database(d.cfg.Name).Collection(inDto.TableName)
 
-	// insertResult, err := collection.InsertOne(context.TODO(), inDto.Values)
-	// if err != nil {
-	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
-	// 	return false, dbErr
-	// }
-	// if insertResult.InsertedID == nil {
-	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "could not insert document", KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
-	// 	return false, dbErr
-	// }
+	insertResult, err := collection.InsertOne(context.TODO(), inDto.Values)
+	if err != nil {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
+		return dbErr
+	}
+	if insertResult.InsertedID == nil {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "could not insert document", KeyName: inDto.KeyName, KeyValue: inDto.KeyValue}
+		return dbErr
+	}
 
-	return true, nil
+	return nil
 }
 
 // Select selects data from the database, with or without filters.
@@ -127,7 +127,8 @@ func (d *mongoDatabase) TestConnection() {
 }
 
 // Update updates a document with the provided key.
-func (d *mongoDatabase) Update(upDto UpdateDto) (bool, error) {
+func (d *mongoDatabase) Update(upDto UpdateDto) error {
+	fmt.Println(upDto)
 	client := d.GetClient()
 	collection := client.Database(d.cfg.Name).Collection(upDto.TableName)
 	filter := bson.D{{upDto.KeyName, upDto.KeyValue}}
@@ -140,16 +141,16 @@ func (d *mongoDatabase) Update(upDto UpdateDto) (bool, error) {
 	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: err.Error(), KeyName: upDto.KeyName, KeyValue: upDto.KeyValue}
-		return false, dbErr
+		return dbErr
 	}
 	if updateResult.MatchedCount == 0 {
 		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "document with given key not found", KeyName: upDto.KeyName, KeyValue: upDto.KeyValue}
-		return false, dbErr
+		return dbErr
 	}
-	// if updateResult.ModifiedCount == 0 {
-	// 	dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no documents modified", KeyName: keyName, KeyValue: keyVal}
-	// 	return false, dbErr
-	// }
+	if updateResult.ModifiedCount == 0 {
+		dbErr := &DatabaseError{DBName: d.cfg.Name, ErrMsg: "no documents modified", KeyName: upDto.KeyName, KeyValue: upDto.KeyValue}
+		return dbErr
+	}
 
-	return true, nil
+	return nil
 }
